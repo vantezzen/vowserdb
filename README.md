@@ -36,3 +36,17 @@ To update/change data in the database, use
 sdb::UPDATE("test", array("password" => "123456"), array("username" => "vantezzen"));
 ```
 Again, the third argument can be left empty to change all columns.
+<br />
+To delete data from the database, use
+```PHP
+sdb::DELETE("test", array("username" => "vantezzen"));
+```
+The second argument can be left empty to delete everything (similar to SQL's "TRUNCATE").
+<br />
+<br />
+# share some love
+If you like sdb, consider starring this repository and telling your friends and family about how awesome sdb is (yay!).
+You can also check out my other repositories on GitHub, maybe you'll find some other things, that might interest you.
+<br />
+<br />
+vantezzen
