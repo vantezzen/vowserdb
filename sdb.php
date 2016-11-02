@@ -166,5 +166,10 @@ class sdb {
      fwrite($file, $newcontent);
      fclose($file);
    }
+
+   public static function DROP($database) {
+     $path = self::$folder . $database . ".sdb";
+     unlink($path);
+   }
 }
 ?>
