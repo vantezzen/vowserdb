@@ -43,7 +43,7 @@ sdb::DELETE("test", array("username" => "vantezzen"));
 ```
 The second argument can be left empty to delete everything (similar to SQL's "TRUNCATE").
 <br />
-A command that doesn't exist in SQL, but does in sdb is ```CLEAR```. ```CLEAR``` deleted all empty lines in the database file to make it prettier and smaller. ```CLEAR``` is automatically run when you ```DELETE``` something.
+A command that doesn't exist in SQL, but does in sdb is ```CLEAR```. ```CLEAR``` deletes all empty lines in the database file to make it prettier and smaller. ```CLEAR``` is automatically run when you ```DELETE``` something.
 ```PHP
 sdb::CLEAR("test");
 ```
