@@ -1,5 +1,5 @@
 # sdb
-sdb is a simple database, that is purely written in PHP and doesn't need any additional services, programs or deamons running to work.
+sdb is a simple database, that is purely written in PHP and doesn't need any additional services, programs or deamons running to work. It uses .sdb files to store databases.
 
 # installation
 Move the "sdb.php" script to your project folder and include it via<br />
