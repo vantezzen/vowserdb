@@ -11,7 +11,7 @@ Create a new folder called "sdb" (the name of the folder can be changed in sdb.p
 You can also create a .htaccess in that folder to deny all requests to the database directly.
 
 # usage
-sdb has similar commands to SQL.<br />
+sdb uses SQL like commands to manage databases.<br />
 To create a new database with the name "test" and the columns "username", "password" and "mail", run<br />
 ```PHP
 sdb::CREATE("test", array("username", "password", "mail"));
