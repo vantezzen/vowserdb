@@ -171,5 +171,13 @@ class sdb {
      $path = self::$folder . $database . ".sdb";
      unlink($path);
    }
+
+   public static function TABLES() {
+     $tables = array();
+     foreach(glob(self::$folder . "*.sdb") as $table) {
+       $tables[] = str_replace(array(self::$folder, ".sdb"), "", $table);
+     }
+     return $tables;
+   }
 }
 ?>
