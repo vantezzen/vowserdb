@@ -77,7 +77,7 @@ This function will just return an array of all your tables in your database.
 <br />
 # lock mechanism
 <br />
-sdb uses a special lock mechanism. This lock mechanism will protect a table when a script writes to it. this can prevent file loss when two scripts try to write to the same table at the same time. It will temporarely create a .lock file named after the table name. If you see this .lock file comming up when a script writes to a table this is normal. If you want to disable this mechanism (e.g. when you want to reduce read and writes to your hard drive), you can turn it off in the sdb.php file by changing the "$disablelock" variable in the config section on the top of the file to "true"
+sdb uses a special lock mechanism. This lock mechanism will protect a table when a script writes to it. This can prevent data loss when two scripts try to write to the same table at the same time. It will temporarely create a .lock file named after the table name. If you see this .lock file comming up when a script writes to a table this is normal and it should be automatically deleted after that. If you want to disable this mechanism (e.g. when you want to reduce read and writes to your hard drive), you can turn it off in the sdb.php file by changing the "$disablelock" variable in the config section on the top of the file to "true"
 <br />
 <br />
 # share some love
