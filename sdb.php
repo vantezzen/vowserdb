@@ -242,7 +242,7 @@ class sdb {
      $lockfile = self::$folder . $database . ".lock";
      $i = 0;
      while(file_exists($lockfile) && $i < 1000) {
-       usleep(100);
+       usleep(10);
        $i++;
      }
      return true;
