@@ -135,8 +135,26 @@ class sdb {
          }
        } else {
          foreach($select as $key => $row) {
-           if ($row[$column] !== $value) {
-             unset($select[$key]);
+           if ($mode == "normal") {
+             if (isset($row[$column]) && $row[$column] == $value) {
+               unset($select[$key]);
+             }
+           } else if ($mode == "bigger") {
+             if (isset($row[$column]) && $row[$column] > $value) {
+               unset($select[$key]);
+             }
+           } else if ($mode == "smaller") {
+             if (isset($row[$column]) && $row[$column] < $value) {
+               unset($select[$key]);
+             }
+           } else if ($mode == "biggerequal") {
+             if (isset($row[$column]) && $row[$column] >= $value) {
+               unset($select[$key]);
+             }
+           } else if ($mode == "smallerequal") {
+             if (isset($row[$column]) && $row[$column] <= $value) {
+               unset($select[$key]);
+             }
            }
          }
        }
