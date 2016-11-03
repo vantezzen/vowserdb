@@ -61,6 +61,7 @@ class sdb {
 ";
      foreach($columns as $column) {
        if (isset($data[$column])) {
+         $data[$column] = str_replace(";;", "", $data[$column]);
          $content .= $data[$column] . ";;";
        } else {
          $content .= ";;";
@@ -191,6 +192,7 @@ class sdb {
        foreach($row as $column => $value) {
          $oldrow .= $value . ";;";
          if (isset($data[$column])) {
+           $data[$column] = str_replace(";;", "", $data[$column]);
            $newrow .= $data[$column] . ";;";
          } else {
            $newrow .= $value . ";;";
@@ -265,6 +267,34 @@ class sdb {
    }
 
    /**
+    * MySQL Table Migrating System
+    */
+
+   function MIGRATE($host, $username, $password, $database, $table, $where = "1") {
+      $db = mysqli_connect($host, $username, $password, $database);
+      if (mysqli_connect_errno()) {
+        return array("error" => mysqli_connect_error());
+      }
+      $command = "SELECT * FROM `".$table."` WHERE " . $where;
+      $exe = mysqli_query($db, $command);
+      if($exe == false) {
+        return array("error" => "SELECT failed");
+      }
+      $columns = "";
+      $rows = array();
+      while($row = mysqli_fetch_assoc($exe)) {
+        if (empty($columns)) {
+          $columns = array_keys($row);
+        }
+        $rows[] = $row;
+      }
+      sdb::CREATE($table, $columns);
+      foreach($rows as $row) {
+        sdb::INSERT($row, $table);
+      }
+   }
+
+   /**
     * Lock mechanism
     */
    private static function setlock($database) {
@@ -297,4 +327,6 @@ class sdb {
      return true;
    }
 }
+
+sdb::MIGRATE("localhost", "root", "1234", "tests", "authomat.users");
 ?>
