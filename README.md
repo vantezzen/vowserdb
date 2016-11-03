@@ -31,6 +31,15 @@ sdb::SELECT("test", array("username" => "vantezzen"));
 <br />
 The second argument can be left empty to get all columns.
 <br />
+Whenever you want to select something (not only in ```SELECT```, but also in ```UPDATE``` or ```DELETE```) you can use ```SMALLER THAN```, ```BIGGER THAN```, ```SMALLER EQUAL``` and ```BIGGER EQUAL``` to compare numbers, e.g.
+```PHP
+sdb::SELECT("test", array("timestamp" => "BIGGER THAN 100"));
+```
+or<br />
+```PHP
+sdb::SELECT("test", array("delete_at" => "SMALLER EQUAL " . time()));
+```
+<br />
 To update/change data in the database, use
 ```PHP
 sdb::UPDATE("test", array("password" => "123456"), array("username" => "vantezzen"));
@@ -43,12 +52,17 @@ sdb::DELETE("test", array("username" => "vantezzen"));
 ```
 The second argument can be left empty to delete everything (similar to SQL's "TRUNCATE").
 <br />
+Optionally, you can also use the following command to get the same effect as ```DELETE``` with an empty second argument:<br />
+```PHP
+sdb::TRUNCATE("test");
+```
+<br />
 A command that doesn't exist in SQL, but does in sdb is ```CLEAR```. ```CLEAR``` deletes all empty lines in the database file to make it prettier and smaller. ```CLEAR``` is automatically run when you ```DELETE``` something.
 ```PHP
 sdb::CLEAR("test");
 ```
 <br />
-If you don't want your database anymore, throw it away using
+If you don't want your database anymore, throw it away using<br />
 ```PHP
 sdb::DROP("test");
 ```
