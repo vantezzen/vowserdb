@@ -75,7 +75,7 @@ sdb::TABLES();
 This function will just return an array of all your tables in your database.
 <br />
 <br />
-# Migrate MySQL table
+# migrate MySQL table
 <br />
 If you want to migrate your current MySQL table to a sdb table, you can use the ```MIGRATE``` function. ```MIGRATE``` takes the following arguments: ```($host, $username, $password, $database, $table, $where = "1")```. You can use the ```$where``` argument like a normal SQL ```WHERE``` statement or leave it empty("1") to migrate all entries in the table.
 <br />
