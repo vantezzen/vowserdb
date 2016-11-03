@@ -44,6 +44,7 @@ To update/change data in the database, use
 ```PHP
 sdb::UPDATE("test", array("password" => "123456"), array("username" => "vantezzen"));
 ```
+The second argument is the new data that will be inserted (in this case "```password```" will be set to "```123456```"). The third argument is the ```SELECT``` argument.
 Again, the third argument can be left empty to change all columns.
 <br />
 To delete data from the database, use
