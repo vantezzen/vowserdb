@@ -14,7 +14,7 @@ class sdb {
   public static $disablelock = false; // Disable the table lock*
   /*
    * * Table lock will protect a table when a script writes to it.
-   *   this can prevent file loss when two scripts try to write
+   *   This can prevent data loss when two scripts try to write
    *   to the same table at the same time. It will temporarely
    *   create a *.lock file named after the table name.
    */
