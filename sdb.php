@@ -6,7 +6,18 @@
  */
 
 class sdb {
-  public static $folder = "sdb/";
+  /*
+   * Configuration
+   * Edit these settings to your needs
+   */
+  public static $folder = "sdb/";     // Change the folder, where the tables will be saved to (notice the leading "/")
+  public static $disablelock = false; // Disable the table lock*
+  /*
+   * * Table lock will protect a table when a script writes to it.
+   *   this can prevent file loss when two scripts try to write
+   *   to the same table at the same time. It will temporarely
+   *   create a *.lock file named after the table name.
+   */
 
   /**
    * Check requirements
@@ -28,6 +39,8 @@ class sdb {
    * @return Success
    */
    public static function CREATE($name, $columns) {
+     self::checklock($name);
+     self::setlock($name);
      $folder = self::$folder;
      $content = "";
      foreach($columns as $column) {
@@ -36,10 +49,12 @@ class sdb {
      $file = fopen($folder . $name . ".sdb", "w");
      fwrite($file, $content);
      fclose($file);
-     return true;
+     self::removelock($name);
    }
 
    public static function INSERT($data, $database) {
+     self::checklock($database);
+     self::setlock($database);
      $path = self::$folder . $database . ".sdb";
      $columns = self::GET_COLUMNS($database);
      $content = "
@@ -53,6 +68,7 @@ class sdb {
      }
      $file = fopen($path, 'a');
      fwrite($file, $content);
+     self::removelock($database);
    }
 
    public static function GET_COLUMNS($database) {
@@ -164,6 +180,8 @@ class sdb {
    }
 
    public static function UPDATE($database, $data, $where = array()) {
+     self::checklock($database);
+     self::setlock($database);
      $rows = self::SELECT($database, $where);
      $path = self::$folder . $database . ".sdb";
      $content = file_get_contents($path);
@@ -183,8 +201,11 @@ class sdb {
      $file = fopen($path, "w");
      fwrite($file, $content);
      fclose($file);
+     self::removelock($database);
    }
    public static function DELETE($database, $where = array()) {
+     self::checklock($database);
+     self::setlock($database);
      $rows = self::SELECT($database, $where);
      $path = self::$folder . $database . ".sdb";
      $content = file_get_contents($path);
@@ -198,6 +219,7 @@ class sdb {
      $file = fopen($path, "w");
      fwrite($file, $content);
      fclose($file);
+     self::removelock($database);
      self::CLEAR($database);
    }
 
@@ -207,6 +229,8 @@ class sdb {
    }
 
    public static function CLEAR($database) {
+     self::checklock($database);
+     self::setlock($database);
      $path = self::$folder . $database . ".sdb";
      $content = file_get_contents($path);
      $rows = explode("
@@ -221,11 +245,15 @@ class sdb {
      $file = fopen($path, "w");
      fwrite($file, $newcontent);
      fclose($file);
+     self::removelock($database);
    }
 
    public static function DROP($database) {
+     self::checklock($database);
+     self::setlock($database);
      $path = self::$folder . $database . ".sdb";
      unlink($path);
+     self::removelock($database);
    }
 
    public static function TABLES() {
@@ -238,33 +266,35 @@ class sdb {
 
    /**
     * Lock mechanism
-    *
-    * Not yet implemented: Locks a table for the time a script writes to it.
-    * This should avoid data loss when two scripts try to update the table
-    * at the same time.
-    *
     */
    private static function setlock($database) {
-     $path = self::$folder . $database . ".lock";
-     $file = fopen($path, "w");
-     fwrite($file, "LOCKED");
-     fclose($file);
+     if(self::$disablelock == false) {
+       $path = self::$folder . $database . ".lock";
+       $file = fopen($path, "w");
+       fwrite($file, "LOCKED");
+       fclose($file);
+     }
+     return true;
    }
 
    private static function removelock($database) {
-     $path = self::$folder . $database . ".lock";
-     unlink($path);
+     if(self::$disablelock == false) {
+       $path = self::$folder . $database . ".lock";
+       unlink($path);
+     }
+     return true;
    }
 
    private static function checklock($database) {
-     $lockfile = self::$folder . $database . ".lock";
-     $i = 0;
-     while(file_exists($lockfile) && $i < 1000) {
-       usleep(10);
-       $i++;
+     if(self::$disablelock == false) {
+       $lockfile = self::$folder . $database . ".lock";
+       $i = 0;
+       while(file_exists($lockfile) && $i < 1000) {
+         usleep(10);
+         $i++;
+       }
      }
      return true;
    }
 }
-
 ?>
