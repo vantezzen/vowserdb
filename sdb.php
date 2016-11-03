@@ -94,10 +94,43 @@ class sdb {
      $select = array();
      $counter = 0;
      foreach($requirements as $column => $value) {
+       if (preg_match("/^BIGGER THAN/", $value)) {
+         $mode = "bigger";
+         $value = str_replace("BIGGER THAN ", "", $value);
+       } else if (preg_match("/^SMALLER THAN/", $value)) {
+         $mode = "smaller";
+         $value = str_replace("SMALLER THAN ", "", $value);
+       } else if (preg_match("/^BIGGER EQUAL/", $value)) {
+         $mode = "biggerequal";
+         $value = str_replace("BIGGER EQUAL ", "", $value);
+       } else if (preg_match("/^SMALLER EQUAL/", $value)) {
+         $mode = "smallerequal";
+         $value = str_replace("SMALLER EQUAL ", "", $value);
+       } else {
+         $mode = "normal";
+       }
        if ($counter == 0) {
          foreach($array as $row) {
-           if (isset($row[$column]) && $row[$column] == $value) {
-             $select[] = $row;
+           if ($mode == "normal") {
+             if (isset($row[$column]) && $row[$column] == $value) {
+               $select[] = $row;
+             }
+           } else if ($mode == "bigger") {
+             if (isset($row[$column]) && $row[$column] > $value) {
+               $select[] = $row;
+             }
+           } else if ($mode == "smaller") {
+             if (isset($row[$column]) && $row[$column] < $value) {
+               $select[] = $row;
+             }
+           } else if ($mode == "biggerequal") {
+             if (isset($row[$column]) && $row[$column] >= $value) {
+               $select[] = $row;
+             }
+           } else if ($mode == "smallerequal") {
+             if (isset($row[$column]) && $row[$column] <= $value) {
+               $select[] = $row;
+             }
            }
          }
        } else {
@@ -207,7 +240,7 @@ class sdb {
 
    private static function checklock($database) {
      $lockfile = self::$folder . $database . ".lock";
-     $i = 0
+     $i = 0;
      while(file_exists($lockfile) && $i < 1000) {
        usleep(100);
        $i++;
