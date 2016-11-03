@@ -150,6 +150,11 @@ class sdb {
      self::CLEAR($database);
    }
 
+   public static function TRUNCATE($database) {
+     //Alias for DELETE *
+     self::DELETE($database);
+   }
+
    public static function CLEAR($database) {
      $path = self::$folder . $database . ".sdb";
      $content = file_get_contents($path);
@@ -179,5 +184,36 @@ class sdb {
      }
      return $tables;
    }
+
+   /**
+    * Lock mechanism
+    *
+    * Not yet implemented: Locks a table for the time a script writes to it.
+    * This should avoid data loss when two scripts try to update the table
+    * at the same time.
+    *
+    */
+   private static function setlock($database) {
+     $path = self::$folder . $database . ".lock";
+     $file = fopen($path, "w");
+     fwrite($file, "LOCKED");
+     fclose($file);
+   }
+
+   private static function removelock($database) {
+     $path = self::$folder . $database . ".lock";
+     unlink($path);
+   }
+
+   private static function checklock($database) {
+     $lockfile = self::$folder . $database . ".lock";
+     $i = 0
+     while(file_exists($lockfile) && $i < 1000) {
+       usleep(100);
+       $i++;
+     }
+     return true;
+   }
 }
+
 ?>
