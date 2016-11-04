@@ -328,5 +328,4 @@ class sdb {
    }
 }
 
-sdb::MIGRATE("localhost", "root", "1234", "tests", "authomat.users");
 ?>
