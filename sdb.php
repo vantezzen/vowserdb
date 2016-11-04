@@ -270,7 +270,7 @@ class sdb {
     * MySQL Table Migrating System
     */
 
-   function MIGRATE($host, $username, $password, $database, $table, $where = "1") {
+   public static function MIGRATE($host, $username, $password, $database, $table, $where = "1") {
       $db = mysqli_connect($host, $username, $password, $database);
       if (mysqli_connect_errno()) {
         return array("error" => mysqli_connect_error());
@@ -293,6 +293,23 @@ class sdb {
         sdb::INSERT($row, $table);
       }
    }
+
+   public static function MIGRATE_DB($host, $username, $password, $database) {
+     $db = mysqli_connect($host, $username, $password, $database);
+     if (mysqli_connect_errno()) {
+       return array("error" => mysqli_connect_error());
+     }
+     $command = "SHOW TABLES";
+     $exe = mysqli_query($db, $command);
+     if($exe == false) {
+       return array("error" => "SELECT failed");
+     }
+     $columnname = "Tables_in_".$database;
+     while($row = mysqli_fetch_assoc($exe)) {
+        self::MIGRATE($host, $username, $password, $database, $row[$columnname]);
+     }
+   }
+
 
    /**
     * Lock mechanism
@@ -327,5 +344,4 @@ class sdb {
      return true;
    }
 }
-
 ?>
