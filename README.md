@@ -81,8 +81,15 @@ This function will just return an array of all your tables in your database.
 If you want to migrate your current MySQL table to a sdb table, you can use the ```MIGRATE``` function. ```MIGRATE``` takes the following arguments: ```($host, $username, $password, $database, $table, $where = "1")```. You can use the ```$where``` argument like a normal SQL ```WHERE``` statement or leave it empty("1") to migrate all entries in the table.
 <br />
 ```PHP
-sdb::MIGRATE("localhost", "database-user", "passwort124", "test-database", "my-test-table", "`isadmin` = '0'");
+sdb::MIGRATE("localhost", "database-user", "password123", "test-database", "my-test-table", "`isadmin` = '0'");
 ```
+<br />
+If you want to migrate a whole MySQL Database at once (with all it's tables), you can use ```MIGRATE_DB```. ```MIGRATE_DB``` uses almost the same arguments as ```MIGRATE```: ```($host, $username, $password, $database)```
+<br />
+```PHP
+sdb::MIGRATE_DB("localhost", "database-user", "password123, "test-database");
+```
+<br />
 # lock mechanism
 <br />
 sdb uses a special lock mechanism. This lock mechanism will protect a table when a script writes to it. This can prevent data loss when two scripts try to write to the same table at the same time. It will temporarely create a .lock file named after the table name. If you see this .lock file comming up when a script writes to a table this is normal and it should be automatically deleted after that. If you want to disable this mechanism (e.g. when you want to reduce read and writes to your hard drive), you can turn it off in the sdb.php file by changing the "$disablelock" variable in the config section on the top of the file to "true"
