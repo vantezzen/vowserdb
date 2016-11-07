@@ -2,11 +2,31 @@
 sdb is a simple database, that is purely written in PHP and doesn't need any additional services, programs or deamons running to work. It uses .sdb files to store tables.
 
 # installation
+You can install sdb manually or with composer.<br />
+## install manually
 Move the "sdb.php" script to your project folder and include it via<br />
 ```PHP
 include("sdb.php");
 ```
 <br />
+## install with composer
+Simply run
+<br />
+```
+composer require sdb/sdb
+```
+<br />
+or add ```sdb/sdb``` to your requirements.
+<br />
+To include sdb, use the autoloader and use sdb\sdb
+<br />
+```
+require __DIR__ . '/vendor/autoload.php';
+use sdb\sdb;
+```
+<br />
+<br />
+## after installation
 Create a new folder called "sdb" (the name of the folder can be changed in sdb.php) and give PHP/www-data enought file permissions to read and write to this folder.<br />
 You can also create a .htaccess in that folder to deny all requests to the database directly.
 
