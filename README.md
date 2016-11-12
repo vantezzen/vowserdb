@@ -13,7 +13,7 @@ include("sdb.php");
 Simply run
 <br />
 ```
-composer require sdb/sdb
+composer require "sdb/sdb":"*"
 ```
 <br />
 or add ```sdb/sdb``` to your requirements.
