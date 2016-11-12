@@ -12,7 +12,7 @@ include("sdb.php");
 ## install with composer
 Simply run
 <br />
-```
+```Bash
 composer require "sdb/sdb":"*"
 ```
 <br />
