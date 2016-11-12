@@ -51,13 +51,14 @@ sdb::SELECT("test", array("username" => "vantezzen"));
 <br />
 The second argument can be left empty to get all columns.
 <br />
-Whenever you want to select something (not only in ```SELECT```, but also in ```UPDATE``` or ```DELETE```) you can use ```SMALLER THAN```, ```BIGGER THAN```, ```SMALLER EQUAL``` and ```BIGGER EQUAL``` to compare numbers, e.g.
+Whenever you want to select something (not only in ```SELECT```, but also in ```UPDATE``` or ```DELETE```) you can use ```SMALLER THAN```, ```BIGGER THAN```, ```SMALLER EQUAL``` and ```BIGGER EQUAL``` to compare numbers
 ```PHP
-sdb::SELECT("test", array("timestamp" => "BIGGER THAN 100"));
+sdb::SELECT("test", array("timestamp" => "SMALLER THAN ".time()));
 ```
-or<br />
+<br />
+or ```IS NOT``` to check if a column has not a specific value
 ```PHP
-sdb::SELECT("test", array("delete_at" => "SMALLER EQUAL " . time()));
+sdb::SELECT("test", array("is_admin" => "IS NOT yes"));
 ```
 <br />
 To update/change data in the database, use
@@ -66,6 +67,11 @@ sdb::UPDATE("test", array("password" => "123456"), array("username" => "vantezze
 ```
 The second argument is the new data that will be inserted (in this case "```password```" will be set to "```123456```"). The third argument is the ```SELECT``` argument.
 Again, the third argument can be left empty to change all columns.
+<br />
+If you ```UPDATE``` columns, you can also use the arguments ```INCREASE BY```, ```DECREASE BY```, ```MULTIPY BY``` and ```DIVIDE BY``` to calculate the the value of the column
+```PHP
+sdb::UPDATE("test", array("clicks" => "INCREASE BY 10"));
+```
 <br />
 To delete data from the database, use
 ```PHP
