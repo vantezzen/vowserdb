@@ -18,7 +18,7 @@ composer require "sdb/sdb":"*"
 <br />
 or add ```sdb/sdb``` to your requirements.
 <br />
-To include sdb, use the autoloader and use sdb\sdb
+To include sdb, use the autoloader and use ```sdb\sdb```
 <br />
 ```PHP
 require __DIR__ . '/vendor/autoload.php';
