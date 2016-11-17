@@ -39,7 +39,7 @@ class sdb
   }
 
    /**
-    * Create a new sdb database.
+    * Create a new sdb table.
     *
     * @return Success
     */
@@ -59,17 +59,17 @@ class sdb
    }
 
    /**
-    * Insert data into a database
+    * Insert data into a table
     *
     * @param Array of data to Insert
-    * @param Database to insert it to
+    * @param table to insert it to
     */
-    public static function INSERT($data, $database)
+    public static function INSERT($data, $table)
     {
-        self::checklock($database);
-        self::setlock($database);
-        $path = self::$folder.$database.'.sdb';
-        $columns = self::GET_COLUMNS($database);
+        self::checklock($table);
+        self::setlock($table);
+        $path = self::$folder.$table.'.sdb';
+        $columns = self::GET_COLUMNS($table);
         $content = '
 ';
         foreach ($columns as $column) {
@@ -82,18 +82,18 @@ class sdb
         }
         $file = fopen($path, 'a');
         fwrite($file, $content);
-        self::removelock($database);
+        self::removelock($table);
     }
 
     /**
-      * Get the name of the columns of a database
+      * Get the name of the columns of a table
       *
-      * @param Name of the database
+      * @param Name of the table
       * @return Array with names of the columns
       */
-    public static function GET_COLUMNS($database)
+    public static function GET_COLUMNS($table)
     {
-        $path = self::$folder.$database.'.sdb';
+        $path = self::$folder.$table.'.sdb';
         if (!file_exists($path) || !is_readable($path) || !is_writable($path)) {
             return array();
         }
@@ -107,16 +107,16 @@ class sdb
     }
 
     /**
-      * Select data from a database
+      * Select data from a table
       *
-      * @param Name if the database
+      * @param Name of the table
       * @param Array of the requirements of the selections
       * @return Array with the selected rows
       */
-    public static function SELECT($database, $requirements = array())
+    public static function SELECT($table, $requirements = array())
     {
-        $path = self::$folder.$database.'.sdb';
-        $columns = self::GET_COLUMNS($database);
+        $path = self::$folder.$table.'.sdb';
+        $columns = self::GET_COLUMNS($table);
         $content = file_get_contents($path);
         $items = explode('
 ', $content);
@@ -222,18 +222,18 @@ class sdb
     }
 
     /**
-      * Update data in the database
+      * Update data in the table
       *
-      * @param Name of the database
+      * @param Name of the table
       * @param Array of data to Insert
       * @param Requirements of the row selections
       */
-    public static function UPDATE($database, $data, $where = array())
+    public static function UPDATE($table, $data, $where = array())
     {
-        self::checklock($database);
-        self::setlock($database);
-        $rows = self::SELECT($database, $where);
-        $path = self::$folder.$database.'.sdb';
+        self::checklock($table);
+        self::setlock($table);
+        $rows = self::SELECT($table, $where);
+        $path = self::$folder.$table.'.sdb';
         $content = file_get_contents($path);
         foreach ($rows as $row) {
             $oldrow = '';
@@ -267,21 +267,21 @@ class sdb
         $file = fopen($path, 'w');
         fwrite($file, $content);
         fclose($file);
-        self::removelock($database);
+        self::removelock($table);
     }
 
     /**
-      * Delete data from the database
+      * Delete data from the table
       *
-      * @param Name of the database
+      * @param Name of the table
       * @param Requirements of the row selection
       */
-    public static function DELETE($database, $where = array())
+    public static function DELETE($table, $where = array())
     {
-        self::checklock($database);
-        self::setlock($database);
-        $rows = self::SELECT($database, $where);
-        $path = self::$folder.$database.'.sdb';
+        self::checklock($table);
+        self::setlock($table);
+        $rows = self::SELECT($table, $where);
+        $path = self::$folder.$table.'.sdb';
         $content = file_get_contents($path);
         foreach ($rows as $row) {
             $oldrow = '';
@@ -293,31 +293,31 @@ class sdb
         $file = fopen($path, 'w');
         fwrite($file, $content);
         fclose($file);
-        self::removelock($database);
-        self::CLEAR($database);
+        self::removelock($table);
+        self::CLEAR($table);
     }
 
     /**
-      * Truncate a database
+      * Truncate a table
       *
-      * @param Name of the database
+      * @param Name of the table
       */
-    public static function TRUNCATE($database)
+    public static function TRUNCATE($table)
     {
         //Alias for DELETE *
-     self::DELETE($database);
+     self::DELETE($table);
     }
 
     /**
-      * Delete empty lines in the database file
+      * Delete empty lines in the table file
       *
-      * @param Name of the database
+      * @param Name of the table
       */
-    public static function CLEAR($database)
+    public static function CLEAR($table)
     {
-        self::checklock($database);
-        self::setlock($database);
-        $path = self::$folder.$database.'.sdb';
+        self::checklock($table);
+        self::setlock($table);
+        $path = self::$folder.$table.'.sdb';
         $content = file_get_contents($path);
         $rows = explode('
 ', $content);
@@ -331,21 +331,21 @@ class sdb
         $file = fopen($path, 'w');
         fwrite($file, $newcontent);
         fclose($file);
-        self::removelock($database);
+        self::removelock($table);
     }
 
     /**
-      * Drop/delete a database
+      * Drop/delete a table
       *
-      * @param Name of the database
+      * @param Name of the table
       */
-    public static function DROP($database)
+    public static function DROP($table)
     {
-        self::checklock($database);
-        self::setlock($database);
-        $path = self::$folder.$database.'.sdb';
+        self::checklock($table);
+        self::setlock($table);
+        $path = self::$folder.$table.'.sdb';
         unlink($path);
-        self::removelock($database);
+        self::removelock($table);
     }
 
     /**
@@ -431,10 +431,10 @@ class sdb
    /*
     * Lock mechanism.
     */
-   private static function setlock($database)
+   private static function setlock($table)
    {
        if (self::$disablelock == false) {
-           $path = self::$folder.$database.'.lock';
+           $path = self::$folder.$table.'.lock';
            $file = fopen($path, 'w');
            fwrite($file, 'LOCKED');
            fclose($file);
@@ -443,20 +443,20 @@ class sdb
        return true;
    }
 
-    private static function removelock($database)
+    private static function removelock($table)
     {
         if (self::$disablelock == false) {
-            $path = self::$folder.$database.'.lock';
+            $path = self::$folder.$table.'.lock';
             unlink($path);
         }
 
         return true;
     }
 
-    private static function checklock($database)
+    private static function checklock($table)
     {
         if (self::$disablelock == false) {
-            $lockfile = self::$folder.$database.'.lock';
+            $lockfile = self::$folder.$table.'.lock';
             $i = 0;
             while (file_exists($lockfile) && $i < 1000) {
                 usleep(10);
