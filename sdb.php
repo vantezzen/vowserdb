@@ -1,13 +1,13 @@
 <?php
-/* SDB - Simple Database - v2.1.0
+/* SDB - Simple Database - v2.2.0
  * by vantezzen (http://vantezzen.de)
  *
- * For documentation check http://github.com/vatezzen/sdb2
+ * For documentation check http://github.com/vantezzen/sdb
  */
 
 class sdb
 {
-  /*
+    /*
    * Configuration
    * Edit these settings to your needs
    */
@@ -30,6 +30,9 @@ class sdb
       $error = array();
       if (!file_exists(self::$folder) || !is_readable(self::$folder) || !is_writable(self::$folder)) {
           $error[] = self::$folder.' is not readable, writable or does not exist';
+      }
+      if (!file_exists(self::$folder.'.htaccess') || file_get_contents(self::$folder.'.htaccess') !== 'deny from all') {
+          $error[] = self::$folder.'.htaccess does not exists or may not have the right content';
       }
 
       return $error;
@@ -55,6 +58,12 @@ class sdb
        self::removelock($name);
    }
 
+   /**
+    * Insert data into a database
+    *
+    * @param Array of data to Insert
+    * @param Database to insert it to
+    */
     public static function INSERT($data, $database)
     {
         self::checklock($database);
@@ -76,6 +85,12 @@ class sdb
         self::removelock($database);
     }
 
+    /**
+      * Get the name of the columns of a database
+      *
+      * @param Name of the database
+      * @return Array with names of the columns
+      */
     public static function GET_COLUMNS($database)
     {
         $path = self::$folder.$database.'.sdb';
@@ -91,6 +106,13 @@ class sdb
         return $array;
     }
 
+    /**
+      * Select data from a database
+      *
+      * @param Name if the database
+      * @param Array of the requirements of the selections
+      * @return Array with the selected rows
+      */
     public static function SELECT($database, $requirements = array())
     {
         $path = self::$folder.$database.'.sdb';
@@ -199,6 +221,13 @@ class sdb
         return $select;
     }
 
+    /**
+      * Update data in the database
+      *
+      * @param Name of the database
+      * @param Array of data to Insert
+      * @param Requirements of the row selections
+      */
     public static function UPDATE($database, $data, $where = array())
     {
         self::checklock($database);
@@ -240,6 +269,13 @@ class sdb
         fclose($file);
         self::removelock($database);
     }
+
+    /**
+      * Delete data from the database
+      *
+      * @param Name of the database
+      * @param Requirements of the row selection
+      */
     public static function DELETE($database, $where = array())
     {
         self::checklock($database);
@@ -261,12 +297,22 @@ class sdb
         self::CLEAR($database);
     }
 
+    /**
+      * Truncate a database
+      *
+      * @param Name of the database
+      */
     public static function TRUNCATE($database)
     {
         //Alias for DELETE *
      self::DELETE($database);
     }
 
+    /**
+      * Delete empty lines in the database file
+      *
+      * @param Name of the database
+      */
     public static function CLEAR($database)
     {
         self::checklock($database);
@@ -288,6 +334,11 @@ class sdb
         self::removelock($database);
     }
 
+    /**
+      * Drop/delete a database
+      *
+      * @param Name of the database
+      */
     public static function DROP($database)
     {
         self::checklock($database);
@@ -297,6 +348,11 @@ class sdb
         self::removelock($database);
     }
 
+    /**
+      * Get a list of tables in the database
+      *
+      * @return Array with the names of all tables
+      */
     public static function TABLES()
     {
         $tables = array();
@@ -307,9 +363,20 @@ class sdb
         return $tables;
     }
 
-   /**
+   /*
     * MySQL Table Migrating System.
     */
+    /**
+      * Migrate a MySQL table to sdb
+      *
+      * @param Host of the MySQL Server
+      * @param Username of the MySQL Server
+      * @param Password of the MySQL Server
+      * @param MySQL Database name
+      * @param MySQL table name
+      * @param MySQL WHERE statement
+      * @return Errors
+      */
    public static function MIGRATE($host, $username, $password, $database, $table, $where = '1')
    {
        $db = mysqli_connect($host, $username, $password, $database);
@@ -335,6 +402,15 @@ class sdb
        }
    }
 
+   /**
+     * Migrate a MySQL database to sdb
+     *
+     * @param Host of the MySQL Server
+     * @param Username of the MySQL Server
+     * @param Password of the MySQL Server
+     * @param MySQL Database name
+     * @return Errors
+     */
     public static function MIGRATE_DB($host, $username, $password, $database)
     {
         $db = mysqli_connect($host, $username, $password, $database);
@@ -352,7 +428,7 @@ class sdb
         }
     }
 
-   /**
+   /*
     * Lock mechanism.
     */
    private static function setlock($database)
@@ -391,4 +467,3 @@ class sdb
         return true;
     }
 }
-?>
