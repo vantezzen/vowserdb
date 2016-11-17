@@ -1,5 +1,5 @@
 <?php
-/* SDB - Simple Database - v2.2.0
+/* SDB - Simple Database - v2.3.0
  * by vantezzen (http://vantezzen.de)
  *
  * For documentation check http://github.com/vantezzen/sdb
@@ -431,6 +431,12 @@ class sdb
    /*
     * Lock mechanism.
     */
+    /**
+      * Set a lock for a table
+      *
+      * @param Table name
+      * @return true
+      */
    private static function setlock($table)
    {
        if (self::$disablelock == false) {
@@ -443,6 +449,12 @@ class sdb
        return true;
    }
 
+  /**
+    * Remove the lock of a database
+    *
+    * @param Name of the table
+    * @return true
+    */
     private static function removelock($table)
     {
         if (self::$disablelock == false) {
@@ -453,6 +465,12 @@ class sdb
         return true;
     }
 
+    /**
+      * Wait for a table to get unlocked
+      *
+      * @param Name of the table
+      * @return true
+      */
     private static function checklock($table)
     {
         if (self::$disablelock == false) {
