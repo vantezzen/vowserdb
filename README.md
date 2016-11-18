@@ -32,6 +32,12 @@ You can also create a .htaccess in that folder to deny all requests to the datab
 
 # usage
 sdb uses SQL like commands to manage databases and tables.<br />
+Before you start working with sdb, please let sdb check it's requirements by running
+```PHP
+sdb::check();
+```
+This will check if the database folder (normally "sdb/") exists, if sdb can read and write to it, if the ".htaccess" file exists and has the right content ("deny from all"). This function will return an array with all found errors. Please fix them before continuing, otherwise sdb will will probably won't work correctly or your tables will be visible to everybody.
+<br />
 To create a new table with the name "test" and the columns "username", "password" and "mail", run<br />
 ```PHP
 sdb::CREATE("test", array("username", "password", "mail"));
