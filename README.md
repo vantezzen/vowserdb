@@ -73,6 +73,11 @@ If you ```UPDATE``` columns, you can also use the arguments ```INCREASE BY```, `
 sdb::UPDATE("test", array("clicks" => "INCREASE BY 10"));
 ```
 <br />
+To change the name of a row use (```($table, $oldname, $newname)```)
+```PHP
+sdb::RENAME("test", "myoldrow", "mynewrow");
+```
+<br />
 To delete data from the database, use
 ```PHP
 sdb::DELETE("test", array("username" => "vantezzen"));
