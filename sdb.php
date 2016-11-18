@@ -3,6 +3,9 @@
  * by vantezzen (http://vantezzen.de)
  *
  * For documentation check http://github.com/vantezzen/sdb
+ *
+ * TODO:
+ * Add function to add/remove columns
  */
 
 class sdb
@@ -275,11 +278,11 @@ class sdb
     }
 
     /**
-      * Rename a row in a table
+      * Rename a column in a table
       *
       * @param Name of the table
-      * @param Old name of the row
-      * @param New name of the row
+      * @param Old name of the column
+      * @param New name of the column
       * @return true/false
       */
      public static function RENAME($table, $oldname, $newname)
