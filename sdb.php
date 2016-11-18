@@ -1,5 +1,5 @@
 <?php
-/* SDB - Simple Database - v2.3.0
+/* SDB - Simple Database - v2.4.0
  * by vantezzen (http://vantezzen.de)
  *
  * For documentation check http://github.com/vantezzen/sdb
@@ -7,12 +7,18 @@
 
 class sdb
 {
-    /*
+  /*
    * Configuration
    * Edit these settings to your needs
    */
   public static $folder = 'sdb/';     // Change the folder, where the tables will be saved to (notice the leading "/")
   public static $disablelock = false; // Disable the table lock*
+
+  /*
+   * Do not edit the constants below
+   */
+  const NEWLINE = '
+';
   /*
    * * Table lock will protect a table when a script writes to it.
    *   This can prevent data loss when two scripts try to write
@@ -70,8 +76,7 @@ class sdb
         self::setlock($table);
         $path = self::$folder.$table.'.sdb';
         $columns = self::GET_COLUMNS($table);
-        $content = '
-';
+        $content = self::NEWLINE;
         foreach ($columns as $column) {
             if (isset($data[$column])) {
                 $data[$column] = str_replace(';;', '', $data[$column]);
@@ -118,8 +123,7 @@ class sdb
         $path = self::$folder.$table.'.sdb';
         $columns = self::GET_COLUMNS($table);
         $content = file_get_contents($path);
-        $items = explode('
-', $content);
+        $items = explode(self::NEWLINE, $content);
         $items[0] = '';
         $rows = array();
         foreach ($items as $item) {
@@ -193,19 +197,19 @@ class sdb
                             unset($select[$key]);
                         }
                     } elseif ($mode == 'bigger') {
-                        if (isset($row[$column]) && $row[$column] < $value) {
-                            unset($select[$key]);
-                        }
-                    } elseif ($mode == 'smaller') {
-                        if (isset($row[$column]) && $row[$column] > $value) {
-                            unset($select[$key]);
-                        }
-                    } elseif ($mode == 'biggerequal') {
                         if (isset($row[$column]) && $row[$column] <= $value) {
                             unset($select[$key]);
                         }
-                    } elseif ($mode == 'smallerequal') {
+                    } elseif ($mode == 'smaller') {
                         if (isset($row[$column]) && $row[$column] >= $value) {
+                            unset($select[$key]);
+                        }
+                    } elseif ($mode == 'biggerequal') {
+                        if (isset($row[$column]) && $row[$column] < $value) {
+                            unset($select[$key]);
+                        }
+                    } elseif ($mode == 'smallerequal') {
+                        if (isset($row[$column]) && $row[$column] > $value) {
                             unset($select[$key]);
                         }
                     } elseif ($mode == 'isnot') {
@@ -271,6 +275,51 @@ class sdb
     }
 
     /**
+      * Rename a row in a table
+      *
+      * @param Name of the table
+      * @param Old name of the row
+      * @param New name of the row
+      * @return true/false
+      */
+     public static function RENAME($table, $oldname, $newname)
+     {
+       self::checklock($table);
+       self::setlock($table);
+       $path = self::$folder.$table.'.sdb';
+       if (!file_exists($path) || !is_readable($path) || !is_writable($path)) {
+           self::removelock($table);
+           return false;
+       }
+       $f = fopen($path, 'r');
+       $line = fgets($f);
+       fclose($f);
+       if (strpos($line, ';;'.$oldname.';;') !== false)
+       {
+         $line = str_replace(';;'.$oldname.';;', ';;'.$newname.';;', $line);
+       } else if (strpos($line, ';;'.$oldname) !== false) {
+         $line = str_replace(';;'.$oldname, ';;'.$newname, $line);
+       } else if (strpos($line, $oldname.';;') !== false) {
+         $line = str_replace($oldname.';;', $newname.';;', $line);
+       } else {
+         self::removelock($table);
+         return false;
+       }
+
+       $content = file_get_contents($path);
+       $content = explode(self::NEWLINE, $content);
+       $content[0] = $line;
+       $content = implode(self::NEWLINE, $content);
+
+       $file = fopen($path, 'w');
+       fwrite($file, $content);
+       fclose($file);
+
+       self::removelock($table);
+       return true;
+     }
+
+    /**
       * Delete data from the table
       *
       * @param Name of the table
@@ -319,13 +368,11 @@ class sdb
         self::setlock($table);
         $path = self::$folder.$table.'.sdb';
         $content = file_get_contents($path);
-        $rows = explode('
-', $content);
+        $rows = explode(self::NEWLINE, $content);
         $newcontent = '';
         foreach ($rows as $key => $row) {
             if (!empty($row) && $row !== ' ') {
-                $newcontent .= $row.'
-';
+                $newcontent .= $row.self::NEWLINE;
             }
         }
         $file = fopen($path, 'w');
