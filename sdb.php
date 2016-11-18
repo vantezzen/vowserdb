@@ -10,7 +10,7 @@
 
 class sdb
 {
-  /*
+    /*
    * Configuration
    * Edit these settings to your needs
    */
@@ -67,12 +67,12 @@ class sdb
        self::removelock($name);
    }
 
-   /**
-    * Insert data into a table
-    *
-    * @param Array of data to Insert
-    * @param table to insert it to
-    */
+    /**
+     * Insert data into a table.
+     *
+     * @param array of data to Insert
+     * @param table to insert it to
+     */
     public static function INSERT($data, $table)
     {
         self::checklock($table);
@@ -94,11 +94,12 @@ class sdb
     }
 
     /**
-      * Get the name of the columns of a table
-      *
-      * @param Name of the table
-      * @return Array with names of the columns
-      */
+     * Get the name of the columns of a table.
+     *
+     * @param Name of the table
+     *
+     * @return array with names of the columns
+     */
     public static function GET_COLUMNS($table)
     {
         $path = self::$folder.$table.'.sdb';
@@ -115,12 +116,13 @@ class sdb
     }
 
     /**
-      * Select data from a table
-      *
-      * @param Name of the table
-      * @param Array of the requirements of the selections
-      * @return Array with the selected rows
-      */
+     * Select data from a table.
+     *
+     * @param Name of the table
+     * @param array of the requirements of the selections
+     *
+     * @return array with the selected rows
+     */
     public static function SELECT($table, $requirements = array())
     {
         $path = self::$folder.$table.'.sdb';
@@ -229,12 +231,12 @@ class sdb
     }
 
     /**
-      * Update data in the table
-      *
-      * @param Name of the table
-      * @param Array of data to Insert
-      * @param Requirements of the row selections
-      */
+     * Update data in the table.
+     *
+     * @param Name of the table
+     * @param array of data to Insert
+     * @param Requirements of the row selections
+     */
     public static function UPDATE($table, $data, $where = array())
     {
         self::checklock($table);
@@ -277,57 +279,60 @@ class sdb
         self::removelock($table);
     }
 
-    /**
-      * Rename a column in a table
+     /**
+      * Rename a column in a table.
       *
       * @param Name of the table
       * @param Old name of the column
       * @param New name of the column
+      *
       * @return true/false
       */
      public static function RENAME($table, $oldname, $newname)
      {
-       self::checklock($table);
-       self::setlock($table);
-       $path = self::$folder.$table.'.sdb';
-       if (!file_exists($path) || !is_readable($path) || !is_writable($path)) {
-           self::removelock($table);
-           return false;
-       }
-       $f = fopen($path, 'r');
-       $line = fgets($f);
-       fclose($f);
-       if (strpos($line, ';;'.$oldname.';;') !== false)
-       {
-         $line = str_replace(';;'.$oldname.';;', ';;'.$newname.';;', $line);
-       } else if (strpos($line, ';;'.$oldname) !== false) {
-         $line = str_replace(';;'.$oldname, ';;'.$newname, $line);
-       } else if (strpos($line, $oldname.';;') !== false) {
-         $line = str_replace($oldname.';;', $newname.';;', $line);
-       } else {
+         self::checklock($table);
+         self::setlock($table);
+         $path = self::$folder.$table.'.sdb';
+         if (!file_exists($path) || !is_readable($path) || !is_writable($path)) {
+             self::removelock($table);
+
+             return false;
+         }
+         $f = fopen($path, 'r');
+         $line = fgets($f);
+         fclose($f);
+         if (strpos($line, ';;'.$oldname.';;') !== false) {
+             $line = str_replace(';;'.$oldname.';;', ';;'.$newname.';;', $line);
+         } elseif (strpos($line, ';;'.$oldname) !== false) {
+             $line = str_replace(';;'.$oldname, ';;'.$newname, $line);
+         } elseif (strpos($line, $oldname.';;') !== false) {
+             $line = str_replace($oldname.';;', $newname.';;', $line);
+         } else {
+             self::removelock($table);
+
+             return false;
+         }
+
+         $content = file_get_contents($path);
+         $content = explode(self::NEWLINE, $content);
+         $content[0] = $line;
+         $content = implode(self::NEWLINE, $content);
+
+         $file = fopen($path, 'w');
+         fwrite($file, $content);
+         fclose($file);
+
          self::removelock($table);
-         return false;
-       }
 
-       $content = file_get_contents($path);
-       $content = explode(self::NEWLINE, $content);
-       $content[0] = $line;
-       $content = implode(self::NEWLINE, $content);
-
-       $file = fopen($path, 'w');
-       fwrite($file, $content);
-       fclose($file);
-
-       self::removelock($table);
-       return true;
+         return true;
      }
 
     /**
-      * Delete data from the table
-      *
-      * @param Name of the table
-      * @param Requirements of the row selection
-      */
+     * Delete data from the table.
+     *
+     * @param Name of the table
+     * @param Requirements of the row selection
+     */
     public static function DELETE($table, $where = array())
     {
         self::checklock($table);
@@ -350,10 +355,10 @@ class sdb
     }
 
     /**
-      * Truncate a table
-      *
-      * @param Name of the table
-      */
+     * Truncate a table.
+     *
+     * @param Name of the table
+     */
     public static function TRUNCATE($table)
     {
         //Alias for DELETE *
@@ -361,10 +366,10 @@ class sdb
     }
 
     /**
-      * Delete empty lines in the table file
-      *
-      * @param Name of the table
-      */
+     * Delete empty lines in the table file.
+     *
+     * @param Name of the table
+     */
     public static function CLEAR($table)
     {
         self::checklock($table);
@@ -385,10 +390,10 @@ class sdb
     }
 
     /**
-      * Drop/delete a table
-      *
-      * @param Name of the table
-      */
+     * Drop/delete a table.
+     *
+     * @param Name of the table
+     */
     public static function DROP($table)
     {
         self::checklock($table);
@@ -399,10 +404,10 @@ class sdb
     }
 
     /**
-      * Get a list of tables in the database
-      *
-      * @return Array with the names of all tables
-      */
+     * Get a list of tables in the database.
+     *
+     * @return array with the names of all tables
+     */
     public static function TABLES()
     {
         $tables = array();
@@ -416,17 +421,18 @@ class sdb
    /*
     * MySQL Table Migrating System.
     */
-    /**
-      * Migrate a MySQL table to sdb
-      *
-      * @param Host of the MySQL Server
-      * @param Username of the MySQL Server
-      * @param Password of the MySQL Server
-      * @param MySQL Database name
-      * @param MySQL table name
-      * @param MySQL WHERE statement
-      * @return Errors
-      */
+   /**
+    * Migrate a MySQL table to sdb.
+    *
+    * @param Host of the MySQL Server
+    * @param Username of the MySQL Server
+    * @param Password of the MySQL Server
+    * @param MySQL Database name
+    * @param MySQL table name
+    * @param MySQL WHERE statement
+    *
+    * @return Errors
+    */
    public static function MIGRATE($host, $username, $password, $database, $table, $where = '1')
    {
        $db = mysqli_connect($host, $username, $password, $database);
@@ -452,13 +458,14 @@ class sdb
        }
    }
 
-   /**
-     * Migrate a MySQL database to sdb
+    /**
+     * Migrate a MySQL database to sdb.
      *
      * @param Host of the MySQL Server
      * @param Username of the MySQL Server
      * @param Password of the MySQL Server
      * @param MySQL Database name
+     *
      * @return Errors
      */
     public static function MIGRATE_DB($host, $username, $password, $database)
@@ -481,12 +488,13 @@ class sdb
    /*
     * Lock mechanism.
     */
-    /**
-      * Set a lock for a table
-      *
-      * @param Table name
-      * @return true
-      */
+   /**
+    * Set a lock for a table.
+    *
+    * @param Table name
+    *
+    * @return true
+    */
    private static function setlock($table)
    {
        if (self::$disablelock == false) {
@@ -499,12 +507,13 @@ class sdb
        return true;
    }
 
-  /**
-    * Remove the lock of a database
-    *
-    * @param Name of the table
-    * @return true
-    */
+    /**
+     * Remove the lock of a database.
+     *
+     * @param Name of the table
+     *
+     * @return true
+     */
     private static function removelock($table)
     {
         if (self::$disablelock == false) {
@@ -516,11 +525,12 @@ class sdb
     }
 
     /**
-      * Wait for a table to get unlocked
-      *
-      * @param Name of the table
-      * @return true
-      */
+     * Wait for a table to get unlocked.
+     *
+     * @param Name of the table
+     *
+     * @return true
+     */
     private static function checklock($table)
     {
         if (self::$disablelock == false) {
