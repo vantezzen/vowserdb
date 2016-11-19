@@ -1,11 +1,12 @@
 <?php
-/* SDB - Simple Database - v2.4.0
+/* SDB - Simple Database - v2.5.0
  * by vantezzen (http://vantezzen.de)
  *
  * For documentation check http://github.com/vantezzen/sdb
  *
  * TODO:
  * Add function to add/remove columns
+ * Caching system
  */
 
 class sdb
@@ -15,6 +16,7 @@ class sdb
    * Edit these settings to your needs
    */
   public static $folder = 'sdb/';     // Change the folder, where the tables will be saved to (notice the leading "/")
+  public static $dobackup = true;    // Do a backup of every table before editing it (e.g. UPDATE, ADD_COLUMN, etc.)
   public static $disablelock = false; // Disable the table lock*
 
   /*
@@ -327,6 +329,48 @@ class sdb
          return true;
      }
 
+     /**
+      * Add a column to a table.
+      *
+      * @param Name of the table
+      * @param Name of the new column
+      * @param Value of the column in all existing rows (optinal)
+      */
+     public static function ADD_COLUMN($table, $column, $value = '')
+     {
+         self::checklock($table);
+         self::setlock($table);
+         $path = self::$folder.$table.'.sdb';
+         if (!file_exists($path) || !is_readable($path) || !is_writable($path)) {
+             self::removelock($table);
+
+             return false;
+         }
+         $f = fopen($path, 'r');
+         $line = fgets($f);
+         fclose($f);
+         $line = str_replace(self::NEWLINE, '', $line);
+         $line .= $column.';;';
+         $content = file_get_contents($path);
+         $content = explode(self::NEWLINE, $content);
+         foreach ($content as $key => $l) {
+             if ($l !== '') {
+                 if ($key == 0) {
+                     $content[$key] = $line;
+                 } else {
+                     $content[$key] .= $value.';;';
+                 }
+             }
+         }
+         $content = implode(self::NEWLINE, $content);
+
+         $file = fopen($path, 'w');
+         fwrite($file, $content);
+         fclose($file);
+
+         self::removelock($table);
+     }
+
     /**
      * Delete data from the table.
      *
@@ -418,6 +462,27 @@ class sdb
         return $tables;
     }
 
+    /**
+     * Restore the backup of a table (as long as it exists)
+     *
+     * @param Name of the table
+     */
+    public static function RESTORE_BACKUP($table) {
+      $backupfile = self::$folder.$table.'.backup.sdb';
+      $tablefile = self::$folder.$table.'.sdb';
+      if (file_exists($backupfile)) {
+        if (file_exists($tablefile)) {
+          rename($tablefile, $tablefile . ".moving");
+        }
+        rename($backupfile, $tablefile);
+        if (file_exists($tablefile . ".moving")) {
+          rename($tablefile . ".moving", $backupfile);
+        }
+        return true;
+      }
+      return false;
+    }
+
    /*
     * MySQL Table Migrating System.
     */
@@ -502,6 +567,12 @@ class sdb
            $file = fopen($path, 'w');
            fwrite($file, 'LOCKED');
            fclose($file);
+       }
+       if (self::$dobackup == true) {
+           if (file_exists(self::$folder.$table.'.backup.sdb')) {
+               unlink(self::$folder.$table.'.backup.sdb');
+           }
+           copy(self::$folder.$table.'.sdb', self::$folder.$table.'.backup.sdb');
        }
 
        return true;
