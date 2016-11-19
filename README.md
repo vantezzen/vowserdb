@@ -132,6 +132,16 @@ If you want to migrate a whole MySQL Database at once (with all it's tables), yo
 sdb::MIGRATE_DB("localhost", "database-user", "password123, "test-database");
 ```
 <br />
+# backup
+<br />
+By default, no backups will be made, but you can easily activate auto-backups of your sdb tables. <br />
+To activate backups, change the config variable ```$dobackup``` in the top of sdb.php to ```true```. A backup of your current table will be made before every change (e.g. ```UPDATE``` or ```DELETE```) and can be restored later with
+```PHP
+sdb::RESTORE_BACKUP("test");
+```
+The current ("updated") version of the table will then be saved to the backup file, so you can redo your changed with the same function if you want.
+<br />
+<br />
 # lock mechanism
 <br />
 sdb uses a special lock mechanism. This lock mechanism will protect a table when a script writes to it. This can prevent data loss when two scripts try to write to the same table at the same time. It will temporarely create a .lock file named after the table name. If you see this .lock file comming up when a script writes to a table this is normal and it should be automatically deleted after that. If you want to disable this mechanism (e.g. when you want to reduce read and writes to your hard drive), you can turn it off in the sdb.php file by changing the "$disablelock" variable in the config section on the top of the file to "true"
