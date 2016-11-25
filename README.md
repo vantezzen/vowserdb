@@ -43,10 +43,16 @@ To create a new table with the name "test" and the columns "username", "password
 sdb::CREATE("test", array("username", "password", "mail"));
 ```
 <br />
-You can later add columns to a table via
+You can later add columns to a table with
 ```PHP
 sdb::ADD_COLUMN("test", "myNewColumn");
 ```
+or remove columns with
+<br />
+```PHP
+sdb::REMOVE_COLUMN("test", "myNewColumn");
+```
+<br />
 <br />
 Data can be inserted to the table via,
 ```PHP
