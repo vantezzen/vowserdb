@@ -67,9 +67,15 @@ Whenever you want to select something (not only in ```SELECT```, but also in ```
 sdb::SELECT("test", array("timestamp" => "SMALLER THAN ".time()));
 ```
 <br />
-or ```IS NOT``` to check if a column has not a specific value
+,```IS NOT``` to check if a column has not a specific value
 ```PHP
 sdb::SELECT("test", array("is_admin" => "IS NOT yes"));
+```
+<br />
+or ```LIKE``` to search for similarities (this uses PHP's ```stristr()``` function)
+<br />
+```PHP
+sdb::SELECT("test", array("name" => "LIKE te"));
 ```
 <br />
 To update/change data in the database, use
