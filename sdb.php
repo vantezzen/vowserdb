@@ -1,5 +1,5 @@
 <?php
-/* SDB - Simple Database - v2.5.0
+/* SDB - Simple Database - v2.5.1
  * by vantezzen (http://vantezzen.de)
  *
  * For documentation check http://github.com/vantezzen/sdb
@@ -166,6 +166,9 @@ class sdb
             } elseif (preg_match('/^IS NOT/', $value)) {
                 $mode = 'isnot';
                 $value = str_replace('IS NOT ', '', $value);
+            } elseif (preg_match('/^LIKE/', $value)) {
+                $mode = 'like';
+                $value = str_replace('LIKE ', '', $value);
             } else {
                 $mode = 'normal';
             }
@@ -189,6 +192,10 @@ class sdb
                         }
                     } elseif ($mode == 'smallerequal') {
                         if (isset($row[$column]) && $row[$column] <= $value) {
+                            $select[] = $row;
+                        }
+                    } elseif ($mode == 'like') {
+                        if (isset($row[$column]) && stristr($row[$column], (string) $value)) {
                             $select[] = $row;
                         }
                     } elseif ($mode == 'isnot') {
@@ -217,6 +224,10 @@ class sdb
                         }
                     } elseif ($mode == 'smallerequal') {
                         if (isset($row[$column]) && $row[$column] > $value) {
+                            unset($select[$key]);
+                        }
+                    } elseif ($mode == 'like') {
+                        if (isset($row[$column]) && !stristr($row[$column], (string) $value)) {
                             unset($select[$key]);
                         }
                     } elseif ($mode == 'isnot') {
