@@ -1,5 +1,5 @@
 <?php
-/* SDB - Simple Database - v2.5.1
+/* SDB - Simple Database - v2.6.0
  * by vantezzen (http://vantezzen.de)
  *
  * For documentation check http://github.com/vantezzen/sdb
@@ -169,6 +169,9 @@ class sdb
             } elseif (preg_match('/^LIKE/', $value)) {
                 $mode = 'like';
                 $value = str_replace('LIKE ', '', $value);
+            } elseif (preg_match('/^MATCH/', $value)) {
+                $mode = 'match';
+                $value = str_replace('MATCH ', '', $value);
             } else {
                 $mode = 'normal';
             }
@@ -196,6 +199,10 @@ class sdb
                         }
                     } elseif ($mode == 'like') {
                         if (isset($row[$column]) && stristr($row[$column], (string) $value)) {
+                            $select[] = $row;
+                        }
+                    } elseif ($mode == 'match') {
+                        if (isset($row[$column]) && preg_match($value, $row[$column])) {
                             $select[] = $row;
                         }
                     } elseif ($mode == 'isnot') {
@@ -228,6 +235,10 @@ class sdb
                         }
                     } elseif ($mode == 'like') {
                         if (isset($row[$column]) && !stristr($row[$column], (string) $value)) {
+                            unset($select[$key]);
+                        }
+                    } elseif ($mode == 'match') {
+                        if (isset($row[$column]) && !preg_match($value, $row[$column])) {
                             unset($select[$key]);
                         }
                     } elseif ($mode == 'isnot') {
@@ -381,6 +392,46 @@ class sdb
 
          self::removelock($table);
      }
+    public static function REMOVE_COLUMN($table, $column) {
+      self::checklock($table);
+      self::setlock($table);
+      $path = self::$folder.$table.'.sdb';
+      if (!file_exists($path) || !is_readable($path) || !is_writable($path)) {
+          self::removelock($table);
+          return false;
+      }
+      $f = fopen($path, 'r');
+      $line = fgets($f);
+      fclose($f);
+      $line = str_replace(self::NEWLINE, '', $line);
+      $columns = explode(";;", $line);
+      foreach($columns as $key => $c) {
+        if ($column == $c) {
+          $k = $key;
+          break;
+        }
+      }
+      if (!isset($k)) {
+        self::removelock($table);
+        return false;
+      }
+      $content = file_get_contents($path);
+      $content = explode(self::NEWLINE, $content);
+      foreach ($content as $key => $line) {
+        $array = explode(";;", $line);
+        unset($array[$k]);
+        $line = implode(";;", $array);
+        $content[$key] = $line;
+      }
+      $content = implode(self::NEWLINE, $content);
+
+      $file = fopen($path, 'w');
+      fwrite($file, $content);
+      fclose($file);
+
+      self::removelock($table);
+      return true;
+    }
 
     /**
      * Delete data from the table.
