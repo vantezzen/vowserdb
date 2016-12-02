@@ -677,4 +677,39 @@ class sdb
 
         return true;
     }
+
+    /*
+     * Encryption/Decryption of tables
+     */
+    private static function encrypt($table, $password = "BC+Lnx.RYum4pF`Z", $iv = "1234567891234567", $method = "AES256") {
+      if (isset($_GLOBAL["sdbtableencryptpassword"])) $password = $_GLOBAL["sdbtableencryptpassword"];
+      if (isset($_GLOBAL["sdbtableencryptiv"])) $iv = $_GLOBAL["sdbtableencryptiv"];
+      $encryptfile = self::$folder.$table.'.encrypt.sdb';
+      $originalfile = self::$folder.$table.'.sdb';
+      $data = file_get_contents($originalfile);
+      if ($data == "This table is encrypted") return false;
+      $encrypt = openssl_encrypt($data, "AES256", $password, 0, $iv);
+      $f = fopen($encryptfile, "w");
+      fwrite($f, $encrypt);
+      fclose($f);
+      $f = fopen($originalfile, "w");
+      fwrite($f, "This table is encrypted");
+      fclose($f);
+    }
+    
+    private static function decrypt($table, $password = "BC+Lnx.RYum4pF`Z", $iv = "1234567891234567", $method = "AES256") {
+      if (isset($_GLOBAL["sdbtableencryptpassword"])) $password = $_GLOBAL["sdbtableencryptpassword"];
+      if (isset($_GLOBAL["sdbtableencryptiv"])) $iv = $_GLOBAL["sdbtableencryptiv"];
+      $encryptfile = self::$folder.$table.'.encrypt.sdb';
+      $originalfile = self::$folder.$table.'.sdb';
+      $data = file_get_contents($encryptfile);
+      if ($data == "This table was decrypted") return false;
+      $decrypt = openssl_decrypt($data, "AES256", $password, 0, $iv);
+      $f = fopen($originalfile, "w");
+      fwrite($f, $decrypt);
+      fclose($f);
+      $f = fopen($encryptfile, "w");
+      fwrite($f, "This table was decrypted");
+      fclose($f);
+    }
 }
