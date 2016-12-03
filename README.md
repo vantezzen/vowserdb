@@ -158,7 +158,7 @@ The current ("updated") version of the table will then be saved to the backup fi
 # escaping
 <br />
 Like MySQL, sdb has 'forbidden characters', that should not be used in the table. In sdb, these are the double-semicolon (';;') and a new line ('<br />
-'). Whenever a new line gets ```INSERT```-ed, all inputted strings will be ```ESCAPE```-d, to remove these characters. If you want to avoid loosing thes 'forbidden characters' from your strings, you can, for example, base64 encode the string before ```INSERT```-ing it to the table.
+'). Whenever something gets ```INSERT```-ed into a table, all inputted strings will be ```ESCAPE```-d, to remove these characters. If you want to avoid loosing these 'forbidden characters' from your strings, you can, for example, base64 encode the string before ```INSERT```-ing it to the table.
 <br />
 # lock mechanism
 <br />
