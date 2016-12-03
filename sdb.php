@@ -1,5 +1,5 @@
 <?php
-/* SDB - Simple Database - v2.6.0
+/* SDB - Simple Database - v2.6.1
  * by vantezzen (http://vantezzen.de)
  *
  * For documentation check http://github.com/vantezzen/sdb
@@ -68,6 +68,24 @@ class sdb
        fclose($file);
        self::removelock($name);
    }
+   /**
+    * Escape a string to remove forbidden characters.
+    *
+    * @param string
+    *
+    * @return Escaped String
+    */
+   public static function ESCAPE($string)
+   {
+       $forbidden = array(
+       ';;',
+       '
+',
+     );
+       $string = str_replace($forbidden, '', $string);
+
+       return $string;
+   }
 
     /**
      * Insert data into a table.
@@ -84,8 +102,7 @@ class sdb
         $content = self::NEWLINE;
         foreach ($columns as $column) {
             if (isset($data[$column])) {
-                $data[$column] = str_replace(';;', '', $data[$column]);
-                $content .= $data[$column].';;';
+                $content .= self::ESCPAE($data[$column]).';;';
             } else {
                 $content .= ';;';
             }
@@ -392,45 +409,49 @@ class sdb
 
          self::removelock($table);
      }
-    public static function REMOVE_COLUMN($table, $column) {
-      self::checklock($table);
-      self::setlock($table);
-      $path = self::$folder.$table.'.sdb';
-      if (!file_exists($path) || !is_readable($path) || !is_writable($path)) {
-          self::removelock($table);
-          return false;
-      }
-      $f = fopen($path, 'r');
-      $line = fgets($f);
-      fclose($f);
-      $line = str_replace(self::NEWLINE, '', $line);
-      $columns = explode(";;", $line);
-      foreach($columns as $key => $c) {
-        if ($column == $c) {
-          $k = $key;
-          break;
+    public static function REMOVE_COLUMN($table, $column)
+    {
+        self::checklock($table);
+        self::setlock($table);
+        $path = self::$folder.$table.'.sdb';
+        if (!file_exists($path) || !is_readable($path) || !is_writable($path)) {
+            self::removelock($table);
+
+            return false;
         }
-      }
-      if (!isset($k)) {
+        $f = fopen($path, 'r');
+        $line = fgets($f);
+        fclose($f);
+        $line = str_replace(self::NEWLINE, '', $line);
+        $columns = explode(';;', $line);
+        foreach ($columns as $key => $c) {
+            if ($column == $c) {
+                $k = $key;
+                break;
+            }
+        }
+        if (!isset($k)) {
+            self::removelock($table);
+
+            return false;
+        }
+        $content = file_get_contents($path);
+        $content = explode(self::NEWLINE, $content);
+        foreach ($content as $key => $line) {
+            $array = explode(';;', $line);
+            unset($array[$k]);
+            $line = implode(';;', $array);
+            $content[$key] = $line;
+        }
+        $content = implode(self::NEWLINE, $content);
+
+        $file = fopen($path, 'w');
+        fwrite($file, $content);
+        fclose($file);
+
         self::removelock($table);
-        return false;
-      }
-      $content = file_get_contents($path);
-      $content = explode(self::NEWLINE, $content);
-      foreach ($content as $key => $line) {
-        $array = explode(";;", $line);
-        unset($array[$k]);
-        $line = implode(";;", $array);
-        $content[$key] = $line;
-      }
-      $content = implode(self::NEWLINE, $content);
 
-      $file = fopen($path, 'w');
-      fwrite($file, $content);
-      fclose($file);
-
-      self::removelock($table);
-      return true;
+        return true;
     }
 
     /**
@@ -525,24 +546,27 @@ class sdb
     }
 
     /**
-     * Restore the backup of a table (as long as it exists)
+     * Restore the backup of a table (as long as it exists).
      *
      * @param Name of the table
      */
-    public static function RESTORE_BACKUP($table) {
-      $backupfile = self::$folder.$table.'.backup.sdb';
-      $tablefile = self::$folder.$table.'.sdb';
-      if (file_exists($backupfile)) {
-        if (file_exists($tablefile)) {
-          rename($tablefile, $tablefile . ".moving");
+    public static function RESTORE_BACKUP($table)
+    {
+        $backupfile = self::$folder.$table.'.backup.sdb';
+        $tablefile = self::$folder.$table.'.sdb';
+        if (file_exists($backupfile)) {
+            if (file_exists($tablefile)) {
+                rename($tablefile, $tablefile.'.moving');
+            }
+            rename($backupfile, $tablefile);
+            if (file_exists($tablefile.'.moving')) {
+                rename($tablefile.'.moving', $backupfile);
+            }
+
+            return true;
         }
-        rename($backupfile, $tablefile);
-        if (file_exists($tablefile . ".moving")) {
-          rename($tablefile . ".moving", $backupfile);
-        }
-        return true;
-      }
-      return false;
+
+        return false;
     }
 
    /*
@@ -681,35 +705,49 @@ class sdb
     /*
      * Encryption/Decryption of tables
      */
-    private static function encrypt($table, $password = "BC+Lnx.RYum4pF`Z", $iv = "1234567891234567", $method = "AES256") {
-      if (isset($_GLOBAL["sdbtableencryptpassword"])) $password = $_GLOBAL["sdbtableencryptpassword"];
-      if (isset($_GLOBAL["sdbtableencryptiv"])) $iv = $_GLOBAL["sdbtableencryptiv"];
-      $encryptfile = self::$folder.$table.'.encrypt.sdb';
-      $originalfile = self::$folder.$table.'.sdb';
-      $data = file_get_contents($originalfile);
-      if ($data == "This table is encrypted") return false;
-      $encrypt = openssl_encrypt($data, "AES256", $password, 0, $iv);
-      $f = fopen($encryptfile, "w");
-      fwrite($f, $encrypt);
-      fclose($f);
-      $f = fopen($originalfile, "w");
-      fwrite($f, "This table is encrypted");
-      fclose($f);
+    private static function encrypt($table, $password = 'BC+Lnx.RYum4pF`Z', $iv = '1234567891234567', $method = 'AES256')
+    {
+        if (isset($_GLOBAL['sdbtableencryptpassword'])) {
+            $password = $_GLOBAL['sdbtableencryptpassword'];
+        }
+        if (isset($_GLOBAL['sdbtableencryptiv'])) {
+            $iv = $_GLOBAL['sdbtableencryptiv'];
+        }
+        $encryptfile = self::$folder.$table.'.encrypt.sdb';
+        $originalfile = self::$folder.$table.'.sdb';
+        $data = file_get_contents($originalfile);
+        if ($data == 'This table is encrypted') {
+            return false;
+        }
+        $encrypt = openssl_encrypt($data, 'AES256', $password, 0, $iv);
+        $f = fopen($encryptfile, 'w');
+        fwrite($f, $encrypt);
+        fclose($f);
+        $f = fopen($originalfile, 'w');
+        fwrite($f, 'This table is encrypted');
+        fclose($f);
     }
-    
-    private static function decrypt($table, $password = "BC+Lnx.RYum4pF`Z", $iv = "1234567891234567", $method = "AES256") {
-      if (isset($_GLOBAL["sdbtableencryptpassword"])) $password = $_GLOBAL["sdbtableencryptpassword"];
-      if (isset($_GLOBAL["sdbtableencryptiv"])) $iv = $_GLOBAL["sdbtableencryptiv"];
-      $encryptfile = self::$folder.$table.'.encrypt.sdb';
-      $originalfile = self::$folder.$table.'.sdb';
-      $data = file_get_contents($encryptfile);
-      if ($data == "This table was decrypted") return false;
-      $decrypt = openssl_decrypt($data, "AES256", $password, 0, $iv);
-      $f = fopen($originalfile, "w");
-      fwrite($f, $decrypt);
-      fclose($f);
-      $f = fopen($encryptfile, "w");
-      fwrite($f, "This table was decrypted");
-      fclose($f);
+
+    private static function decrypt($table, $password = 'BC+Lnx.RYum4pF`Z', $iv = '1234567891234567', $method = 'AES256')
+    {
+        if (isset($_GLOBAL['sdbtableencryptpassword'])) {
+            $password = $_GLOBAL['sdbtableencryptpassword'];
+        }
+        if (isset($_GLOBAL['sdbtableencryptiv'])) {
+            $iv = $_GLOBAL['sdbtableencryptiv'];
+        }
+        $encryptfile = self::$folder.$table.'.encrypt.sdb';
+        $originalfile = self::$folder.$table.'.sdb';
+        $data = file_get_contents($encryptfile);
+        if ($data == 'This table was decrypted') {
+            return false;
+        }
+        $decrypt = openssl_decrypt($data, 'AES256', $password, 0, $iv);
+        $f = fopen($originalfile, 'w');
+        fwrite($f, $decrypt);
+        fclose($f);
+        $f = fopen($encryptfile, 'w');
+        fwrite($f, 'This table was decrypted');
+        fclose($f);
     }
 }
