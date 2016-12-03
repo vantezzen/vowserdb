@@ -154,6 +154,12 @@ sdb::RESTORE_BACKUP("test");
 The current ("updated") version of the table will then be saved to the backup file, so you can redo your changed with the same function if you want.
 <br />
 <br />
+<br />
+# escaping
+<br />
+Like MySQL, sdb has 'forbidden characters', that should not be used in the table. In sdb, these are the double-semicolon (';;') and a new line ('<br />
+'). Whenever a new line gets ```INSERT```-ed, all inputted strings will be ```ESCAPE```-d, to remove these characters. If you want to avoid loosing thes 'forbidden characters' from your strings, you can, for example, base64 encode the string before ```INSERT```-ing it to the table.
+<br />
 # lock mechanism
 <br />
 sdb uses a special lock mechanism. This lock mechanism will protect a table when a script writes to it. This can prevent data loss when two scripts try to write to the same table at the same time. It will temporarely create a .lock file named after the table name. If you see this .lock file comming up when a script writes to a table this is normal and it should be automatically deleted after that. If you want to disable this mechanism (e.g. when you want to reduce read and writes to your hard drive), you can turn it off in the sdb.php file by changing the "$disablelock" variable in the config section on the top of the file to "true"
