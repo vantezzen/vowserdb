@@ -1,5 +1,5 @@
 <?php
-/* SDB - Simple Database - v2.6.1
+/* SDB - Simple Database - v2.6.2
  * by vantezzen (http://vantezzen.de)
  *
  * For documentation check http://github.com/vantezzen/sdb
