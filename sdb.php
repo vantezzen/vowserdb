@@ -102,7 +102,7 @@ class sdb
         $content = self::NEWLINE;
         foreach ($columns as $column) {
             if (isset($data[$column])) {
-                $content .= self::ESCPAE($data[$column]).';;';
+                $content .= self::ESCAPE($data[$column]).';;';
             } else {
                 $content .= ';;';
             }
