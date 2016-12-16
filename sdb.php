@@ -149,6 +149,7 @@ class sdb
         $content = file_get_contents($path);
         $items = explode(self::NEWLINE, $content);
         $items[0] = '';
+        $array = array();
         $rows = array();
         foreach ($items as $item) {
             if (!empty($item)) {
