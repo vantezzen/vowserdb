@@ -1,4 +1,4 @@
-# sdb
+# vowserdb (former sdb)
 sdb is a simple database, that is purely written in PHP and doesn't need any additional services, programs or deamons running to work. It uses .sdb files to store tables.
 
 # installation
