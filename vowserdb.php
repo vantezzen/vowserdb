@@ -1,21 +1,21 @@
 <?php
-/* SDB - Simple Database - v2.6.2
+/* vowserDB -  v2.6.2
  * by vantezzen (http://vantezzen.de)
  *
- * For documentation check http://github.com/vantezzen/sdb
+ * For documentation check http://github.com/vantezzen/vowserdb
  *
  * TODO:
  * Add function to add/remove columns
  * Caching system
  */
 
-class sdb
+class vowserdb
 {
     /*
    * Configuration
    * Edit these settings to your needs
    */
-  public static $folder = 'sdb/';     // Change the folder, where the tables will be saved to (notice the leading "/")
+  public static $folder = 'vowserdb/';     // Change the folder, where the tables will be saved to (notice the leading "/")
   public static $dobackup = false;    // Do a backup of every table before editing it (e.g. UPDATE, ADD_COLUMN, etc.)
   public static $disablelock = false; // Disable the table lock*
 
@@ -50,7 +50,7 @@ class sdb
   }
 
    /**
-    * Create a new sdb table.
+    * Create a new vowserdb table.
     *
     * @return Success
     */
@@ -63,7 +63,7 @@ class sdb
        foreach ($columns as $column) {
            $content .= $column.';;';
        }
-       $file = fopen($folder.$name.'.sdb', 'w');
+       $file = fopen($folder.$name.'.vowserdb', 'w');
        fwrite($file, $content);
        fclose($file);
        self::removelock($name);
@@ -97,7 +97,7 @@ class sdb
     {
         self::checklock($table);
         self::setlock($table);
-        $path = self::$folder.$table.'.sdb';
+        $path = self::$folder.$table.'.vowserdb';
         $columns = self::GET_COLUMNS($table);
         $content = self::NEWLINE;
         foreach ($columns as $column) {
@@ -121,7 +121,7 @@ class sdb
      */
     public static function GET_COLUMNS($table)
     {
-        $path = self::$folder.$table.'.sdb';
+        $path = self::$folder.$table.'.vowserdb';
         if (!file_exists($path) || !is_readable($path) || !is_writable($path)) {
             return array();
         }
@@ -144,7 +144,7 @@ class sdb
      */
     public static function SELECT($table, $requirements = array())
     {
-        $path = self::$folder.$table.'.sdb';
+        $path = self::$folder.$table.'.vowserdb';
         $columns = self::GET_COLUMNS($table);
         $content = file_get_contents($path);
         $items = explode(self::NEWLINE, $content);
@@ -284,7 +284,7 @@ class sdb
         self::checklock($table);
         self::setlock($table);
         $rows = self::SELECT($table, $where);
-        $path = self::$folder.$table.'.sdb';
+        $path = self::$folder.$table.'.vowserdb';
         $content = file_get_contents($path);
         foreach ($rows as $row) {
             $oldrow = '';
@@ -334,7 +334,7 @@ class sdb
      {
          self::checklock($table);
          self::setlock($table);
-         $path = self::$folder.$table.'.sdb';
+         $path = self::$folder.$table.'.vowserdb';
          if (!file_exists($path) || !is_readable($path) || !is_writable($path)) {
              self::removelock($table);
 
@@ -380,7 +380,7 @@ class sdb
      {
          self::checklock($table);
          self::setlock($table);
-         $path = self::$folder.$table.'.sdb';
+         $path = self::$folder.$table.'.vowserdb';
          if (!file_exists($path) || !is_readable($path) || !is_writable($path)) {
              self::removelock($table);
 
@@ -414,7 +414,7 @@ class sdb
     {
         self::checklock($table);
         self::setlock($table);
-        $path = self::$folder.$table.'.sdb';
+        $path = self::$folder.$table.'.vowserdb';
         if (!file_exists($path) || !is_readable($path) || !is_writable($path)) {
             self::removelock($table);
 
@@ -466,7 +466,7 @@ class sdb
         self::checklock($table);
         self::setlock($table);
         $rows = self::SELECT($table, $where);
-        $path = self::$folder.$table.'.sdb';
+        $path = self::$folder.$table.'.vowserdb';
         $content = file_get_contents($path);
         foreach ($rows as $row) {
             $oldrow = '';
@@ -502,7 +502,7 @@ class sdb
     {
         self::checklock($table);
         self::setlock($table);
-        $path = self::$folder.$table.'.sdb';
+        $path = self::$folder.$table.'.vowserdb';
         $content = file_get_contents($path);
         $rows = explode(self::NEWLINE, $content);
         $newcontent = '';
@@ -526,7 +526,7 @@ class sdb
     {
         self::checklock($table);
         self::setlock($table);
-        $path = self::$folder.$table.'.sdb';
+        $path = self::$folder.$table.'.vowserdb';
         unlink($path);
         self::removelock($table);
     }
@@ -539,8 +539,8 @@ class sdb
     public static function TABLES()
     {
         $tables = array();
-        foreach (glob(self::$folder.'*.sdb') as $table) {
-            $tables[] = str_replace(array(self::$folder, '.sdb'), '', $table);
+        foreach (glob(self::$folder.'*.vowserdb') as $table) {
+            $tables[] = str_replace(array(self::$folder, '.vowserdb'), '', $table);
         }
 
         return $tables;
@@ -553,8 +553,8 @@ class sdb
      */
     public static function RESTORE_BACKUP($table)
     {
-        $backupfile = self::$folder.$table.'.backup.sdb';
-        $tablefile = self::$folder.$table.'.sdb';
+        $backupfile = self::$folder.$table.'.backup.vowserdb';
+        $tablefile = self::$folder.$table.'.vowserdb';
         if (file_exists($backupfile)) {
             if (file_exists($tablefile)) {
                 rename($tablefile, $tablefile.'.moving');
@@ -574,7 +574,7 @@ class sdb
     * MySQL Table Migrating System.
     */
    /**
-    * Migrate a MySQL table to sdb.
+    * Migrate a MySQL table to vowserdb.
     *
     * @param Host of the MySQL Server
     * @param Username of the MySQL Server
@@ -611,7 +611,7 @@ class sdb
    }
 
     /**
-     * Migrate a MySQL database to sdb.
+     * Migrate a MySQL database to vowserdb.
      *
      * @param Host of the MySQL Server
      * @param Username of the MySQL Server
@@ -656,10 +656,10 @@ class sdb
            fclose($file);
        }
        if (self::$dobackup == true) {
-           if (file_exists(self::$folder.$table.'.backup.sdb')) {
-               unlink(self::$folder.$table.'.backup.sdb');
+           if (file_exists(self::$folder.$table.'.backup.vowserdb')) {
+               unlink(self::$folder.$table.'.backup.vowserdb');
            }
-           copy(self::$folder.$table.'.sdb', self::$folder.$table.'.backup.sdb');
+           copy(self::$folder.$table.'.vowserdb', self::$folder.$table.'.backup.vowserdb');
        }
 
        return true;
@@ -708,14 +708,14 @@ class sdb
      */
     private static function encrypt($table, $password = 'BC+Lnx.RYum4pF`Z', $iv = '1234567891234567', $method = 'AES256')
     {
-        if (isset($_GLOBAL['sdbtableencryptpassword'])) {
-            $password = $_GLOBAL['sdbtableencryptpassword'];
+        if (isset($_GLOBAL['vowserdbtableencryptpassword'])) {
+            $password = $_GLOBAL['vowserdbtableencryptpassword'];
         }
-        if (isset($_GLOBAL['sdbtableencryptiv'])) {
-            $iv = $_GLOBAL['sdbtableencryptiv'];
+        if (isset($_GLOBAL['vowserdbtableencryptiv'])) {
+            $iv = $_GLOBAL['vowserdbtableencryptiv'];
         }
-        $encryptfile = self::$folder.$table.'.encrypt.sdb';
-        $originalfile = self::$folder.$table.'.sdb';
+        $encryptfile = self::$folder.$table.'.encrypt.vowserdb';
+        $originalfile = self::$folder.$table.'.vowserdb';
         $data = file_get_contents($originalfile);
         if ($data == 'This table is encrypted') {
             return false;
@@ -731,14 +731,14 @@ class sdb
 
     private static function decrypt($table, $password = 'BC+Lnx.RYum4pF`Z', $iv = '1234567891234567', $method = 'AES256')
     {
-        if (isset($_GLOBAL['sdbtableencryptpassword'])) {
-            $password = $_GLOBAL['sdbtableencryptpassword'];
+        if (isset($_GLOBAL['vowserdbtableencryptpassword'])) {
+            $password = $_GLOBAL['vowserdbtableencryptpassword'];
         }
-        if (isset($_GLOBAL['sdbtableencryptiv'])) {
-            $iv = $_GLOBAL['sdbtableencryptiv'];
+        if (isset($_GLOBAL['vowserdbtableencryptiv'])) {
+            $iv = $_GLOBAL['vowserdbtableencryptiv'];
         }
-        $encryptfile = self::$folder.$table.'.encrypt.sdb';
-        $originalfile = self::$folder.$table.'.sdb';
+        $encryptfile = self::$folder.$table.'.encrypt.vowserdb';
+        $originalfile = self::$folder.$table.'.vowserdb';
         $data = file_get_contents($encryptfile);
         if ($data == 'This table was decrypted') {
             return false;
