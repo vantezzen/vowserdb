@@ -1,5 +1,5 @@
 <?php
-/* vowserDB -  v2.7.0
+/* vowserDB -  v2.7.1
  * by vantezzen (http://vantezzen.de)
  *
  * For documentation check http://github.com/vantezzen/vowserdb
@@ -169,6 +169,7 @@ class vowserdb
         $select = array();
         $counter = 0;
         foreach ($requirements as $column => $value) {
+            $value = self::ESCAPE($value);
             if (preg_match('/^BIGGER THAN/', $value)) {
                 $mode = 'bigger';
                 $value = str_replace('BIGGER THAN ', '', $value);
@@ -708,10 +709,10 @@ class vowserdb
      */
     private static function encrypt($table, $password = 'BC+Lnx.RYum4pF`Z', $iv = '1234567891234567', $method = 'AES256')
     {
-        if (isset(VOWSERDBPASSWORD)) {
+        if (defined(VOWSERDBPASSWORD)) {
             $password = VOWSERDBPASSWORD;
         }
-        if (isset(VOWSERDBIV)) {
+        if (defined(VOWSERDBIV)) {
             $iv = VOWSERDBIV;
         }
         $encryptfile = self::$folder.$table.'.encrypt.vowserdb';
@@ -731,10 +732,10 @@ class vowserdb
 
     private static function decrypt($table, $password = 'BC+Lnx.RYum4pF`Z', $iv = '1234567891234567', $method = 'AES256')
     {
-        if (isset(VOWSERDBPASSWORD)) {
+        if (defined(VOWSERDBPASSWORD)) {
             $password = VOWSERDBPASSWORD;
         }
-        if (isset(VOWSERDBIV)) {
+        if (defined(VOWSERDBIV)) {
           $iv = VOWSERDBIV;
         }
         $encryptfile = self::$folder.$table.'.encrypt.vowserdb';
