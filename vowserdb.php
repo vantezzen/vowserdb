@@ -16,7 +16,7 @@ class vowserdb
    * Edit these settings to your needs
    */
   public static $folder = 'vowserdb/';     // Change the folder, where the tables will be saved to (notice the leading "/")
-  public static $dobackup = false;    // Do a backup of every table before editing it (e.g. UPDATE, ADD_COLUMN, etc.)
+  public static $dobackup = true;    // Do a backup of every table before editing it (e.g. UPDATE, ADD_COLUMN, etc.)
   public static $disablelock = false; // Disable the table lock*
 
   /*
