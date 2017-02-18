@@ -1,5 +1,5 @@
 <?php
-/* vowserDB -  v2.6.2
+/* vowserDB -  v2.7.0
  * by vantezzen (http://vantezzen.de)
  *
  * For documentation check http://github.com/vantezzen/vowserdb
@@ -708,11 +708,11 @@ class vowserdb
      */
     private static function encrypt($table, $password = 'BC+Lnx.RYum4pF`Z', $iv = '1234567891234567', $method = 'AES256')
     {
-        if (isset($_GLOBAL['vowserdbtableencryptpassword'])) {
-            $password = $_GLOBAL['vowserdbtableencryptpassword'];
+        if (isset(VOWSERDBPASSWORD)) {
+            $password = VOWSERDBPASSWORD;
         }
-        if (isset($_GLOBAL['vowserdbtableencryptiv'])) {
-            $iv = $_GLOBAL['vowserdbtableencryptiv'];
+        if (isset(VOWSERDBIV)) {
+            $iv = VOWSERDBIV;
         }
         $encryptfile = self::$folder.$table.'.encrypt.vowserdb';
         $originalfile = self::$folder.$table.'.vowserdb';
@@ -731,11 +731,11 @@ class vowserdb
 
     private static function decrypt($table, $password = 'BC+Lnx.RYum4pF`Z', $iv = '1234567891234567', $method = 'AES256')
     {
-        if (isset($_GLOBAL['vowserdbtableencryptpassword'])) {
-            $password = $_GLOBAL['vowserdbtableencryptpassword'];
+        if (isset(VOWSERDBPASSWORD)) {
+            $password = VOWSERDBPASSWORD;
         }
-        if (isset($_GLOBAL['vowserdbtableencryptiv'])) {
-            $iv = $_GLOBAL['vowserdbtableencryptiv'];
+        if (isset(VOWSERDBIV)) {
+          $iv = VOWSERDBIV;
         }
         $encryptfile = self::$folder.$table.'.encrypt.vowserdb';
         $originalfile = self::$folder.$table.'.vowserdb';
