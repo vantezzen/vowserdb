@@ -173,8 +173,8 @@ class vowserdb
                 $row = $relationship["row1"];
                 $row2 = $relationship["row2"];
                 $table2 = $relationship["table2"];
-                foreach($select as $id => $entry) {
-                  $select[$id][$row] = self::SELECT($table2, array($row2 => $select[$id][$row]));
+                foreach($array as $id => $entry) {
+                  $array[$id][$row] = self::SELECT($table2, array($row2 => $array[$id][$row]));
                 }
               }
             }
