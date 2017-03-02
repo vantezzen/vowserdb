@@ -18,6 +18,7 @@ class vowserdb
   public static $folder = 'vowserdb/';     // Change the folder, where the tables will be saved to (notice the leading "/")
   public static $dobackup = true;    // Do a backup of every table before editing it (e.g. UPDATE, ADD_COLUMN, etc.)
   public static $disablelock = false; // Disable the table lock*
+  public static $respectrelationshipsrelationship = false; // Should relationships on the relationship table be repected?
 
   /*
    * Do not edit the constants below
@@ -174,7 +175,7 @@ class vowserdb
                 $row2 = $relationship["row2"];
                 $table2 = $relationship["table2"];
                 foreach($array as $id => $entry) {
-                  $array[$id][$row] = self::SELECT($table2, array($row2 => $array[$id][$row]));
+                  $array[$id][$row] = self::SELECT($table2, array($row2 => $array[$id][$row]), !$respectrelationshipsrelationship);
                 }
               }
             }
@@ -293,7 +294,7 @@ class vowserdb
               $row2 = $relationship["row2"];
               $table2 = $relationship["table2"];
               foreach($select as $id => $entry) {
-                $select[$id][$row] = self::SELECT($table2, array($row2 => $select[$id][$row]));
+                $select[$id][$row] = self::SELECT($table2, array($row2 => $select[$id][$row]), !$respectrelationshipsrelationship);
               }
             }
           }
@@ -312,7 +313,7 @@ class vowserdb
     {
         self::checklock($table);
         self::setlock($table);
-        $rows = self::SELECT($table, $where);
+        $rows = self::SELECT($table, $where, true);
         $path = self::$folder.$table.'.vowserdb';
         $content = file_get_contents($path);
         foreach ($rows as $row) {
@@ -494,7 +495,7 @@ class vowserdb
     {
         self::checklock($table);
         self::setlock($table);
-        $rows = self::SELECT($table, $where);
+        $rows = self::SELECT($table, $where, true);
         $path = self::$folder.$table.'.vowserdb';
         $content = file_get_contents($path);
         foreach ($rows as $row) {
