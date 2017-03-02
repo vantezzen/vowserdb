@@ -175,7 +175,7 @@ class vowserdb
                 $row2 = $relationship["row2"];
                 $table2 = $relationship["table2"];
                 foreach($array as $id => $entry) {
-                  $array[$id][$row] = self::SELECT($table2, array($row2 => $array[$id][$row]), !$respectrelationshipsrelationship);
+                  $array[$id][$row] = self::SELECT($table2, array($row2 => $array[$id][$row]), !self::$respectrelationshipsrelationship);
                 }
               }
             }
@@ -294,7 +294,7 @@ class vowserdb
               $row2 = $relationship["row2"];
               $table2 = $relationship["table2"];
               foreach($select as $id => $entry) {
-                $select[$id][$row] = self::SELECT($table2, array($row2 => $select[$id][$row]), !$respectrelationshipsrelationship);
+                $select[$id][$row] = self::SELECT($table2, array($row2 => $select[$id][$row]), !self::$respectrelationshipsrelationship);
               }
             }
           }
