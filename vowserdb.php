@@ -24,6 +24,8 @@ class vowserdb
    */
   const NEWLINE = '
 ';
+  const RELATIONSHIPTABLE = "vowserdb-table-relationships";
+
   /*
    * * Table lock will protect a table when a script writes to it.
    *   This can prevent data loss when two scripts try to write
@@ -164,7 +166,20 @@ class vowserdb
             }
         }
         if ($requirements == array() || empty($requirements)) {
-            return $array;
+          if ($table !== self::RELATIONSHIPTABLE) {
+            $relationships = self::getrelationships($table);
+            if (!empty($relationships)) {
+              foreach($relationships as $relationship) {
+                $row = $relationship["row1"];
+                $row2 = $relationship["row2"];
+                $table2 = $relationship["table2"];
+                foreach($select as $id => $entry) {
+                  $select[$id][$row] = self::SELECT($table2, array($row2 => $select[$id][$row]));
+                }
+              }
+            }
+          }
+          return $array;
         }
         $select = array();
         $counter = 0;
@@ -270,6 +285,19 @@ class vowserdb
             ++$counter;
         }
 
+        if ($table !== self::RELATIONSHIPTABLE) {
+          $relationships = self::getrelationships($table);
+          if (!empty($relationships)) {
+            foreach($relationships as $relationship) {
+              $row = $relationship["row1"];
+              $row2 = $relationship["row2"];
+              $table2 = $relationship["table2"];
+              foreach($select as $id => $entry) {
+                $select[$id][$row] = self::SELECT($table2, array($row2 => $select[$id][$row]));
+              }
+            }
+          }
+        }
         return $select;
     }
 
@@ -638,6 +666,42 @@ class vowserdb
         }
     }
 
+  /*
+   * Relationships
+   */
+
+   public static function relationship($table1, $row1, $table2, $row2) {
+     if (!file_exists(self::$folder.self::RELATIONSHIPTABLE.'.vowserdb')) {
+       self::CREATE(self::RELATIONSHIPTABLE, array("table1", "row1", "table2", "row2"));
+     }
+     if (!empty(self::SELECT(self::RELATIONSHIPTABLE, array("table1" => $table1, "row1" => $row1, "table2" => $table2, "row2" => $row2)))) {
+       return array("error" => "Relationship already exists");
+     } else {
+       self::INSERT(array("table1" => $table1, "row1" => $row1, "table2" => $table2, "row2" => $row2), self::RELATIONSHIPTABLE);
+       return true;
+     }
+   }
+   public static function destroyrelationship($table1, $row1, $table2, $row2) {
+     if (!file_exists(self::$folder.self::RELATIONSHIPTABLE.'.vowserdb')) {
+       return array("error" => "Relationship not found");
+     }
+     if (empty(self::SELECT(self::RELATIONSHIPTABLE, array("table1" => $table1, "row1" => $row1, "table2" => $table2, "row2" => $row2)))) {
+       return array("error" => "Relationship not found");
+     } else {
+       self::DELETE(self::RELATIONSHIPTABLE, array("table1" => $table1, "row1" => $row1, "table2" => $table2, "row2" => $row2));
+       return true;
+     }
+   }
+   private static function getrelationships($table) {
+     if (!file_exists(self::$folder.self::RELATIONSHIPTABLE.'.vowserdb')) {
+       return array();
+     }
+     return self::SELECT(self::RELATIONSHIPTABLE, array("table1" => $table));
+   }
+
+  /*
+   * INTERNAL FUNCTIONS
+   */
    /*
     * Lock mechanism.
     */
@@ -660,7 +724,9 @@ class vowserdb
            if (file_exists(self::$folder.$table.'.backup.vowserdb')) {
                unlink(self::$folder.$table.'.backup.vowserdb');
            }
-           copy(self::$folder.$table.'.vowserdb', self::$folder.$table.'.backup.vowserdb');
+           if (file_exists(self::$folder.$table.'.vowserdb')) {
+             copy(self::$folder.$table.'.vowserdb', self::$folder.$table.'.backup.vowserdb');
+           }
        }
 
        return true;
