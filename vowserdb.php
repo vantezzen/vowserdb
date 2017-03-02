@@ -1,5 +1,5 @@
 <?php
-/* vowserDB -  v2.7.1
+/* vowserDB -  v2.8.0
  * by vantezzen (http://vantezzen.de)
  *
  * For documentation check http://github.com/vantezzen/vowserdb
@@ -144,7 +144,7 @@ class vowserdb
      *
      * @return array with the selected rows
      */
-    public static function SELECT($table, $requirements = array())
+    public static function SELECT($table, $requirements = array(), $ignorerelationships = false)
     {
         $path = self::$folder.$table.'.vowserdb';
         $columns = self::GET_COLUMNS($table);
@@ -166,7 +166,7 @@ class vowserdb
             }
         }
         if ($requirements == array() || empty($requirements)) {
-          if ($table !== self::RELATIONSHIPTABLE) {
+          if ($table !== self::RELATIONSHIPTABLE && $ignorerelationships !== true) {
             $relationships = self::getrelationships($table);
             if (!empty($relationships)) {
               foreach($relationships as $relationship) {
@@ -285,7 +285,7 @@ class vowserdb
             ++$counter;
         }
 
-        if ($table !== self::RELATIONSHIPTABLE) {
+        if ($table !== self::RELATIONSHIPTABLE && $ignorerelationships !== true) {
           $relationships = self::getrelationships($table);
           if (!empty($relationships)) {
             foreach($relationships as $relationship) {
