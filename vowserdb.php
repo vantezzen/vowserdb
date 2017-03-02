@@ -18,6 +18,9 @@ class vowserdb
   public static $folder = 'vowserdb/';     // Change the folder, where the tables will be saved to (notice the leading "/")
   public static $dobackup = true;    // Do a backup of every table before editing it (e.g. UPDATE, ADD_COLUMN, etc.)
   public static $disablelock = false; // Disable the table lock*
+  public static $encrypt = true; // Encrypt the tables
+  public static $file_encryption_blocks = 10000;
+
 
   /*
    * Do not edit the constants below
@@ -656,6 +659,9 @@ class vowserdb
            fwrite($file, 'LOCKED');
            fclose($file);
        }
+       if (self::$encrypt) {
+         self::decrypt($table);
+       }
        if (self::$dobackup == true) {
            if (file_exists(self::$folder.$table.'.backup.vowserdb')) {
                unlink(self::$folder.$table.'.backup.vowserdb');
@@ -678,6 +684,9 @@ class vowserdb
         if (self::$disablelock == false) {
             $path = self::$folder.$table.'.lock';
             unlink($path);
+        }
+        if (self::$encrypt) {
+          self::encrypt($table);
         }
 
         return true;
@@ -707,49 +716,86 @@ class vowserdb
     /*
      * Encryption/Decryption of tables
      */
-    private static function encrypt($table, $password = 'BC+Lnx.RYum4pF`Z', $iv = '1234567891234567', $method = 'AES256')
-    {
-        if (defined(VOWSERDBPASSWORD)) {
-            $password = VOWSERDBPASSWORD;
-        }
-        if (defined(VOWSERDBIV)) {
-            $iv = VOWSERDBIV;
-        }
-        $encryptfile = self::$folder.$table.'.encrypt.vowserdb';
-        $originalfile = self::$folder.$table.'.vowserdb';
-        $data = file_get_contents($originalfile);
-        if ($data == 'This table is encrypted') {
-            return false;
-        }
-        $encrypt = openssl_encrypt($data, 'AES256', $password, 0, $iv);
-        $f = fopen($encryptfile, 'w');
-        fwrite($f, $encrypt);
-        fclose($f);
-        $f = fopen($originalfile, 'w');
-        fwrite($f, 'This table is encrypted');
-        fclose($f);
-    }
+     function encrypt($table)
+     {
+       $encryptfile = self::$folder.$table.'.encrypt.vowserdb';
+       $originalfile = self::$folder.$table.'.vowserdb';
+       if (!file_exists($originalfile)) {
+         return false;
+       }
+       if (file_get_contents($originalfile) == "encr") {
+         return array("error" => "Already encrypted");
+       }
+       self::encryptFile($originalfile, '20E4A879C13ADB03A74324A8B9792C10', $encryptfile);
+       $f = fopen($originalfile, 'w');
+       fwrite($f, 'encr');
+       fclose($f);
+     }
 
-    private static function decrypt($table, $password = 'BC+Lnx.RYum4pF`Z', $iv = '1234567891234567', $method = 'AES256')
-    {
-        if (defined(VOWSERDBPASSWORD)) {
-            $password = VOWSERDBPASSWORD;
-        }
-        if (defined(VOWSERDBIV)) {
-          $iv = VOWSERDBIV;
-        }
-        $encryptfile = self::$folder.$table.'.encrypt.vowserdb';
-        $originalfile = self::$folder.$table.'.vowserdb';
-        $data = file_get_contents($encryptfile);
-        if ($data == 'This table was decrypted') {
-            return false;
-        }
-        $decrypt = openssl_decrypt($data, 'AES256', $password, 0, $iv);
-        $f = fopen($originalfile, 'w');
-        fwrite($f, $decrypt);
-        fclose($f);
-        $f = fopen($encryptfile, 'w');
-        fwrite($f, 'This table was decrypted');
-        fclose($f);
-    }
+     function decrypt($table)
+     {
+       $encryptfile = self::$folder.$table.'.encrypt.vowserdb';
+       $originalfile = self::$folder.$table.'.vowserdb';
+       if (!file_exists($encryptfile)) {
+         return array("error" => "Already decrypted");
+       }
+       self::decryptFile($encryptfile, '20E4A879C13ADB03A74324A8B9792C10', $originalfile);
+       unlink($encryptfile);
+     }
+
+     private static function encryptFile($source, $key, $dest)
+     {
+         $key = substr(sha1($key, true), 0, 16);
+         $iv = openssl_random_pseudo_bytes(16);
+
+         $error = false;
+         if ($fpOut = fopen($dest, 'w')) {
+             // Put the initialzation vector to the beginning of the file
+             fwrite($fpOut, $iv);
+             if ($fpIn = fopen($source, 'rb')) {
+                 while (!feof($fpIn)) {
+                     $plaintext = fread($fpIn, 16 * 10000);
+                     $ciphertext = openssl_encrypt($plaintext, 'AES-128-CBC', $key, OPENSSL_RAW_DATA, $iv);
+                     // Use the first 16 bytes of the ciphertext as the next initialization vector
+                     $iv = substr($ciphertext, 0, 16);
+                     fwrite($fpOut, $ciphertext);
+                 }
+                 fclose($fpIn);
+             } else {
+                 $error = true;
+             }
+             fclose($fpOut);
+         } else {
+             $error = true;
+         }
+
+         return $error ? false : $dest;
+     }
+     private static function decryptFile($source, $key, $dest)
+     {
+         $key = substr(sha1($key, true), 0, 16);
+
+         $error = false;
+         if ($fpOut = fopen($dest, 'w')) {
+             if ($fpIn = fopen($source, 'rb')) {
+                 // Get the initialzation vector from the beginning of the file
+                 $iv = fread($fpIn, 16);
+                 while (!feof($fpIn)) {
+                     $ciphertext = fread($fpIn, 16 * (10000 + 1)); // we have to read one block more for decrypting than for encrypting
+                     $plaintext = openssl_decrypt($ciphertext, 'AES-128-CBC', $key, OPENSSL_RAW_DATA, $iv);
+                     // Use the first 16 bytes of the ciphertext as the next initialization vector
+                     $iv = substr($ciphertext, 0, 16);
+                     fwrite($fpOut, $plaintext);
+                 }
+                 fclose($fpIn);
+             } else {
+                 $error = true;
+             }
+             fclose($fpOut);
+         } else {
+             $error = true;
+         }
+
+         return $error ? false : $dest;
+     }
 }
