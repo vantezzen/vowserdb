@@ -1,5 +1,5 @@
 <?php
-/* vowserDB -  v2.7.1
+/* vowserDB -  v2.8.0
  * by vantezzen (http://vantezzen.de)
  *
  * For documentation check http://github.com/vantezzen/vowserdb
@@ -18,15 +18,17 @@ class vowserdb
   public static $folder = 'vowserdb/';     // Change the folder, where the tables will be saved to (notice the leading "/")
   public static $dobackup = true;    // Do a backup of every table before editing it (e.g. UPDATE, ADD_COLUMN, etc.)
   public static $disablelock = false; // Disable the table lock*
+  public static $respectrelationshipsrelationship = false; // Should relationships on the relationship table be repected?
   public static $encrypt = true; // Encrypt the tables
   public static $file_encryption_blocks = 10000;
-
 
   /*
    * Do not edit the constants below
    */
   const NEWLINE = '
 ';
+  const RELATIONSHIPTABLE = "vowserdb-table-relationships";
+
   /*
    * * Table lock will protect a table when a script writes to it.
    *   This can prevent data loss when two scripts try to write
@@ -145,7 +147,7 @@ class vowserdb
      *
      * @return array with the selected rows
      */
-    public static function SELECT($table, $requirements = array())
+    public static function SELECT($table, $requirements = array(), $ignorerelationships = false)
     {
         $path = self::$folder.$table.'.vowserdb';
         $columns = self::GET_COLUMNS($table);
@@ -167,7 +169,20 @@ class vowserdb
             }
         }
         if ($requirements == array() || empty($requirements)) {
-            return $array;
+          if ($table !== self::RELATIONSHIPTABLE && $ignorerelationships !== true) {
+            $relationships = self::getrelationships($table);
+            if (!empty($relationships)) {
+              foreach($relationships as $relationship) {
+                $row = $relationship["row1"];
+                $row2 = $relationship["row2"];
+                $table2 = $relationship["table2"];
+                foreach($array as $id => $entry) {
+                  $array[$id][$row] = self::SELECT($table2, array($row2 => $array[$id][$row]), !self::$respectrelationshipsrelationship);
+                }
+              }
+            }
+          }
+          return $array;
         }
         $select = array();
         $counter = 0;
@@ -273,6 +288,19 @@ class vowserdb
             ++$counter;
         }
 
+        if ($table !== self::RELATIONSHIPTABLE && $ignorerelationships !== true) {
+          $relationships = self::getrelationships($table);
+          if (!empty($relationships)) {
+            foreach($relationships as $relationship) {
+              $row = $relationship["row1"];
+              $row2 = $relationship["row2"];
+              $table2 = $relationship["table2"];
+              foreach($select as $id => $entry) {
+                $select[$id][$row] = self::SELECT($table2, array($row2 => $select[$id][$row]), !self::$respectrelationshipsrelationship);
+              }
+            }
+          }
+        }
         return $select;
     }
 
@@ -287,7 +315,7 @@ class vowserdb
     {
         self::checklock($table);
         self::setlock($table);
-        $rows = self::SELECT($table, $where);
+        $rows = self::SELECT($table, $where, true);
         $path = self::$folder.$table.'.vowserdb';
         $content = file_get_contents($path);
         foreach ($rows as $row) {
@@ -469,7 +497,7 @@ class vowserdb
     {
         self::checklock($table);
         self::setlock($table);
-        $rows = self::SELECT($table, $where);
+        $rows = self::SELECT($table, $where, true);
         $path = self::$folder.$table.'.vowserdb';
         $content = file_get_contents($path);
         foreach ($rows as $row) {
@@ -641,6 +669,42 @@ class vowserdb
         }
     }
 
+  /*
+   * Relationships
+   */
+
+   public static function relationship($table1, $row1, $table2, $row2) {
+     if (!file_exists(self::$folder.self::RELATIONSHIPTABLE.'.vowserdb')) {
+       self::CREATE(self::RELATIONSHIPTABLE, array("table1", "row1", "table2", "row2"));
+     }
+     if (!empty(self::SELECT(self::RELATIONSHIPTABLE, array("table1" => $table1, "row1" => $row1, "table2" => $table2, "row2" => $row2)))) {
+       return array("error" => "Relationship already exists");
+     } else {
+       self::INSERT(array("table1" => $table1, "row1" => $row1, "table2" => $table2, "row2" => $row2), self::RELATIONSHIPTABLE);
+       return true;
+     }
+   }
+   public static function destroyrelationship($table1, $row1, $table2, $row2) {
+     if (!file_exists(self::$folder.self::RELATIONSHIPTABLE.'.vowserdb')) {
+       return array("error" => "Relationship not found");
+     }
+     if (empty(self::SELECT(self::RELATIONSHIPTABLE, array("table1" => $table1, "row1" => $row1, "table2" => $table2, "row2" => $row2)))) {
+       return array("error" => "Relationship not found");
+     } else {
+       self::DELETE(self::RELATIONSHIPTABLE, array("table1" => $table1, "row1" => $row1, "table2" => $table2, "row2" => $row2));
+       return true;
+     }
+   }
+   private static function getrelationships($table) {
+     if (!file_exists(self::$folder.self::RELATIONSHIPTABLE.'.vowserdb')) {
+       return array();
+     }
+     return self::SELECT(self::RELATIONSHIPTABLE, array("table1" => $table));
+   }
+
+  /*
+   * INTERNAL FUNCTIONS
+   */
    /*
     * Lock mechanism.
     */
@@ -667,7 +731,9 @@ class vowserdb
            if (file_exists(self::$folder.$table.'.backup.vowserdb')) {
                unlink(self::$folder.$table.'.backup.vowserdb');
            }
-           copy(self::$folder.$table.'.vowserdb', self::$folder.$table.'.backup.vowserdb');
+           if (file_exists(self::$folder.$table.'.vowserdb')) {
+             copy(self::$folder.$table.'.vowserdb', self::$folder.$table.'.backup.vowserdb');
+           }
        }
 
        return true;
