@@ -661,6 +661,7 @@ class vowserdb
        }
        if (self::$encrypt) {
          self::decrypt($table);
+         self::decryptbackup($table);
        }
        if (self::$dobackup == true) {
            if (file_exists(self::$folder.$table.'.backup.vowserdb')) {
@@ -687,6 +688,7 @@ class vowserdb
         }
         if (self::$encrypt) {
           self::encrypt($table);
+          self::encryptbackup($table);
         }
 
         return true;
@@ -720,13 +722,31 @@ class vowserdb
      {
        $encryptfile = self::$folder.$table.'.encrypt.vowserdb';
        $originalfile = self::$folder.$table.'.vowserdb';
+       $key = defined('VOWSERDBENCRKEY') ? VOWSERDBENCRKEY : '20E4A879C13ADB03A74324A8B9792C10';
        if (!file_exists($originalfile)) {
          return false;
        }
        if (file_get_contents($originalfile) == "encr") {
          return array("error" => "Already encrypted");
        }
-       self::encryptFile($originalfile, '20E4A879C13ADB03A74324A8B9792C10', $encryptfile);
+       self::encryptFile($originalfile, $key, $encryptfile);
+       $f = fopen($originalfile, 'w');
+       fwrite($f, 'encr');
+       fclose($f);
+     }
+
+     function encryptbackup($table)
+     {
+       $encryptfile = self::$folder.$table.'.backup.encrypt.vowserdb';
+       $originalfile = self::$folder.$table.'.backup.vowserdb';
+       $key = defined('VOWSERDBENCRKEY') ? VOWSERDBENCRKEY : '20E4A879C13ADB03A74324A8B9792C10';
+       if (!file_exists($originalfile)) {
+         return false;
+       }
+       if (file_get_contents($originalfile) == "encr") {
+         return array("error" => "Already encrypted");
+       }
+       self::encryptFile($originalfile, $key, $encryptfile);
        $f = fopen($originalfile, 'w');
        fwrite($f, 'encr');
        fclose($f);
@@ -736,10 +756,23 @@ class vowserdb
      {
        $encryptfile = self::$folder.$table.'.encrypt.vowserdb';
        $originalfile = self::$folder.$table.'.vowserdb';
+       $key = defined('VOWSERDBENCRKEY') ? VOWSERDBENCRKEY : '20E4A879C13ADB03A74324A8B9792C10';
        if (!file_exists($encryptfile)) {
          return array("error" => "Already decrypted");
        }
-       self::decryptFile($encryptfile, '20E4A879C13ADB03A74324A8B9792C10', $originalfile);
+       self::decryptFile($encryptfile, $key, $originalfile);
+       unlink($encryptfile);
+     }
+
+     function decryptbackup($table)
+     {
+       $encryptfile = self::$folder.$table.'.backup.encrypt.vowserdb';
+       $originalfile = self::$folder.$table.'.backup.vowserdb';
+       $key = defined('VOWSERDBENCRKEY') ? VOWSERDBENCRKEY : '20E4A879C13ADB03A74324A8B9792C10';
+       if (!file_exists($encryptfile)) {
+         return array("error" => "Already decrypted");
+       }
+       self::decryptFile($encryptfile, $key, $originalfile);
        unlink($encryptfile);
      }
 
