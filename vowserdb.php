@@ -50,6 +50,9 @@ class vowserdb
       if (!file_exists(self::$folder.'.htaccess') || file_get_contents(self::$folder.'.htaccess') !== 'deny from all') {
           $error[] = self::$folder.'.htaccess does not exists or may not have the right content';
       }
+      if (self::$encrypt && !defined('VOWSERDBENCRKEY')) {
+          $error[] = 'Encryption is enabled but no custom encryption key is defined. Please define(\'VOWSERDBENCRKEY\') with a custom AES-128-CBC encryption key.';
+      }
 
       return $error;
   }
@@ -150,8 +153,11 @@ class vowserdb
     public static function SELECT($table, $requirements = array(), $ignorerelationships = false)
     {
         $path = self::$folder.$table.'.vowserdb';
+        self::checklock($table);
+        self::setlock($table);
         $columns = self::GET_COLUMNS($table);
         $content = file_get_contents($path);
+        self::removelock($table);
         $items = explode(self::NEWLINE, $content);
         $items[0] = '';
         $array = array();
@@ -177,7 +183,9 @@ class vowserdb
                 $row2 = $relationship["row2"];
                 $table2 = $relationship["table2"];
                 foreach($array as $id => $entry) {
-                  $array[$id][$row] = self::SELECT($table2, array($row2 => $array[$id][$row]), !self::$respectrelationshipsrelationship);
+                  if (!is_array($array[$id][$row])) {
+                    $array[$id][$row] = self::SELECT($table2, array($row2 => $array[$id][$row]), !self::$respectrelationshipsrelationship);
+                  }
                 }
               }
             }
@@ -296,7 +304,9 @@ class vowserdb
               $row2 = $relationship["row2"];
               $table2 = $relationship["table2"];
               foreach($select as $id => $entry) {
-                $select[$id][$row] = self::SELECT($table2, array($row2 => $select[$id][$row]), !self::$respectrelationshipsrelationship);
+                if (!is_array($array[$id][$row])) {
+                  $select[$id][$row] = self::SELECT($table2, array($row2 => $select[$id][$row]), !self::$respectrelationshipsrelationship);
+                }
               }
             }
           }
@@ -558,8 +568,10 @@ class vowserdb
     {
         self::checklock($table);
         self::setlock($table);
-        $path = self::$folder.$table.'.vowserdb';
-        unlink($path);
+        if (file_exists(self::$folder.$table.'.vowserdb')) unlink(self::$folder.$table.'.vowserdb');
+        if (file_exists(self::$folder.$table.'.encrypt.vowserdb')) unlink(self::$folder.$table.'.encrypt.vowserdb');
+        if (file_exists(self::$folder.$table.'.backup.vowserdb')) unlink(self::$folder.$table.'.backup.vowserdb');
+        if (file_exists(self::$folder.$table.'.backup.enrypt.vowserdb')) unlink(self::$folder.$table.'.backup.enrypt.vowserdb');
         self::removelock($table);
     }
 
@@ -572,7 +584,9 @@ class vowserdb
     {
         $tables = array();
         foreach (glob(self::$folder.'*.vowserdb') as $table) {
+          if (!preg_match("/.backup.vowserdb$/", $table) && !preg_match("/.encrypt.vowserdb$/", $table) && !preg_match("/^vowserdb-/", $table)) {
             $tables[] = str_replace(array(self::$folder, '.vowserdb'), '', $table);
+          }
         }
 
         return $tables;
@@ -750,7 +764,7 @@ class vowserdb
     {
         if (self::$disablelock == false) {
             $path = self::$folder.$table.'.lock';
-            unlink($path);
+            if (file_exists($path)) unlink($path);
         }
         if (self::$encrypt) {
           self::encrypt($table);
@@ -784,7 +798,15 @@ class vowserdb
     /*
      * Encryption/Decryption of tables
      */
-     function encrypt($table)
+     public static function decryptall()
+     {
+       foreach(self::TABLES() as $table) {
+         self::decrypt($table);
+         self::decryptbackup($table);
+       }
+     }
+
+     private static function encrypt($table)
      {
        $encryptfile = self::$folder.$table.'.encrypt.vowserdb';
        $originalfile = self::$folder.$table.'.vowserdb';
@@ -801,7 +823,7 @@ class vowserdb
        fclose($f);
      }
 
-     function encryptbackup($table)
+     private static function encryptbackup($table)
      {
        $encryptfile = self::$folder.$table.'.backup.encrypt.vowserdb';
        $originalfile = self::$folder.$table.'.backup.vowserdb';
@@ -818,7 +840,7 @@ class vowserdb
        fclose($f);
      }
 
-     function decrypt($table)
+     private static function decrypt($table)
      {
        $encryptfile = self::$folder.$table.'.encrypt.vowserdb';
        $originalfile = self::$folder.$table.'.vowserdb';
@@ -830,7 +852,7 @@ class vowserdb
        unlink($encryptfile);
      }
 
-     function decryptbackup($table)
+     private static function decryptbackup($table)
      {
        $encryptfile = self::$folder.$table.'.backup.encrypt.vowserdb';
        $originalfile = self::$folder.$table.'.backup.vowserdb';
