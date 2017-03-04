@@ -1,5 +1,5 @@
 <?php
-/* vowserDB -  v2.8.0
+/* vowserDB -  v2.9.0
  * by vantezzen (http://vantezzen.de)
  *
  * For documentation check http://github.com/vantezzen/vowserdb
