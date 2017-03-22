@@ -9,6 +9,7 @@ Move the "vowserdb.php" script to your project folder and include it via<br />
 include("vowserdb.php");
 ```
 <br />
+
 ## install with composer
 
 Simply run
