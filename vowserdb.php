@@ -54,7 +54,8 @@ class vowserdb
       return $error;
   }
 
-  function read_table($table) {
+  // Internally used functions
+  private static function read_table($table) {
     $path = self::$folder.$table.self::$file_extension;
     $columns = self::GET_COLUMNS($table);
     $f = fopen($path, 'r');
@@ -75,6 +76,18 @@ class vowserdb
     return $array;
   }
 
+  // Source: https://gist.github.com/johanmeiring/2894568
+  private static function str_putcsv($input, $delimiter = ',', $enclosure = '"')
+    {
+        $fp = fopen('php://temp', 'r+');
+        fputcsv($fp, $input, $delimiter, $enclosure);
+        rewind($fp);
+        $data = fread($fp, 1048576);
+        fclose($fp);
+        return rtrim($data, "\n");
+    }
+
+  // External functions
    /**
     * Create a new vowserdb table.
     *
@@ -155,7 +168,7 @@ class vowserdb
     {
         $path = self::$folder.$table.self::$file_extension;
         $columns = self::GET_COLUMNS($table);
-        $array = read_table($table);
+        $array = self::read_table($table);
 
         if ($requirements == array() || empty($requirements)) {
           if ($table !== self::RELATIONSHIPTABLE && $ignorerelationships !== true) {
@@ -176,7 +189,6 @@ class vowserdb
         $select = array();
         $counter = 0;
         foreach ($requirements as $column => $value) {
-            $value = self::ESCAPE($value);
             if (preg_match('/^BIGGER THAN/', $value)) {
                 $mode = 'bigger';
                 $value = str_replace('BIGGER THAN ', '', $value);
@@ -308,10 +320,9 @@ class vowserdb
         $path = self::$folder.$table.self::$file_extension;
         $content = file_get_contents($path);
         foreach ($rows as $row) {
-            $oldrow = '';
-            $newrow = '';
+            $oldrow = self::str_putcsv($row);
+            $newrow = array();
             foreach ($row as $column => $value) {
-                $oldrow .= $value.self::$seperation_char;
                 if (isset($data[$column])) {
                     $data[$column] = str_replace(self::$seperation_char, '', $data[$column]);
                     if (preg_match('/^INCREASE BY/', $data[$column])) {
@@ -329,11 +340,10 @@ class vowserdb
                     } else {
                         $value = $data[$column];
                     }
-                    $newrow .= $value.self::$seperation_char;
-                } else {
-                    $newrow .= $value.self::$seperation_char;
                 }
+                $newrow[] = $value;
             }
+            $newrow = self::str_putcsv($newrow);
             $content = str_replace($oldrow, $newrow, $content, $num);
         }
         $file = fopen($path, 'w');
