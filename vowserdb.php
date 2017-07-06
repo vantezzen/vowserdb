@@ -19,15 +19,15 @@ class vowserdb
   public static $respectrelationshipsrelationship = false; // Should relationships on the relationship table be repected?
   public static $encrypt = false; // Encrypt the tables
   public static $file_encryption_blocks = 10000;
-  public static $file_extension = '.csv';
-  public static $seperation_char = ',';
+    public static $file_extension = '.csv';
+    public static $seperation_char = ',';
 
   /*
    * Do not edit the constants below
    */
   const NEWLINE = '
 ';
-  const RELATIONSHIPTABLE = "vowserdb-table-relationships";
+    const RELATIONSHIPTABLE = "vowserdb-table-relationships";
 
   /*
    * * Table lock will protect a table when a script writes to it.
@@ -55,37 +55,38 @@ class vowserdb
   }
 
   // Internally used functions
-  private static function read_table($table) {
-    $path = self::$folder.$table.self::$file_extension;
-    $columns = self::GET_COLUMNS($table);
-    $f = fopen($path, 'r');
-    $array = array();
-    while (($data = fgetcsv($f)) !== FALSE) {
-      if (!empty($data) && array_filter($data, 'trim')) {
-        $row = array();
-        foreach ($data as $key => $e) {
-            $row[$columns[$key]] = $e;
-        }
-        $array[] = $row;
+  private static function read_table($table)
+  {
+      $path = self::$folder.$table.self::$file_extension;
+      $columns = self::GET_COLUMNS($table);
+      $f = fopen($path, 'r');
+      $array = array();
+      while (($data = fgetcsv($f)) !== false) {
+          if (!empty($data) && array_filter($data, 'trim')) {
+              $row = array();
+              foreach ($data as $key => $e) {
+                  $row[$columns[$key]] = $e;
+              }
+              $array[] = $row;
+          }
       }
-    }
-    fclose($f);
+      fclose($f);
 
-    array_shift($array);
+      array_shift($array);
 
-    return $array;
+      return $array;
   }
 
   // Source: https://gist.github.com/johanmeiring/2894568
   private static function str_putcsv($input, $delimiter = ',', $enclosure = '"')
-    {
-        $fp = fopen('php://temp', 'r+');
-        fputcsv($fp, $input, $delimiter, $enclosure);
-        rewind($fp);
-        $data = fread($fp, 1048576);
-        fclose($fp);
-        return rtrim($data, "\n");
-    }
+  {
+      $fp = fopen('php://temp', 'r+');
+      fputcsv($fp, $input, $delimiter, $enclosure);
+      rewind($fp);
+      $data = fread($fp, 1048576);
+      fclose($fp);
+      return rtrim($data, "\n");
+  }
 
   // External functions
    /**
@@ -98,7 +99,7 @@ class vowserdb
        self::checklock($name);
        self::setlock($name);
        if (file_exists(self::$folder.$name.self::$file_extension)) {
-         // TODO: reenable
+           // TODO: reenable
          //return false;
        }
 
@@ -171,20 +172,20 @@ class vowserdb
         $array = self::read_table($table);
 
         if ($requirements == array() || empty($requirements)) {
-          if ($table !== self::RELATIONSHIPTABLE && $ignorerelationships !== true) {
-            $relationships = self::getrelationships($table);
-            if (!empty($relationships)) {
-              foreach($relationships as $relationship) {
-                $row = $relationship["row1"];
-                $row2 = $relationship["row2"];
-                $table2 = $relationship["table2"];
-                foreach($array as $id => $entry) {
-                  $array[$id][$row] = self::SELECT($table2, array($row2 => $array[$id][$row]), !self::$respectrelationshipsrelationship);
+            if ($table !== self::RELATIONSHIPTABLE && $ignorerelationships !== true) {
+                $relationships = self::getrelationships($table);
+                if (!empty($relationships)) {
+                    foreach ($relationships as $relationship) {
+                        $row = $relationship["row1"];
+                        $row2 = $relationship["row2"];
+                        $table2 = $relationship["table2"];
+                        foreach ($array as $id => $entry) {
+                            $array[$id][$row] = self::SELECT($table2, array($row2 => $array[$id][$row]), !self::$respectrelationshipsrelationship);
+                        }
+                    }
                 }
-              }
             }
-          }
-          return $array;
+            return $array;
         }
         $select = array();
         $counter = 0;
@@ -290,17 +291,17 @@ class vowserdb
         }
 
         if ($table !== self::RELATIONSHIPTABLE && $ignorerelationships !== true) {
-          $relationships = self::getrelationships($table);
-          if (!empty($relationships)) {
-            foreach($relationships as $relationship) {
-              $row = $relationship["row1"];
-              $row2 = $relationship["row2"];
-              $table2 = $relationship["table2"];
-              foreach($select as $id => $entry) {
-                $select[$id][$row] = self::SELECT($table2, array($row2 => $select[$id][$row]), !self::$respectrelationshipsrelationship);
-              }
+            $relationships = self::getrelationships($table);
+            if (!empty($relationships)) {
+                foreach ($relationships as $relationship) {
+                    $row = $relationship["row1"];
+                    $row2 = $relationship["row2"];
+                    $table2 = $relationship["table2"];
+                    foreach ($select as $id => $entry) {
+                        $select[$id][$row] = self::SELECT($table2, array($row2 => $select[$id][$row]), !self::$respectrelationshipsrelationship);
+                    }
+                }
             }
-          }
         }
         return $select;
     }
@@ -366,37 +367,22 @@ class vowserdb
          self::checklock($table);
          self::setlock($table);
          $path = self::$folder.$table.self::$file_extension;
-         if (!file_exists($path) || !is_readable($path) || !is_writable($path)) {
-             self::removelock($table);
+         $content = explode(self::NEWLINE, file_get_contents($path));
 
-             return false;
-         }
-         $f = fopen($path, 'r');
-         $line = fgets($f);
-         fclose($f);
-         if (strpos($line, self::$seperation_char.$oldname.self::$seperation_char) !== false) {
-             $line = str_replace(self::$seperation_char.$oldname.self::$seperation_char, self::$seperation_char.$newname.self::$seperation_char, $line);
-         } elseif (strpos($line, self::$seperation_char.$oldname) !== false) {
-             $line = str_replace(self::$seperation_char.$oldname, self::$seperation_char.$newname, $line);
-         } elseif (strpos($line, $oldname.self::$seperation_char) !== false) {
-             $line = str_replace($oldname.self::$seperation_char, $newname.self::$seperation_char, $line);
-         } else {
-             self::removelock($table);
+         $columns = str_getcsv($content[0]);
 
-             return false;
+         foreach($columns as $column) {
+           if ($column == $oldname) $column = $newname;
          }
 
-         $content = file_get_contents($path);
-         $content = explode(self::NEWLINE, $content);
-         $content[0] = $line;
+         $content[0] = self::str_putcsv($columns);
+
          $content = implode(self::NEWLINE, $content);
-
          $file = fopen($path, 'w');
          fwrite($file, $content);
          fclose($file);
 
          self::removelock($table);
-
          return true;
      }
 
@@ -601,105 +587,42 @@ class vowserdb
         return false;
     }
 
-   /*
-    * MySQL Table Migrating System.
-    */
-   /**
-    * Migrate a MySQL table to vowserdb.
-    *
-    * @param Host of the MySQL Server
-    * @param Username of the MySQL Server
-    * @param Password of the MySQL Server
-    * @param MySQL Database name
-    * @param MySQL table name
-    * @param MySQL WHERE statement
-    *
-    * @return Errors
-    */
-   public static function MIGRATE($host, $username, $password, $database, $table, $where = '1')
-   {
-       $db = mysqli_connect($host, $username, $password, $database);
-       if (mysqli_connect_errno()) {
-           return array('error' => mysqli_connect_error());
-       }
-       $command = 'SELECT * FROM `'.$table.'` WHERE '.$where;
-       $exe = mysqli_query($db, $command);
-       if ($exe == false) {
-           return array('error' => 'SELECT failed');
-       }
-       $columns = '';
-       $rows = array();
-       while ($row = mysqli_fetch_assoc($exe)) {
-           if (empty($columns)) {
-               $columns = array_keys($row);
-           }
-           $rows[] = $row;
-       }
-       self::CREATE($table, $columns);
-       foreach ($rows as $row) {
-           self::INSERT($row, $table);
-       }
-   }
-
-    /**
-     * Migrate a MySQL database to vowserdb.
-     *
-     * @param Host of the MySQL Server
-     * @param Username of the MySQL Server
-     * @param Password of the MySQL Server
-     * @param MySQL Database name
-     *
-     * @return Errors
-     */
-    public static function MIGRATE_DB($host, $username, $password, $database)
-    {
-        $db = mysqli_connect($host, $username, $password, $database);
-        if (mysqli_connect_errno()) {
-            return array('error' => mysqli_connect_error());
-        }
-        $command = 'SHOW TABLES';
-        $exe = mysqli_query($db, $command);
-        if ($exe == false) {
-            return array('error' => 'SELECT failed');
-        }
-        $columnname = 'Tables_in_'.$database;
-        while ($row = mysqli_fetch_assoc($exe)) {
-            self::MIGRATE($host, $username, $password, $database, $row[$columnname]);
-        }
-    }
 
   /*
    * Relationships
    */
 
-   public static function relationship($table1, $row1, $table2, $row2) {
-     if (!file_exists(self::$folder.self::RELATIONSHIPTABLE.self::$file_extension)) {
-       self::CREATE(self::RELATIONSHIPTABLE, array("table1", "row1", "table2", "row2"));
-     }
-     if (!empty(self::SELECT(self::RELATIONSHIPTABLE, array("table1" => $table1, "row1" => $row1, "table2" => $table2, "row2" => $row2)))) {
-       return array("error" => "Relationship already exists");
-     } else {
-       self::INSERT(array("table1" => $table1, "row1" => $row1, "table2" => $table2, "row2" => $row2), self::RELATIONSHIPTABLE);
-       return true;
-     }
+   public static function relationship($table1, $row1, $table2, $row2)
+   {
+       if (!file_exists(self::$folder.self::RELATIONSHIPTABLE.self::$file_extension)) {
+           self::CREATE(self::RELATIONSHIPTABLE, array("table1", "row1", "table2", "row2"));
+       }
+       if (!empty(self::SELECT(self::RELATIONSHIPTABLE, array("table1" => $table1, "row1" => $row1, "table2" => $table2, "row2" => $row2)))) {
+           return array("error" => "Relationship already exists");
+       } else {
+           self::INSERT(array("table1" => $table1, "row1" => $row1, "table2" => $table2, "row2" => $row2), self::RELATIONSHIPTABLE);
+           return true;
+       }
    }
-   public static function destroyrelationship($table1, $row1, $table2, $row2) {
-     if (!file_exists(self::$folder.self::RELATIONSHIPTABLE.self::$file_extension)) {
-       return array("error" => "Relationship not found");
-     }
-     if (empty(self::SELECT(self::RELATIONSHIPTABLE, array("table1" => $table1, "row1" => $row1, "table2" => $table2, "row2" => $row2)))) {
-       return array("error" => "Relationship not found");
-     } else {
-       self::DELETE(self::RELATIONSHIPTABLE, array("table1" => $table1, "row1" => $row1, "table2" => $table2, "row2" => $row2));
-       return true;
-     }
-   }
-   private static function getrelationships($table) {
-     if (!file_exists(self::$folder.self::RELATIONSHIPTABLE.self::$file_extension)) {
-       return array();
-     }
-     return self::SELECT(self::RELATIONSHIPTABLE, array("table1" => $table));
-   }
+    public static function destroyrelationship($table1, $row1, $table2, $row2)
+    {
+        if (!file_exists(self::$folder.self::RELATIONSHIPTABLE.self::$file_extension)) {
+            return array("error" => "Relationship not found");
+        }
+        if (empty(self::SELECT(self::RELATIONSHIPTABLE, array("table1" => $table1, "row1" => $row1, "table2" => $table2, "row2" => $row2)))) {
+            return array("error" => "Relationship not found");
+        } else {
+            self::DELETE(self::RELATIONSHIPTABLE, array("table1" => $table1, "row1" => $row1, "table2" => $table2, "row2" => $row2));
+            return true;
+        }
+    }
+    private static function getrelationships($table)
+    {
+        if (!file_exists(self::$folder.self::RELATIONSHIPTABLE.self::$file_extension)) {
+            return array();
+        }
+        return self::SELECT(self::RELATIONSHIPTABLE, array("table1" => $table));
+    }
 
   /*
    * INTERNAL FUNCTIONS
@@ -723,15 +646,15 @@ class vowserdb
            fclose($file);
        }
        if (self::$encrypt) {
-         self::decrypt($table);
-         self::decryptbackup($table);
+           self::decrypt($table);
+           self::decryptbackup($table);
        }
        if (self::$dobackup == true) {
            if (file_exists(self::$folder.$table.'.backup'.self::$file_extension)) {
                unlink(self::$folder.$table.'.backup'.self::$file_extension);
            }
            if (file_exists(self::$folder.$table.self::$file_extension)) {
-             copy(self::$folder.$table.self::$file_extension, self::$folder.$table.'.backup'.self::$file_extension);
+               copy(self::$folder.$table.self::$file_extension, self::$folder.$table.'.backup'.self::$file_extension);
            }
        }
 
@@ -752,8 +675,8 @@ class vowserdb
             unlink($path);
         }
         if (self::$encrypt) {
-          self::encrypt($table);
-          self::encryptbackup($table);
+            self::encrypt($table);
+            self::encryptbackup($table);
         }
 
         return true;
@@ -785,115 +708,115 @@ class vowserdb
      */
      private static function encrypt($table)
      {
-       $encryptfile = self::$folder.$table.'.encrypt'.self::$file_extension;
-       $originalfile = self::$folder.$table.self::$file_extension;
-       $key = defined('VOWSERDBENCRKEY') ? VOWSERDBENCRKEY : '20E4A879C13ADB03A74324A8B9792C10';
-       if (!file_exists($originalfile)) {
-         return false;
-       }
-       if (file_get_contents($originalfile) == "encr") {
-         return array("error" => "Already encrypted");
-       }
-       self::encryptFile($originalfile, $key, $encryptfile);
-       $f = fopen($originalfile, 'w');
-       fwrite($f, 'encr');
-       fclose($f);
+         $encryptfile = self::$folder.$table.'.encrypt'.self::$file_extension;
+         $originalfile = self::$folder.$table.self::$file_extension;
+         $key = defined('VOWSERDBENCRKEY') ? VOWSERDBENCRKEY : '20E4A879C13ADB03A74324A8B9792C10';
+         if (!file_exists($originalfile)) {
+             return false;
+         }
+         if (file_get_contents($originalfile) == "encr") {
+             return array("error" => "Already encrypted");
+         }
+         self::encryptFile($originalfile, $key, $encryptfile);
+         $f = fopen($originalfile, 'w');
+         fwrite($f, 'encr');
+         fclose($f);
      }
 
-     public static function encryptbackup($table)
-     {
-       $encryptfile = self::$folder.$table.'.backup.encrypt'.self::$file_extension;
-       $originalfile = self::$folder.$table.'.backup'.self::$file_extension;
-       $key = defined('VOWSERDBENCRKEY') ? VOWSERDBENCRKEY : '20E4A879C13ADB03A74324A8B9792C10';
-       if (!file_exists($originalfile)) {
-         return false;
-       }
-       if (file_get_contents($originalfile) == "encr") {
-         return array("error" => "Already encrypted");
-       }
-       self::encryptFile($originalfile, $key, $encryptfile);
-       $f = fopen($originalfile, 'w');
-       fwrite($f, 'encr');
-       fclose($f);
-     }
+    public static function encryptbackup($table)
+    {
+        $encryptfile = self::$folder.$table.'.backup.encrypt'.self::$file_extension;
+        $originalfile = self::$folder.$table.'.backup'.self::$file_extension;
+        $key = defined('VOWSERDBENCRKEY') ? VOWSERDBENCRKEY : '20E4A879C13ADB03A74324A8B9792C10';
+        if (!file_exists($originalfile)) {
+            return false;
+        }
+        if (file_get_contents($originalfile) == "encr") {
+            return array("error" => "Already encrypted");
+        }
+        self::encryptFile($originalfile, $key, $encryptfile);
+        $f = fopen($originalfile, 'w');
+        fwrite($f, 'encr');
+        fclose($f);
+    }
 
-     private static function decrypt($table)
-     {
-       $encryptfile = self::$folder.$table.'.encrypt'.self::$file_extension;
-       $originalfile = self::$folder.$table.self::$file_extension;
-       $key = defined('VOWSERDBENCRKEY') ? VOWSERDBENCRKEY : '20E4A879C13ADB03A74324A8B9792C10';
-       if (!file_exists($encryptfile)) {
-         return array("error" => "Already decrypted");
-       }
-       self::decryptFile($encryptfile, $key, $originalfile);
-       unlink($encryptfile);
-     }
+    private static function decrypt($table)
+    {
+        $encryptfile = self::$folder.$table.'.encrypt'.self::$file_extension;
+        $originalfile = self::$folder.$table.self::$file_extension;
+        $key = defined('VOWSERDBENCRKEY') ? VOWSERDBENCRKEY : '20E4A879C13ADB03A74324A8B9792C10';
+        if (!file_exists($encryptfile)) {
+            return array("error" => "Already decrypted");
+        }
+        self::decryptFile($encryptfile, $key, $originalfile);
+        unlink($encryptfile);
+    }
 
-     private static function decryptbackup($table)
-     {
-       $encryptfile = self::$folder.$table.'.backup.encrypt'.self::$file_extension;
-       $originalfile = self::$folder.$table.'.backup'.self::$file_extension;
-       $key = defined('VOWSERDBENCRKEY') ? VOWSERDBENCRKEY : '20E4A879C13ADB03A74324A8B9792C10';
-       if (!file_exists($encryptfile)) {
-         return array("error" => "Already decrypted");
-       }
-       self::decryptFile($encryptfile, $key, $originalfile);
-       unlink($encryptfile);
-     }
+    private static function decryptbackup($table)
+    {
+        $encryptfile = self::$folder.$table.'.backup.encrypt'.self::$file_extension;
+        $originalfile = self::$folder.$table.'.backup'.self::$file_extension;
+        $key = defined('VOWSERDBENCRKEY') ? VOWSERDBENCRKEY : '20E4A879C13ADB03A74324A8B9792C10';
+        if (!file_exists($encryptfile)) {
+            return array("error" => "Already decrypted");
+        }
+        self::decryptFile($encryptfile, $key, $originalfile);
+        unlink($encryptfile);
+    }
 
-     private static function encryptFile($source, $key, $dest)
-     {
-         $key = substr(sha1($key, true), 0, 16);
-         $iv = openssl_random_pseudo_bytes(16);
+    private static function encryptFile($source, $key, $dest)
+    {
+        $key = substr(sha1($key, true), 0, 16);
+        $iv = openssl_random_pseudo_bytes(16);
 
-         $error = false;
-         if ($fpOut = fopen($dest, 'w')) {
-             // Put the initialzation vector to the beginning of the file
+        $error = false;
+        if ($fpOut = fopen($dest, 'w')) {
+            // Put the initialzation vector to the beginning of the file
              fwrite($fpOut, $iv);
-             if ($fpIn = fopen($source, 'rb')) {
-                 while (!feof($fpIn)) {
-                     $plaintext = fread($fpIn, 16 * 10000);
-                     $ciphertext = openssl_encrypt($plaintext, 'AES-128-CBC', $key, OPENSSL_RAW_DATA, $iv);
+            if ($fpIn = fopen($source, 'rb')) {
+                while (!feof($fpIn)) {
+                    $plaintext = fread($fpIn, 16 * 10000);
+                    $ciphertext = openssl_encrypt($plaintext, 'AES-128-CBC', $key, OPENSSL_RAW_DATA, $iv);
                      // Use the first 16 bytes of the ciphertext as the next initialization vector
                      $iv = substr($ciphertext, 0, 16);
-                     fwrite($fpOut, $ciphertext);
-                 }
-                 fclose($fpIn);
-             } else {
-                 $error = true;
-             }
-             fclose($fpOut);
-         } else {
-             $error = true;
-         }
+                    fwrite($fpOut, $ciphertext);
+                }
+                fclose($fpIn);
+            } else {
+                $error = true;
+            }
+            fclose($fpOut);
+        } else {
+            $error = true;
+        }
 
-         return $error ? false : $dest;
-     }
-     private static function decryptFile($source, $key, $dest)
-     {
-         $key = substr(sha1($key, true), 0, 16);
+        return $error ? false : $dest;
+    }
+    private static function decryptFile($source, $key, $dest)
+    {
+        $key = substr(sha1($key, true), 0, 16);
 
-         $error = false;
-         if ($fpOut = fopen($dest, 'w')) {
-             if ($fpIn = fopen($source, 'rb')) {
-                 // Get the initialzation vector from the beginning of the file
+        $error = false;
+        if ($fpOut = fopen($dest, 'w')) {
+            if ($fpIn = fopen($source, 'rb')) {
+                // Get the initialzation vector from the beginning of the file
                  $iv = fread($fpIn, 16);
-                 while (!feof($fpIn)) {
-                     $ciphertext = fread($fpIn, 16 * (10000 + 1)); // we have to read one block more for decrypting than for encrypting
+                while (!feof($fpIn)) {
+                    $ciphertext = fread($fpIn, 16 * (10000 + 1)); // we have to read one block more for decrypting than for encrypting
                      $plaintext = openssl_decrypt($ciphertext, 'AES-128-CBC', $key, OPENSSL_RAW_DATA, $iv);
                      // Use the first 16 bytes of the ciphertext as the next initialization vector
                      $iv = substr($ciphertext, 0, 16);
-                     fwrite($fpOut, $plaintext);
-                 }
-                 fclose($fpIn);
-             } else {
-                 $error = true;
-             }
-             fclose($fpOut);
-         } else {
-             $error = true;
-         }
+                    fwrite($fpOut, $plaintext);
+                }
+                fclose($fpIn);
+            } else {
+                $error = true;
+            }
+            fclose($fpOut);
+        } else {
+            $error = true;
+        }
 
-         return $error ? false : $dest;
-     }
+        return $error ? false : $dest;
+    }
 }
