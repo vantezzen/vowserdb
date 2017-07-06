@@ -54,6 +54,27 @@ class vowserdb
       return $error;
   }
 
+  function read_table($table) {
+    $path = self::$folder.$table.self::$file_extension;
+    $columns = self::GET_COLUMNS($table);
+    $f = fopen($path, 'r');
+    $array = array();
+    while (($data = fgetcsv($f)) !== FALSE) {
+      if (!empty($data) && array_filter($data, 'trim')) {
+        $row = array();
+        foreach ($data as $key => $e) {
+            $row[$columns[$key]] = $e;
+        }
+        $array[] = $row;
+      }
+    }
+    fclose($f);
+
+    array_shift($array);
+
+    return $array;
+  }
+
    /**
     * Create a new vowserdb table.
     *
@@ -134,23 +155,8 @@ class vowserdb
     {
         $path = self::$folder.$table.self::$file_extension;
         $columns = self::GET_COLUMNS($table);
-        $content = file_get_contents($path);
-        $items = explode(self::NEWLINE, $content);
-        $items[0] = '';
-        $array = array();
-        $rows = array();
-        foreach ($items as $item) {
-            if (!empty($item)) {
-                $explode = explode(self::$seperation_char, $item);
-                array_pop($explode);
-                unset($row);
-                $row = array();
-                foreach ($explode as $key => $e) {
-                    $row[$columns[$key]] = $e;
-                }
-                $array[] = $row;
-            }
-        }
+        $array = read_table($table);
+
         if ($requirements == array() || empty($requirements)) {
           if ($table !== self::RELATIONSHIPTABLE && $ignorerelationships !== true) {
             $relationships = self::getrelationships($table);
