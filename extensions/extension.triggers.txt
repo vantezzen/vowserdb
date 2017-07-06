@@ -1,0 +1,12 @@
+Trigger name    Param return    Triggers when...
+onCheckDone     results         after check() has been executed
+onTableRead     table name      the table has been read using the read_table() function
+onTableCreate   table name      a table is being created
+onInsert        table & data    data has been inserted into a table
+onSelect        table&reqmnts   the SELECT function has been executed
+onUpdate        table & data    the UPDATE function has been executed
+onRename        table & data    the RENAME function has been executed
+
+
+onLockSet       table           the lock has been set (also gets triggered when lock is disabled)
+onLockRemove    table           the lock has been removed (also gets triggered when lock is disabled)

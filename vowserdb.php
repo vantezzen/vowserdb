@@ -19,8 +19,9 @@ class vowserdb
   public static $respectrelationshipsrelationship = false; // Should relationships on the relationship table be repected?
   public static $encrypt = false; // Encrypt the tables
   public static $file_encryption_blocks = 10000;
-    public static $file_extension = '.csv';
-    public static $seperation_char = ',';
+  public static $file_extension = '.csv';
+  public static $seperation_char = ',';
+  private static $events = []; // Trigger events (used in extensions)
 
   /*
    * Do not edit the constants below
@@ -51,6 +52,8 @@ class vowserdb
           $error[] = self::$folder.'.htaccess does not exists or may not have the right content';
       }
 
+      self::trigger('onCheckDone');
+
       return $error;
   }
 
@@ -73,6 +76,8 @@ class vowserdb
       fclose($f);
 
       array_shift($array);
+
+      self::trigger('onTableRead', $table);
 
       return $array;
   }
@@ -107,6 +112,7 @@ class vowserdb
        fputcsv($file, $columns);
        fclose($file);
        self::removelock($name);
+       self::trigger('onTableCreate', $name);
        return true;
    }
 
@@ -134,6 +140,8 @@ class vowserdb
         fwrite($file, self::NEWLINE);
         fputcsv($file, $columndata);
         fclose($file);
+
+        self::trigger('onInsert', array('name' => $table, 'data' => $data));
         self::removelock($table);
     }
 
@@ -170,6 +178,8 @@ class vowserdb
         $path = self::$folder.$table.self::$file_extension;
         $columns = self::GET_COLUMNS($table);
         $array = self::read_table($table);
+
+        self::trigger('onSelect', array('name' => $table, 'requirements' => $requirements));
 
         if ($requirements == array() || empty($requirements)) {
             if ($table !== self::RELATIONSHIPTABLE && $ignorerelationships !== true) {
@@ -350,6 +360,9 @@ class vowserdb
         $file = fopen($path, 'w');
         fwrite($file, $content);
         fclose($file);
+
+        self::trigger('onUpdate', array('name' => $table, 'data' => $data, 'where' => $where));
+
         self::removelock($table);
     }
 
@@ -371,8 +384,10 @@ class vowserdb
 
          $columns = str_getcsv($content[0]);
 
-         foreach($columns as $column) {
-           if ($column == $oldname) $column = $newname;
+         foreach ($columns as $column) {
+             if ($column == $oldname) {
+                 $column = $newname;
+             }
          }
 
          $content[0] = self::str_putcsv($columns);
@@ -381,6 +396,8 @@ class vowserdb
          $file = fopen($path, 'w');
          fwrite($file, $content);
          fclose($file);
+
+         self::trigger('onRename', array('name' => $table, 'oldname' => $oldname, 'newname' => $newname));
 
          self::removelock($table);
          return true;
@@ -563,31 +580,6 @@ class vowserdb
         return $tables;
     }
 
-    /**
-     * Restore the backup of a table (as long as it exists).
-     *
-     * @param Name of the table
-     */
-    public static function RESTORE_BACKUP($table)
-    {
-        $backupfile = self::$folder.$table.'.backup'.self::$file_extension;
-        $tablefile = self::$folder.$table.self::$file_extension;
-        if (file_exists($backupfile)) {
-            if (file_exists($tablefile)) {
-                rename($tablefile, $tablefile.'.moving');
-            }
-            rename($backupfile, $tablefile);
-            if (file_exists($tablefile.'.moving')) {
-                rename($tablefile.'.moving', $backupfile);
-            }
-
-            return true;
-        }
-
-        return false;
-    }
-
-
   /*
    * Relationships
    */
@@ -645,18 +637,8 @@ class vowserdb
            fwrite($file, 'LOCKED');
            fclose($file);
        }
-       if (self::$encrypt) {
-           self::decrypt($table);
-           self::decryptbackup($table);
-       }
-       if (self::$dobackup == true) {
-           if (file_exists(self::$folder.$table.'.backup'.self::$file_extension)) {
-               unlink(self::$folder.$table.'.backup'.self::$file_extension);
-           }
-           if (file_exists(self::$folder.$table.self::$file_extension)) {
-               copy(self::$folder.$table.self::$file_extension, self::$folder.$table.'.backup'.self::$file_extension);
-           }
-       }
+
+       self::trigger('onLockSet', $table);
 
        return true;
    }
@@ -674,10 +656,8 @@ class vowserdb
             $path = self::$folder.$table.'.lock';
             unlink($path);
         }
-        if (self::$encrypt) {
-            self::encrypt($table);
-            self::encryptbackup($table);
-        }
+
+        self::trigger('onLockRemove', $table);
 
         return true;
     }
@@ -703,120 +683,17 @@ class vowserdb
         return true;
     }
 
-    /*
-     * Encryption/Decryption of tables
-     */
-     private static function encrypt($table)
-     {
-         $encryptfile = self::$folder.$table.'.encrypt'.self::$file_extension;
-         $originalfile = self::$folder.$table.self::$file_extension;
-         $key = defined('VOWSERDBENCRKEY') ? VOWSERDBENCRKEY : '20E4A879C13ADB03A74324A8B9792C10';
-         if (!file_exists($originalfile)) {
-             return false;
-         }
-         if (file_get_contents($originalfile) == "encr") {
-             return array("error" => "Already encrypted");
-         }
-         self::encryptFile($originalfile, $key, $encryptfile);
-         $f = fopen($originalfile, 'w');
-         fwrite($f, 'encr');
-         fclose($f);
-     }
+    // Functions for extensions
 
-    public static function encryptbackup($table)
-    {
-        $encryptfile = self::$folder.$table.'.backup.encrypt'.self::$file_extension;
-        $originalfile = self::$folder.$table.'.backup'.self::$file_extension;
-        $key = defined('VOWSERDBENCRKEY') ? VOWSERDBENCRKEY : '20E4A879C13ADB03A74324A8B9792C10';
-        if (!file_exists($originalfile)) {
-            return false;
-        }
-        if (file_get_contents($originalfile) == "encr") {
-            return array("error" => "Already encrypted");
-        }
-        self::encryptFile($originalfile, $key, $encryptfile);
-        $f = fopen($originalfile, 'w');
-        fwrite($f, 'encr');
-        fclose($f);
+    // Source: https://gist.github.com/im4aLL/548c11c56dbc7267a2fe96bda6ed348b
+    public static function listen($name, $callback) {
+        self::$events[$name][] = $callback;
     }
-
-    private static function decrypt($table)
-    {
-        $encryptfile = self::$folder.$table.'.encrypt'.self::$file_extension;
-        $originalfile = self::$folder.$table.self::$file_extension;
-        $key = defined('VOWSERDBENCRKEY') ? VOWSERDBENCRKEY : '20E4A879C13ADB03A74324A8B9792C10';
-        if (!file_exists($encryptfile)) {
-            return array("error" => "Already decrypted");
+    public static function trigger($name, $param = '') {
+      if (isset(self::$events[$name]) && !empty(self::$events[$name])) {
+        foreach(self::$events[$name] as $event => $callback) {
+            call_user_func($callback, $param);
         }
-        self::decryptFile($encryptfile, $key, $originalfile);
-        unlink($encryptfile);
-    }
-
-    private static function decryptbackup($table)
-    {
-        $encryptfile = self::$folder.$table.'.backup.encrypt'.self::$file_extension;
-        $originalfile = self::$folder.$table.'.backup'.self::$file_extension;
-        $key = defined('VOWSERDBENCRKEY') ? VOWSERDBENCRKEY : '20E4A879C13ADB03A74324A8B9792C10';
-        if (!file_exists($encryptfile)) {
-            return array("error" => "Already decrypted");
-        }
-        self::decryptFile($encryptfile, $key, $originalfile);
-        unlink($encryptfile);
-    }
-
-    private static function encryptFile($source, $key, $dest)
-    {
-        $key = substr(sha1($key, true), 0, 16);
-        $iv = openssl_random_pseudo_bytes(16);
-
-        $error = false;
-        if ($fpOut = fopen($dest, 'w')) {
-            // Put the initialzation vector to the beginning of the file
-             fwrite($fpOut, $iv);
-            if ($fpIn = fopen($source, 'rb')) {
-                while (!feof($fpIn)) {
-                    $plaintext = fread($fpIn, 16 * 10000);
-                    $ciphertext = openssl_encrypt($plaintext, 'AES-128-CBC', $key, OPENSSL_RAW_DATA, $iv);
-                     // Use the first 16 bytes of the ciphertext as the next initialization vector
-                     $iv = substr($ciphertext, 0, 16);
-                    fwrite($fpOut, $ciphertext);
-                }
-                fclose($fpIn);
-            } else {
-                $error = true;
-            }
-            fclose($fpOut);
-        } else {
-            $error = true;
-        }
-
-        return $error ? false : $dest;
-    }
-    private static function decryptFile($source, $key, $dest)
-    {
-        $key = substr(sha1($key, true), 0, 16);
-
-        $error = false;
-        if ($fpOut = fopen($dest, 'w')) {
-            if ($fpIn = fopen($source, 'rb')) {
-                // Get the initialzation vector from the beginning of the file
-                 $iv = fread($fpIn, 16);
-                while (!feof($fpIn)) {
-                    $ciphertext = fread($fpIn, 16 * (10000 + 1)); // we have to read one block more for decrypting than for encrypting
-                     $plaintext = openssl_decrypt($ciphertext, 'AES-128-CBC', $key, OPENSSL_RAW_DATA, $iv);
-                     // Use the first 16 bytes of the ciphertext as the next initialization vector
-                     $iv = substr($ciphertext, 0, 16);
-                    fwrite($fpOut, $plaintext);
-                }
-                fclose($fpIn);
-            } else {
-                $error = true;
-            }
-            fclose($fpOut);
-        } else {
-            $error = true;
-        }
-
-        return $error ? false : $dest;
+      }
     }
 }
