@@ -1,5 +1,4 @@
 <?php
-// TODO: update to 3.0.0
 class migrate_mysql extends vowserdb {
   /*
    * MySQL Table Migrating System.

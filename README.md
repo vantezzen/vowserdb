@@ -1,5 +1,6 @@
 # vowserdb (former sdb)
-vowserdb is a simple database, that is purely written in PHP and doesn't need any additional services, programs or deamons running to work. It uses .vowserdb files to store tables.
+vowserdb allows you to use csv files as a standalone database with SQL-like commands.
+It is written purely in PHP without any frameworks, additional services or deamons.
 
 # installation
 You can install vowserdb manually or with composer.<br />
@@ -32,6 +33,9 @@ You can also create a .htaccess in that folder to deny all requests to the datab
 
 # usage
 You can find the full vowserDB documentation at https://vantezzen.github.io/vowserdb-docs/documentation.html
+
+#updating from 2.X.X to 3.X.X
+If you want to update from vowserdb 2.X.X to 3.X.X take a look at [the corrosponding wiki article](https://github.com/vantezzen/vowserdb/wiki/Updating-from-vowserDB-2.X.X-to-vowserDB-3.X.X)
 
 # share some love
 If you like vowserdb, consider starring this repository and telling your friends and family about how awesome vowserdb is (yay!).
