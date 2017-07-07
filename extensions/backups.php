@@ -3,7 +3,7 @@ class backups extends vowserdb {
   // Set triggers
   public static function init()
   {
-      vowserdb::listen('onLockSet', function () {
+      vowserdb::listen('onTableAccessBegin', function () {
         if (vowserdb::$dobackup == true) {
             if (file_exists(self::$folder.$table.'.backup'.self::$file_extension)) {
                 unlink(self::$folder.$table.'.backup'.self::$file_extension);

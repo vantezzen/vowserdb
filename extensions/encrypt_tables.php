@@ -4,14 +4,14 @@ class encrypt_tables extends vowserdb
     // Set triggers
     public static function init()
     {
-        vowserdb::listen('onLockRemove', function () {
+        vowserdb::listen('onTableAccessEnd', function () {
             if (vowserdb::$encrypt) {
                 self::encrypt($table);
                 self::encryptbackup($table);
             }
         });
 
-        vowserdb::listen('onLockSet', function () {
+        vowserdb::listen('onTableAccessBegin', function () {
             if (vowserdb::$encrypt) {
                 self::decrypt($table);
                 self::decryptbackup($table);

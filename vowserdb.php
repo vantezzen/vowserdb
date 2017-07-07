@@ -57,43 +57,6 @@ class vowserdb
       return $error;
   }
 
-  // Internally used functions
-  private static function read_table($table)
-  {
-      $path = self::$folder.$table.self::$file_extension;
-      $columns = self::GET_COLUMNS($table);
-      $f = fopen($path, 'r');
-      $array = array();
-      while (($data = fgetcsv($f)) !== false) {
-          if (!empty($data) && array_filter($data, 'trim')) {
-              $row = array();
-              foreach ($data as $key => $e) {
-                  $row[$columns[$key]] = $e;
-              }
-              $array[] = $row;
-          }
-      }
-      fclose($f);
-
-      array_shift($array);
-
-      self::trigger('onTableRead', $table);
-
-      return $array;
-  }
-
-  // Source: https://gist.github.com/johanmeiring/2894568
-  private static function str_putcsv($input, $delimiter = ',', $enclosure = '"')
-  {
-      $fp = fopen('php://temp', 'r+');
-      fputcsv($fp, $input, $delimiter, $enclosure);
-      rewind($fp);
-      $data = fread($fp, 1048576);
-      fclose($fp);
-      return rtrim($data, "\n");
-  }
-
-  // External functions
    /**
     * Create a new vowserdb table.
     *
@@ -101,8 +64,8 @@ class vowserdb
     */
    public static function CREATE($name, $columns)
    {
-       self::checklock($name);
-       self::setlock($name);
+       self::beforeTableAccess($name);
+       self::beginTableAccess($name);
        if (file_exists(self::$folder.$name.self::$file_extension)) {
            // TODO: reenable
          //return false;
@@ -111,7 +74,7 @@ class vowserdb
        $file = fopen(self::$folder.$name.self::$file_extension, 'w');
        fputcsv($file, $columns);
        fclose($file);
-       self::removelock($name);
+       self::endTableAccess($name);
        self::trigger('onTableCreate', $name);
        return true;
    }
@@ -124,8 +87,8 @@ class vowserdb
      */
     public static function INSERT($table, $data)
     {
-        self::checklock($table);
-        self::setlock($table);
+        self::beforeTableAccess($table);
+        self::beginTableAccess($table);
         $path = self::$folder.$table.self::$file_extension;
         $columns = self::GET_COLUMNS($table);
         $columndata = array();
@@ -142,7 +105,7 @@ class vowserdb
         fclose($file);
 
         self::trigger('onInsert', array('name' => $table, 'data' => $data));
-        self::removelock($table);
+        self::endTableAccess($table);
     }
 
     /**
@@ -325,8 +288,8 @@ class vowserdb
      */
     public static function UPDATE($table, $data, $where = array())
     {
-        self::checklock($table);
-        self::setlock($table);
+        self::beforeTableAccess($table);
+        self::beginTableAccess($table);
         $rows = self::SELECT($table, $where, true);
         $path = self::$folder.$table.self::$file_extension;
         $content = file_get_contents($path);
@@ -363,7 +326,7 @@ class vowserdb
 
         self::trigger('onUpdate', array('name' => $table, 'data' => $data, 'where' => $where));
 
-        self::removelock($table);
+        self::endTableAccess($table);
     }
 
      /**
@@ -377,8 +340,8 @@ class vowserdb
       */
      public static function RENAME($table, $oldname, $newname)
      {
-         self::checklock($table);
-         self::setlock($table);
+         self::beforeTableAccess($table);
+         self::beginTableAccess($table);
          $path = self::$folder.$table.self::$file_extension;
          $content = explode(self::NEWLINE, file_get_contents($path));
 
@@ -399,7 +362,7 @@ class vowserdb
 
          self::trigger('onRename', array('name' => $table, 'oldname' => $oldname, 'newname' => $newname));
 
-         self::removelock($table);
+         self::endTableAccess($table);
          return true;
      }
 
@@ -412,8 +375,8 @@ class vowserdb
       */
      public static function ADD_COLUMN($table, $column, $value = '')
      {
-         self::checklock($table);
-         self::setlock($table);
+         self::beforeTableAccess($table);
+         self::beginTableAccess($table);
          $path = self::$folder.$table.self::$file_extension;
          $content = explode(self::NEWLINE, file_get_contents($path));
 
@@ -429,12 +392,12 @@ class vowserdb
 
          self::trigger('onColumnAdd', array('name' => $table, 'column' => $column));
 
-         self::removelock($table);
+         self::endTableAccess($table);
      }
     public static function REMOVE_COLUMN($table, $column)
     {
-        self::checklock($table);
-        self::setlock($table);
+        self::beforeTableAccess($table);
+        self::beginTableAccess($table);
         $path = self::$folder.$table.self::$file_extension;
         $content = explode(self::NEWLINE, file_get_contents($path));
         $columns = str_getcsv($content[0]);
@@ -456,7 +419,7 @@ class vowserdb
 
         self::trigger('onColumnRemove', array('name' => $table, 'column' => $column));
 
-        self::removelock($table);
+        self::endTableAccess($table);
 
         return true;
     }
@@ -469,8 +432,8 @@ class vowserdb
      */
     public static function DELETE($table, $where = array())
     {
-        self::checklock($table);
-        self::setlock($table);
+        self::beforeTableAccess($table);
+        self::beginTableAccess($table);
         $rows = self::SELECT($table, $where, true);
         $path = self::$folder.$table.self::$file_extension;
         $content = file_get_contents($path);
@@ -484,7 +447,7 @@ class vowserdb
         $file = fopen($path, 'w');
         fwrite($file, $content);
         fclose($file);
-        self::removelock($table);
+        self::endTableAccess($table);
         self::CLEAR($table);
     }
 
@@ -506,8 +469,8 @@ class vowserdb
      */
     public static function CLEAR($table)
     {
-        self::checklock($table);
-        self::setlock($table);
+        self::beforeTableAccess($table);
+        self::beginTableAccess($table);
         $path = self::$folder.$table.self::$file_extension;
         $content = file_get_contents($path);
         $rows = explode(self::NEWLINE, $content);
@@ -520,7 +483,7 @@ class vowserdb
         $file = fopen($path, 'w');
         fwrite($file, $newcontent);
         fclose($file);
-        self::removelock($table);
+        self::endTableAccess($table);
     }
 
     /**
@@ -530,11 +493,11 @@ class vowserdb
      */
     public static function DROP($table)
     {
-        self::checklock($table);
-        self::setlock($table);
+        self::beforeTableAccess($table);
+        self::beginTableAccess($table);
         $path = self::$folder.$table.self::$file_extension;
         unlink($path);
-        self::removelock($table);
+        self::endTableAccess($table);
     }
 
     /**
@@ -592,56 +555,44 @@ class vowserdb
    * INTERNAL FUNCTIONS
    */
    /*
-    * Lock mechanism.
+    * Table access triggers
     */
    /**
-    * Set a lock for a table.
+    * Execute triggers at the beggining of the table access
     *
     * @param Table name
     *
     * @return true
     */
-   private static function setlock($table)
+   private static function beginTableAccess($table)
    {
-       if (self::$disablelock == false) {
-           $path = self::$folder.$table.'.lock';
-           $file = fopen($path, 'w');
-           fwrite($file, 'LOCKED');
-           fclose($file);
-       }
-
-       self::trigger('onLockSet', $table);
+       self::trigger('onTableAccessBegin', $table);
 
        return true;
    }
 
     /**
-     * Remove the lock of a database.
+     * Execute triggers at the end of the table access
      *
      * @param Name of the table
      *
      * @return true
      */
-    private static function removelock($table)
+    private static function endTableAccess($table)
     {
-        if (self::$disablelock == false) {
-            $path = self::$folder.$table.'.lock';
-            unlink($path);
-        }
-
-        self::trigger('onLockRemove', $table);
+        self::trigger('onTableAccessEnd', $table);
 
         return true;
     }
 
     /**
-     * Wait for a table to get unlocked.
+     * Execute triggers before a table is being accessed.
      *
      * @param Name of the table
      *
      * @return true
      */
-    private static function checklock($table)
+    private static function beforeTableAccess($table)
     {
         if (self::$disablelock == false) {
             $lockfile = self::$folder.$table.'.lock';
@@ -653,6 +604,41 @@ class vowserdb
         }
 
         return true;
+    }
+
+    private static function read_table($table)
+    {
+        $path = self::$folder.$table.self::$file_extension;
+        $columns = self::GET_COLUMNS($table);
+        $f = fopen($path, 'r');
+        $array = array();
+        while (($data = fgetcsv($f)) !== false) {
+            if (!empty($data) && array_filter($data, 'trim')) {
+                $row = array();
+                foreach ($data as $key => $e) {
+                    $row[$columns[$key]] = $e;
+                }
+                $array[] = $row;
+            }
+        }
+        fclose($f);
+
+        array_shift($array);
+
+        self::trigger('onTableRead', $table);
+
+        return $array;
+    }
+
+    // Source: https://gist.github.com/johanmeiring/2894568
+    private static function str_putcsv($input, $delimiter = ',', $enclosure = '"')
+    {
+        $fp = fopen('php://temp', 'r+');
+        fputcsv($fp, $input, $delimiter, $enclosure);
+        rewind($fp);
+        $data = fread($fp, 1048576);
+        fclose($fp);
+        return rtrim($data, "\n");
     }
 
     // Functions for extensions
