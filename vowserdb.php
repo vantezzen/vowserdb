@@ -15,7 +15,6 @@ class vowserdb
    */
   public static $folder = 'vowserdb/';     // Change the folder, where the tables will be saved to (notice the leading "/")
   public static $dobackup = false;    // Do a backup of every table before editing it (e.g. UPDATE, ADD_COLUMN, etc.)
-  public static $disablelock = true; // Disable the table lock*
   public static $respectrelationshipsrelationship = false; // Should relationships on the relationship table be repected?
   public static $encrypt = false; // Encrypt the tables
   public static $file_encryption_blocks = 10000;
