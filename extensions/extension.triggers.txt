@@ -6,7 +6,8 @@ onInsert        table & data    data has been inserted into a table
 onSelect        table&reqmnts   the SELECT function has been executed
 onUpdate        table & data    the UPDATE function has been executed
 onRename        table & data    the RENAME function has been executed
-
+onColumnAdd     table & column  a column has been added
+onColumnRemove  table & column  a column has been removed
 
 onLockSet       table           the lock has been set (also gets triggered when lock is disabled)
 onLockRemove    table           the lock has been removed (also gets triggered when lock is disabled)

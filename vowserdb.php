@@ -415,32 +415,19 @@ class vowserdb
          self::checklock($table);
          self::setlock($table);
          $path = self::$folder.$table.self::$file_extension;
-         if (!file_exists($path) || !is_readable($path) || !is_writable($path)) {
-             self::removelock($table);
+         $content = explode(self::NEWLINE, file_get_contents($path));
 
-             return false;
-         }
-         $f = fopen($path, 'r');
-         $line = fgets($f);
-         fclose($f);
-         $line = str_replace(self::NEWLINE, '', $line);
-         $line .= $column.self::$seperation_char;
-         $content = file_get_contents($path);
-         $content = explode(self::NEWLINE, $content);
-         foreach ($content as $key => $l) {
-             if ($l !== '') {
-                 if ($key == 0) {
-                     $content[$key] = $line;
-                 } else {
-                     $content[$key] .= $value.self::$seperation_char;
-                 }
-             }
-         }
+         // Add column to columns
+         $columns = str_getcsv($content[0]);
+         $columns[] = $column;
+         $content[0] = self::str_putcsv($columns);
+
          $content = implode(self::NEWLINE, $content);
-
          $file = fopen($path, 'w');
          fwrite($file, $content);
          fclose($file);
+
+         self::trigger('onColumnAdd', array('name' => $table, 'column' => $column));
 
          self::removelock($table);
      }
@@ -449,40 +436,25 @@ class vowserdb
         self::checklock($table);
         self::setlock($table);
         $path = self::$folder.$table.self::$file_extension;
-        if (!file_exists($path) || !is_readable($path) || !is_writable($path)) {
-            self::removelock($table);
+        $content = explode(self::NEWLINE, file_get_contents($path));
+        $columns = str_getcsv($content[0]);
 
-            return false;
-        }
-        $f = fopen($path, 'r');
-        $line = fgets($f);
-        fclose($f);
-        $line = str_replace(self::NEWLINE, '', $line);
-        $columns = explode(self::$seperation_char, $line);
-        foreach ($columns as $key => $c) {
-            if ($column == $c) {
-                $k = $key;
-                break;
+        $found = false;
+
+        foreach ($columns as $key => $columnname) {
+            if ($columnname == $column) {
+                unset($columns[$key]);
             }
         }
-        if (!isset($k)) {
-            self::removelock($table);
 
-            return false;
-        }
-        $content = file_get_contents($path);
-        $content = explode(self::NEWLINE, $content);
-        foreach ($content as $key => $line) {
-            $array = explode(self::$seperation_char, $line);
-            unset($array[$k]);
-            $line = implode(self::$seperation_char, $array);
-            $content[$key] = $line;
-        }
+        $content[0] = self::str_putcsv($columns);
+
         $content = implode(self::NEWLINE, $content);
-
         $file = fopen($path, 'w');
         fwrite($file, $content);
         fclose($file);
+
+        self::trigger('onColumnRemove', array('name' => $table, 'column' => $column));
 
         self::removelock($table);
 
