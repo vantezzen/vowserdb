@@ -21,9 +21,9 @@ echo "Needed ". round($end-$start,4) . "s to create table<br />";
 $start = microtime(true);
 
 for($i = 0; $i < ($inserted_rows - 1); $i++) {
-  vowserdb::INSERT(array("1" => "This is a test", "3" => "Heyy", "4" => "ahsdkahsdgasdagsjdgajsd", "8" => "a", "9" => "xxxx"), "benchmark");
+  vowserdb::INSERT("benchmark", array("1" => "This is a test", "3" => "Heyy", "4" => "ahsdkahsdgasdagsjdgajsd", "8" => "a", "9" => "xxxx"));
 }
-vowserdb::INSERT(array("1" => "select me pls", "3" => "Heyy", "4" => "ahsdkahsdgasdagsjdgajsd", "8" => "a", "9" => "xxxx"), "benchmark");
+vowserdb::INSERT("benchmark", array("1" => "select me pls", "3" => "Heyy", "4" => "ahsdkahsdgasdagsjdgajsd", "8" => "a", "9" => "xxxx"));
 
 $end = microtime(true);
 

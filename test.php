@@ -5,6 +5,7 @@ echo "testing vowserdb...";
 $notpassed = false;
 include("vowserdb.php");
 echo "<br />Folder: ".vowserdb::$folder;
+echo "<br />Path for table 'test': ".vowserdb::get_table_path('test');
 echo '<br />Including extentions: <ul>';
 $extensions = array('backups', /*'encrypt_tables', */'table_lock');
 foreach($extensions as $extension) {
