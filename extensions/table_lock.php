@@ -14,6 +14,14 @@ class table_lock extends vowserdb
           fwrite($file, 'LOCKED');
           fclose($file);
       });
+      vowserbdb::listen('beforeTableAccess', function($table) {
+        $lockfile = self::$folder.$table.'.lock';
+        $i = 0;
+        while (file_exists($lockfile) && $i < 1000) {
+            usleep(10);
+            ++$i;
+        }
+      });
   }
 }
 table_lock::init();

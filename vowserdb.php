@@ -1,5 +1,5 @@
 <?php
-/* vowserDB -  v3.0.0 Alpha 1
+/* vowserDB -  v3.0.0 Alpha 2
  * by vantezzen (http://vantezzen.de)
  *
  * For documentation check http://github.com/vantezzen/vowserdb
@@ -14,10 +14,7 @@ class vowserdb
    * Edit these settings to your needs
    */
   public static $folder = 'vowserdb/';     // Change the folder, where the tables will be saved to (notice the leading "/")
-  public static $dobackup = false;    // Do a backup of every table before editing it (e.g. UPDATE, ADD_COLUMN, etc.)
   public static $respectrelationshipsrelationship = false; // Should relationships on the relationship table be repected?
-  public static $encrypt = false; // Encrypt the tables
-  public static $file_encryption_blocks = 10000;
   public static $file_extension = '.csv';
   public static $seperation_char = ',';
   private static $events = []; // Trigger events (used in extensions)
@@ -88,7 +85,7 @@ class vowserdb
     {
         self::beforeTableAccess($table);
         self::beginTableAccess($table);
-        $path = self::$folder.$table.self::$file_extension;
+        $path = self::get_table_path($table);
         $columns = self::GET_COLUMNS($table);
         $columndata = array();
         foreach ($columns as $column) {
@@ -116,7 +113,7 @@ class vowserdb
      */
     public static function GET_COLUMNS($table)
     {
-        $path = self::$folder.$table.self::$file_extension;
+        $path = self::get_table_path($table);
         if (!file_exists($path) || !is_readable($path) || !is_writable($path)) {
             return array();
         }
@@ -137,7 +134,7 @@ class vowserdb
      */
     public static function SELECT($table, $requirements = array(), $ignorerelationships = false)
     {
-        $path = self::$folder.$table.self::$file_extension;
+        $path = self::get_table_path($table);
         $columns = self::GET_COLUMNS($table);
         $array = self::read_table($table);
 
@@ -290,7 +287,7 @@ class vowserdb
         self::beforeTableAccess($table);
         self::beginTableAccess($table);
         $rows = self::SELECT($table, $where, true);
-        $path = self::$folder.$table.self::$file_extension;
+        $path = self::get_table_path($table);
         $content = file_get_contents($path);
         foreach ($rows as $row) {
             $oldrow = self::str_putcsv($row);
@@ -341,14 +338,14 @@ class vowserdb
      {
          self::beforeTableAccess($table);
          self::beginTableAccess($table);
-         $path = self::$folder.$table.self::$file_extension;
+         $path = self::get_table_path($table);
          $content = explode(self::NEWLINE, file_get_contents($path));
 
          $columns = str_getcsv($content[0]);
 
-         foreach ($columns as $column) {
+         foreach ($columns as $key => $column) {
              if ($column == $oldname) {
-                 $column = $newname;
+                 $columns[$key] = $newname;
              }
          }
 
@@ -376,7 +373,7 @@ class vowserdb
      {
          self::beforeTableAccess($table);
          self::beginTableAccess($table);
-         $path = self::$folder.$table.self::$file_extension;
+         $path = self::get_table_path($table);
          $content = explode(self::NEWLINE, file_get_contents($path));
 
          // Add column to columns
@@ -397,7 +394,7 @@ class vowserdb
     {
         self::beforeTableAccess($table);
         self::beginTableAccess($table);
-        $path = self::$folder.$table.self::$file_extension;
+        $path = self::get_table_path($table);
         $content = explode(self::NEWLINE, file_get_contents($path));
         $columns = str_getcsv($content[0]);
 
@@ -434,14 +431,11 @@ class vowserdb
         self::beforeTableAccess($table);
         self::beginTableAccess($table);
         $rows = self::SELECT($table, $where, true);
-        $path = self::$folder.$table.self::$file_extension;
+        $path = self::get_table_path($table);
         $content = file_get_contents($path);
         foreach ($rows as $row) {
-            $oldrow = '';
-            foreach ($row as $column => $value) {
-                $oldrow .= $value.self::$seperation_char;
-            }
-            $content = str_replace($oldrow, '', $content, $num);
+          $oldrow = self::str_putcsv($row);
+          $content = str_replace($oldrow, '', $content);
         }
         $file = fopen($path, 'w');
         fwrite($file, $content);
@@ -470,7 +464,7 @@ class vowserdb
     {
         self::beforeTableAccess($table);
         self::beginTableAccess($table);
-        $path = self::$folder.$table.self::$file_extension;
+        $path = self::get_table_path($table);
         $content = file_get_contents($path);
         $rows = explode(self::NEWLINE, $content);
         $newcontent = '';
@@ -494,7 +488,7 @@ class vowserdb
     {
         self::beforeTableAccess($table);
         self::beginTableAccess($table);
-        $path = self::$folder.$table.self::$file_extension;
+        $path = self::get_table_path($table);
         unlink($path);
         self::endTableAccess($table);
     }
@@ -526,7 +520,7 @@ class vowserdb
        if (!empty(self::SELECT(self::RELATIONSHIPTABLE, array("table1" => $table1, "row1" => $row1, "table2" => $table2, "row2" => $row2)))) {
            return array("error" => "Relationship already exists");
        } else {
-           self::INSERT(array("table1" => $table1, "row1" => $row1, "table2" => $table2, "row2" => $row2), self::RELATIONSHIPTABLE);
+           self::INSERT(self::RELATIONSHIPTABLE, array("table1" => $table1, "row1" => $row1, "table2" => $table2, "row2" => $row2));
            return true;
        }
    }
@@ -593,21 +587,14 @@ class vowserdb
      */
     private static function beforeTableAccess($table)
     {
-        if (self::$disablelock == false) {
-            $lockfile = self::$folder.$table.'.lock';
-            $i = 0;
-            while (file_exists($lockfile) && $i < 1000) {
-                usleep(10);
-                ++$i;
-            }
-        }
+        self::trigger('beforeTableAccess', $table);
 
         return true;
     }
 
     private static function read_table($table)
     {
-        $path = self::$folder.$table.self::$file_extension;
+        $path = self::get_table_path($table);
         $columns = self::GET_COLUMNS($table);
         $f = fopen($path, 'r');
         $array = array();
@@ -627,6 +614,10 @@ class vowserdb
         self::trigger('onTableRead', $table);
 
         return $array;
+    }
+
+    private static function get_table_path($table) {
+      return self::$folder.$table.self::$file_extension;
     }
 
     // Source: https://gist.github.com/johanmeiring/2894568

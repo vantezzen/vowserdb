@@ -2,13 +2,9 @@
 // This file will check all important functions of vowserDB to see if everything still works
 error_reporting(E_ALL);
 echo "testing vowserdb...";
+$notpassed = false;
 include("vowserdb.php");
-echo "<br />Encryption is ";
-echo vowserdb::$encrypt ? 'activated' : 'deactivated';
-echo "<br />Backups are ";
-echo vowserdb::$dobackup ? 'activated' : 'deactivated';
-echo "<br />The lock mechanism is ";
-echo vowserdb::$disablelock ? 'deactivated' : 'activated';
+echo "<br />Folder: ".vowserdb::$folder;
 echo "<br />vowserdb check: ";
 print_r(vowserdb::check());
 vowserdb::CREATE("testing", array("0", "1", "2", "3", "4", "5", "6", "7", "8", "9"));
@@ -17,6 +13,7 @@ echo "<br />SELECT test: ";
 if (json_encode(vowserdb::SELECT("testing", array("1" => "select me pls"))) == '[["","select me pls","","Heyy","ahsdkahsdgasdagsjdgajsd","","","","a","xxxx"]]') {
     echo "PASSED";
 } else {
+    $notpassed = true;
     echo "Not as expected: ";
     print_r(vowserdb::SELECT("testing", array("1" => "select me pls")));
 }
@@ -30,13 +27,43 @@ vowserdb::relationship("table1", "user", "table2", "username");
 vowserdb::INSERT("table1", array("text" => "This is a test message", "addedOn" => "Today", "user" => "vantezzen"));
 vowserdb::INSERT("table2", array("username" => "vantezzen", "password" => "1234", "mail" => "mail@example.com"));
 echo "<br />Relationship test: ";
-if (json_encode(vowserdb::SELECT("table1")) == '[{"user":[{"username":"vantezzen","password":"1234","mail":"mail@example.com"}],"text":"This is a test message","addedOn":"Today"}]') {
+$expected = '[{"user":[{"username":"vantezzen","password":"1234","mail":"mail@example.com"}],"text":"This is a test message","addedOn":"Today"}]';
+if (json_encode(vowserdb::SELECT("table1")) == $expected) {
     echo "PASSED";
 } else {
-    echo "Not as expected: ";
+    $notpassed = true;
+    echo "Not as expected: <br />";
+    echo 'Result: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
     print_r(vowserdb::SELECT("table1"));
+    echo '<br />Expected: ';
+    print_r(json_decode($expected, true));
 }
+echo "<br />Extension trigger test: ";
+
+class testextension extends vowserdb {
+  public static $passed = false;
+  public static function init() {
+    vowserdb::listen('onCheckDone', function() {
+      self::$passed = true;
+    });
+  }
+}
+testextension::init();
+vowserdb::check();
+if (testextension::$passed) {
+  echo 'PASSED';
+} else {
+  $notpassed = true;
+  echo 'Did not trigger event';
+}
+
+if (!$notpassed) {
+  echo '<br /><br /><b style="color: green;">The test was completed successfully!</b>';
+} else {
+  echo '<br /><br /><b style="color: red;">DID NOT PASS! Please correct the errors!</b>';
+}
+
 vowserdb::TABLES();
 vowserdb::DROP("table1");
 vowserdb::DROP("table2");
-echo "<br />testing done";
+echo "<br />done";

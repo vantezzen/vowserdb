@@ -11,3 +11,4 @@ onColumnRemove        table & column    a column has been removed
 
 onTableAccessBegin    table             the lock has been set (also gets triggered when lock is disabled)
 onTableAccessEnd      table             the lock has been removed (also gets triggered when lock is disabled)
+beforeTableAccess     table             before a table access is initiated
