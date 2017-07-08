@@ -16,8 +16,8 @@ class vowserdb
   public static $folder = 'vowserdb/';     // Change the folder, where the tables will be saved to (notice the leading "/")
   public static $respectrelationshipsrelationship = false; // Should relationships on the relationship table be repected?
   public static $file_extension = '.csv';
-  public static $seperation_char = ',';
-  private static $events = []; // Trigger events (used in extensions)
+    public static $seperation_char = ',';
+    private static $events = []; // Trigger events (used in extensions)
 
   /*
    * Do not edit the constants below
@@ -434,8 +434,8 @@ class vowserdb
         $path = self::get_table_path($table);
         $content = file_get_contents($path);
         foreach ($rows as $row) {
-          $oldrow = self::str_putcsv($row);
-          $content = str_replace($oldrow, '', $content);
+            $oldrow = self::str_putcsv($row);
+            $content = str_replace($oldrow, '', $content);
         }
         $file = fopen($path, 'w');
         fwrite($file, $content);
@@ -452,7 +452,7 @@ class vowserdb
     public static function TRUNCATE($table)
     {
         //Alias for DELETE *
-     self::DELETE($table);
+      self::DELETE($table);
     }
 
     /**
@@ -616,8 +616,9 @@ class vowserdb
         return $array;
     }
 
-    private static function get_table_path($table) {
-      return self::$folder.$table.self::$file_extension;
+    private static function get_table_path($table)
+    {
+        return self::$folder.$table.self::$file_extension;
     }
 
     // Source: https://gist.github.com/johanmeiring/2894568
@@ -634,14 +635,16 @@ class vowserdb
     // Functions for extensions
 
     // Source: https://gist.github.com/im4aLL/548c11c56dbc7267a2fe96bda6ed348b
-    public static function listen($name, $callback) {
+    public static function listen($name, $callback)
+    {
         self::$events[$name][] = $callback;
     }
-    public static function trigger($name, $param = '') {
-      if (isset(self::$events[$name]) && !empty(self::$events[$name])) {
-        foreach(self::$events[$name] as $event => $callback) {
-            call_user_func($callback, $param);
+    public static function trigger($name, $param = '')
+    {
+        if (isset(self::$events[$name]) && !empty(self::$events[$name])) {
+            foreach (self::$events[$name] as $event => $callback) {
+                call_user_func($callback, $param);
+            }
         }
-      }
     }
 }
