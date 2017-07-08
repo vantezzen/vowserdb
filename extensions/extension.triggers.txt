@@ -8,6 +8,9 @@ onUpdate              table & data      the UPDATE function has been executed
 onRename              table & data      the RENAME function has been executed
 onColumnAdd           table & column    a column has been added
 onColumnRemove        table & column    a column has been removed
+onDelete              table&selection   the DELETE function has been executed
+onClear               table             a table has been cleared (empty lines have been removed)
+onDrop                table             a table has been dropped/deleted
 
 onTableAccessBegin    table             the lock has been set (also gets triggered when lock is disabled)
 onTableAccessEnd      table             the lock has been removed (also gets triggered when lock is disabled)

@@ -440,6 +440,7 @@ class vowserdb
         $file = fopen($path, 'w');
         fwrite($file, $content);
         fclose($file);
+        self::trigger('onDelete', array('name' => $table, 'select' => $where));
         self::endTableAccess($table);
         self::CLEAR($table);
     }
@@ -453,6 +454,7 @@ class vowserdb
     {
         //Alias for DELETE *
       self::DELETE($table);
+      self::trigger('onTruncate', $table);
     }
 
     /**
@@ -469,13 +471,14 @@ class vowserdb
         $rows = explode(self::NEWLINE, $content);
         $newcontent = '';
         foreach ($rows as $key => $row) {
-            if (!empty($row) && $row !== ' ') {
+            if (!empty(trim($row))) {
                 $newcontent .= $row.self::NEWLINE;
             }
         }
         $file = fopen($path, 'w');
         fwrite($file, $newcontent);
         fclose($file);
+        self::trigger('onClear', $table);
         self::endTableAccess($table);
     }
 
@@ -490,6 +493,7 @@ class vowserdb
         self::beginTableAccess($table);
         $path = self::get_table_path($table);
         unlink($path);
+        self::trigger('onDrop', $table);
         self::endTableAccess($table);
     }
 
@@ -526,10 +530,7 @@ class vowserdb
    }
     public static function destroyrelationship($table1, $row1, $table2, $row2)
     {
-        if (!file_exists(self::$folder.self::RELATIONSHIPTABLE.self::$file_extension)) {
-            return array("error" => "Relationship not found");
-        }
-        if (empty(self::SELECT(self::RELATIONSHIPTABLE, array("table1" => $table1, "row1" => $row1, "table2" => $table2, "row2" => $row2)))) {
+        if ((!file_exists(self::$folder.self::RELATIONSHIPTABLE.self::$file_extension)) || (empty(self::SELECT(self::RELATIONSHIPTABLE, array("table1" => $table1, "row1" => $row1, "table2" => $table2, "row2" => $row2))))) {
             return array("error" => "Relationship not found");
         } else {
             self::DELETE(self::RELATIONSHIPTABLE, array("table1" => $table1, "row1" => $row1, "table2" => $table2, "row2" => $row2));
