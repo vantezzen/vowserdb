@@ -1,24 +1,20 @@
 <?php
+//TODO: make it work
 class encrypt_tables extends vowserdb
 {
-
     public static $file_encryption_blocks = 10000;
-  
+
     // Set triggers
     public static function init()
     {
-        vowserdb::listen('onTableAccessEnd', function () {
-            if (vowserdb::$encrypt) {
-                self::encrypt($table);
-                self::encryptbackup($table);
-            }
+        vowserdb::listen('onTableAccessEnd', function ($table) {
+            self::encrypt($table);
+            self::encryptbackup($table);
         });
 
-        vowserdb::listen('onTableAccessBegin', function () {
-            if (vowserdb::$encrypt) {
-                self::decrypt($table);
-                self::decryptbackup($table);
-            }
+        vowserdb::listen('onTableAccessBegin', function ($table) {
+            self::decrypt($table);
+            self::decryptbackup($table);
         });
     }
 

@@ -5,17 +5,29 @@ echo "testing vowserdb...";
 $notpassed = false;
 include("vowserdb.php");
 echo "<br />Folder: ".vowserdb::$folder;
+echo '<br />Including extentions: <ul>';
+$extensions = array('backups', /*'encrypt_tables', */'table_lock');
+foreach($extensions as $extension) {
+  echo '<br /><li>'.$extension.'</li>';
+  include('extensions/'.$extension.'.php');
+}
+echo '</ul>';
+
 echo "<br />vowserdb check: ";
 print_r(vowserdb::check());
 vowserdb::CREATE("testing", array("0", "1", "2", "3", "4", "5", "6", "7", "8", "9"));
 vowserdb::INSERT("testing", array("1" => "select me pls", "3" => "Heyy", "4" => "ahsdkahsdgasdagsjdgajsd", "8" => "a", "9" => "xxxx"));
 echo "<br />SELECT test: ";
-if (json_encode(vowserdb::SELECT("testing", array("1" => "select me pls"))) == '[["","select me pls","","Heyy","ahsdkahsdgasdagsjdgajsd","","","","a","xxxx"]]') {
+$expected = '[["","select me pls","","Heyy","ahsdkahsdgasdagsjdgajsd","","","","a","xxxx"]]';
+if (json_encode(vowserdb::SELECT("testing", array("1" => "select me pls"))) == $expected) {
     echo "PASSED";
 } else {
     $notpassed = true;
-    echo "Not as expected: ";
+    echo "Not as expected: <br />";
+    echo 'Result: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
     print_r(vowserdb::SELECT("testing", array("1" => "select me pls")));
+    echo '<br />Expected: ';
+    print_r(json_decode($expected, true));
 }
 vowserdb::UPDATE("testing", array("1" => "select me pls pls"), array("1" => "select me pls"));
 vowserdb::DELETE("testing", array("1" => "select me pls pls"));

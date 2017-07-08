@@ -1,17 +1,16 @@
 <?php
-class backups extends vowserdb {
-  // Set triggers
+class backups extends vowserdb
+{
+    // Set triggers
   public static function init()
   {
-      vowserdb::listen('onTableAccessBegin', function () {
-        if (vowserdb::$dobackup == true) {
-            if (file_exists(self::$folder.$table.'.backup'.self::$file_extension)) {
-                unlink(self::$folder.$table.'.backup'.self::$file_extension);
-            }
-            if (file_exists(self::$folder.$table.self::$file_extension)) {
-                copy(self::$folder.$table.self::$file_extension, self::$folder.$table.'.backup'.self::$file_extension);
-            }
-        }
+      vowserdb::listen('onTableAccessBegin', function ($table) {
+          if (file_exists(self::$folder.$table.'.backup'.self::$file_extension)) {
+              unlink(self::$folder.$table.'.backup'.self::$file_extension);
+          }
+          if (file_exists(self::$folder.$table.self::$file_extension)) {
+              copy(self::$folder.$table.self::$file_extension, self::$folder.$table.'.backup'.self::$file_extension);
+          }
       });
   }
   /**
@@ -40,4 +39,3 @@ class backups extends vowserdb {
 }
 
 backups::init();
- ?>
