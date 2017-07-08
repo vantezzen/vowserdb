@@ -453,7 +453,7 @@ class vowserdb
     {
         //Alias for DELETE *
       self::DELETE($table);
-      self::trigger('onTruncate', $table);
+        self::trigger('onTruncate', $table);
     }
 
     /**
@@ -649,11 +649,12 @@ class vowserdb
     }
 
 
-    public static function load_extension($extension) {
-      include(realpath(dirname(__FILE__)).'/extensions/'.$extension.'.php');
-      if (method_exists($extension, 'init') && is_callable(array($extension, 'init'))) {
-        call_user_func(array($extension, 'init'));
-      }
-      return true;
+    public static function load_extension($extension)
+    {
+        include(realpath(dirname(__FILE__)).'/extensions/'.$extension.'.php');
+        if (method_exists($extension, 'init') && is_callable(array($extension, 'init'))) {
+            call_user_func(array($extension, 'init'));
+        }
+        return true;
     }
 }
