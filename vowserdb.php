@@ -61,9 +61,8 @@ class vowserdb
    {
        self::beforeTableAccess($name);
        self::beginTableAccess($name);
-       if (file_exists(self::$folder.$name.self::$file_extension)) {
-           // TODO: reenable
-         //return false;
+       if (file_exists(self::get_table_path($name))) {
+         return false;
        }
 
        $file = fopen(self::$folder.$name.self::$file_extension, 'w');

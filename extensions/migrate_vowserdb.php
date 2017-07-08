@@ -9,9 +9,8 @@ class migrate_vowserdb extends vowserdb {
     }
     $migrated = vowserdb::$folder.$table.vowserdb::$file_extension;
     if (file_exists($migrated)) {
-      //TODO: reenable
-      // echo('Migrated table '.$migrated.' already exists');
-      // return false;
+      echo('Migrated table '.$migrated.' already exists');
+      return false;
     }
     $f = fopen($migrated, 'w');
     $original = fopen($file, 'r');
