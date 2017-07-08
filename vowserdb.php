@@ -1,5 +1,5 @@
 <?php
-/* vowserDB -  v3.0.0 Alpha 2
+/* vowserDB -  v3.0.0 Alpha 3
  * by vantezzen (http://vantezzen.de)
  *
  * For documentation check http://github.com/vantezzen/vowserdb
@@ -616,9 +616,9 @@ class vowserdb
         return $array;
     }
 
-    private static function get_table_path($table)
+    public static function get_table_path($table)
     {
-        return self::$folder.$table.self::$file_extension;
+        return realpath(dirname(__FILE__)).'/'.self::$folder.$table.self::$file_extension;
     }
 
     // Source: https://gist.github.com/johanmeiring/2894568
