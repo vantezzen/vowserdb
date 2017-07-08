@@ -1,17 +1,17 @@
-Trigger name          Param return      Triggers when...
-onCheckDone           results           after check() has been executed
-onTableRead           table name        the table has been read using the read_table() function
-onTableCreate         table name        a table is being created
-onInsert              table & data      data has been inserted into a table
-onSelect              table&requirem.   the SELECT function has been executed
-onUpdate              table & data      the UPDATE function has been executed
-onRename              table & data      the RENAME function has been executed
-onColumnAdd           table & column    a column has been added
-onColumnRemove        table & column    a column has been removed
-onDelete              table&selection   the DELETE function has been executed
-onClear               table             a table has been cleared (empty lines have been removed)
-onDrop                table             a table has been dropped/deleted
+Trigger name          Param return ('name in array')            (is array)  Triggers when...
+onCheckDone           results                                               after check() has been executed
+onTableRead           table name                                            the table has been read using the read_table() function
+onTableCreate         table name                                            a table is being created
+onInsert              table('name') & data                         (array)  data has been inserted into a table
+onSelect              table('name') & requirements('requirements') (array)  the SELECT function has been executed
+onUpdate              table('name') & data('data') & where('where')(array)  the UPDATE function has been executed
+onRename              table('name') & oldname & newname            (array)  the RENAME function has been executed
+onColumnAdd           table('name') & column                       (array)  a column has been added
+onColumnRemove        table('name') & column                       (array)  a column has been removed
+onDelete              table('name') & selection('select')          (array)  the DELETE function has been executed
+onClear               table                                                 a table has been cleared (empty lines have been removed)
+onDrop                table                                                 a table has been dropped/deleted
 
-onTableAccessBegin    table             the lock has been set (also gets triggered when lock is disabled)
-onTableAccessEnd      table             the lock has been removed (also gets triggered when lock is disabled)
-beforeTableAccess     table             before a table access is initiated
+onTableAccessBegin    table                                                 the table access has begun
+onTableAccessEnd      table                                                 the table access has ended
+beforeTableAccess     table                                                 before a table access is initiated

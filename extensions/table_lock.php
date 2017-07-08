@@ -24,4 +24,3 @@ class table_lock extends vowserdb
       });
   }
 }
-table_lock::init();

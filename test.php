@@ -8,8 +8,14 @@ echo "<br />Folder: ".vowserdb::$folder;
 echo '<br />Including extentions: <ul>';
 $extensions = array('backups', /*'encrypt_tables', */'table_lock');
 foreach($extensions as $extension) {
-  echo '<br /><li>'.$extension.'</li>';
-  include('extensions/'.$extension.'.php');
+  echo '<br /><li>'.$extension;
+  vowserdb::load_extension($extension);
+  if (class_exists($extension)) {
+    echo ': Included successfully!</li>';
+  } else {
+    $notpassed = true;
+    echo ': Did not include!</li>';
+  }
 }
 echo '</ul>';
 

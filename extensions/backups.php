@@ -37,5 +37,3 @@ class backups extends vowserdb
       return false;
   }
 }
-
-backups::init();

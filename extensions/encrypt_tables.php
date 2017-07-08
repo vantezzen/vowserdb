@@ -132,4 +132,3 @@ class encrypt_tables extends vowserdb
         return $error ? false : $dest;
     }
 }
-encrypt_tables::init();

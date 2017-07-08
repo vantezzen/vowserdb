@@ -6,7 +6,6 @@
  *
  * TODO:
  */
-
 class vowserdb
 {
     /*
@@ -647,5 +646,14 @@ class vowserdb
                 call_user_func($callback, $param);
             }
         }
+    }
+
+
+    public static function load_extension($extension) {
+      include(realpath(dirname(__FILE__)).'/extensions/'.$extension.'.php');
+      if (method_exists($extension, 'init') && is_callable(array($extension, 'init'))) {
+        call_user_func(array($extension, 'init'));
+      }
+      return true;
     }
 }
