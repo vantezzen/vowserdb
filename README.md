@@ -3,7 +3,7 @@ vowserdb allows you to use csv files as a standalone database with SQL-like comm
 It is written purely in PHP without any frameworks, additional services or deamons.
 
 # installation
-You can install vowserdb manually or with composer.<br />
+You can install vowserdb manually or with composer.
 ## install manually
 Move the "vowserdb.php" script to your project folder and include it via
 
@@ -11,7 +11,6 @@ Move the "vowserdb.php" script to your project folder and include it via
 include("vowserdb.php");
 ```
 
-<br />
 ## install with composer
 Simply run
 
