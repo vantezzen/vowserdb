@@ -19,6 +19,7 @@ class vowserdb
   private static $events = []; // Trigger events (used in extensions)
   private static $file_postfixes = array(''); // Possible file postfixes (e.g .encrypt or .backup)
   private static $loaded_extensions =  [];
+  private static $uncompatible_extensions = [];
 
   /*
    * Do not edit the constants below
@@ -64,7 +65,7 @@ class vowserdb
        self::beforeTableAccess($name);
        self::beginTableAccess($name);
        if (file_exists(self::get_table_path($name))) {
-         return false;
+           return false;
        }
 
        $file = fopen(self::$folder.$name.self::$file_extension, 'w');
@@ -135,8 +136,8 @@ class vowserdb
     public static function SELECT($table, $requirements = array(), $ignorerelationships = false, $tableaccessinitiated = false)
     {
         if (!$tableaccessinitiated) {
-          self::beforeTableAccess($table);
-          self::beginTableAccess($table);
+            self::beforeTableAccess($table);
+            self::beginTableAccess($table);
         }
         $path = self::get_table_path($table);
         $columns = self::GET_COLUMNS($table);
@@ -159,7 +160,7 @@ class vowserdb
                 }
             }
             if (!$tableaccessinitiated) {
-              self::endTableAccess($table);
+                self::endTableAccess($table);
             }
             return $array;
         }
@@ -280,7 +281,7 @@ class vowserdb
             }
         }
         if (!$tableaccessinitiated) {
-          self::endTableAccess($table);
+            self::endTableAccess($table);
         }
         return $select;
     }
@@ -501,11 +502,11 @@ class vowserdb
     {
         self::beforeTableAccess($table);
         self::beginTableAccess($table);
-        foreach(self::$file_postfixes as $postfix) {
-          $path = self::get_table_path($table . $postfix);
-          if (file_exists($path)) {
-            unlink($path);
-          }
+        foreach (self::$file_postfixes as $postfix) {
+            $path = self::get_table_path($table . $postfix);
+            if (file_exists($path)) {
+                unlink($path);
+            }
         }
         self::trigger('onDrop', $table);
         self::endTableAccess($table);
@@ -637,6 +638,18 @@ class vowserdb
         return realpath(dirname(__FILE__)).'/'.self::$folder.$table.self::$file_extension;
     }
 
+    // Source: https://stackoverflow.com/questions/4128323/in-array-and-multidimensional-array
+    public static function in_array_r($needle, $haystack, $strict = false)
+    {
+        foreach ($haystack as $item) {
+            if (($strict ? $item === $needle : $item == $needle) || (is_array($item) && self::in_array_r($needle, $item, $strict))) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     // Source: https://gist.github.com/johanmeiring/2894568
     private static function str_putcsv($input, $delimiter = ',', $enclosure = '"')
     {
@@ -664,29 +677,54 @@ class vowserdb
         }
     }
 
-    public static function register_postfix($postfix) {
-      self::$file_postfixes[] = $postfix;
+    public static function register_postfix($postfix)
+    {
+        self::$file_postfixes[] = $postfix;
     }
 
 
     public static function load_extension($extension)
     {
-      if (file_exists(realpath(dirname(__FILE__)).'/extensions/'.$extension.'.json')) {
-        $conf = json_decode(file_get_contents(realpath(dirname(__FILE__)).'/extensions/'.$extension.'.json'), true);
-        if(isset($conf['uncompatible_with'])) {
-          foreach($conf['uncompatible_with'] as $uncompatible_extension) {
-            if (in_array($uncompatible_extension, self::$loaded_extensions)) {
-              echo('<br /><b>"' . $extension . '" is not compatible with the extension "' . $uncompatible_extension . '".</b><br />');
+        if (self::in_array_r($extension, self::$uncompatible_extensions)) {
+            $uncompatible_with = '';
+            foreach (self::$uncompatible_extensions as $item) {
+                if ($item === $extension || (is_array($item) && self::in_array_r($extension, $item))) {
+                    $uncompatible_with = $item[0];
+                }
+            }
+            if (!empty($uncompatible_with)) {
+              echo('<br /><b>"' . $uncompatible_with . '" is not compatible with the extension "' . $extension . '" and thus "' . $extension . '" hasn\'t been loaded.</b><br />');
+              return false;
+            } else {
+              echo('<br /><b>"' . $extension . '" is not compatible with another loaded extension and thus hasn\'t been loaded.</b><br />');
               return false;
             }
-          }
+
         }
-      }
-      include(realpath(dirname(__FILE__)).'/extensions/'.$extension.'.php');
-      if (method_exists($extension, 'init') && is_callable(array($extension, 'init'))) {
-          call_user_func(array($extension, 'init'));
-      }
-      self::$loaded_extensions[] = $extension;
-      return true;
+
+        if (file_exists(realpath(dirname(__FILE__)).'/extensions/'.$extension.'.json')) {
+            $conf = json_decode(file_get_contents(realpath(dirname(__FILE__)).'/extensions/'.$extension.'.json'), true);
+            if (isset($conf['uncompatible_with'])) {
+                foreach ($conf['uncompatible_with'] as $uncompatible_extension) {
+                    if (in_array($uncompatible_extension, self::$loaded_extensions)) {
+                        echo('<br /><b>"' . $extension . '" is not compatible with the extension "' . $uncompatible_extension . '" and thus hasn\'t been loaded.</b><br />');
+                        return false;
+                    }
+                    self::$uncompatible_extensions[] = array($extension, $uncompatible_extension);
+                }
+            }
+            if (isset($conf['postfixes'])) {
+              foreach($conf['postfixes'] as $postfix) {
+                self::$file_postfixes[] = $postfix;
+              }
+            }
+        }
+
+        include(realpath(dirname(__FILE__)).'/extensions/'.$extension.'.php');
+        if (method_exists($extension, 'init') && is_callable(array($extension, 'init'))) {
+            call_user_func(array($extension, 'init'));
+        }
+        self::$loaded_extensions[] = $extension;
+        return true;
     }
 }

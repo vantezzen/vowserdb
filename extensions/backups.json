@@ -1,0 +1,7 @@
+{
+  "name": "backups",
+  "description": "backups will automatically backup your tables to a seperate file",
+  "postfixes": [
+    ".backup"
+  ]
+}

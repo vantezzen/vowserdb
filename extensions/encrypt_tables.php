@@ -15,9 +15,6 @@ class encrypt_tables extends vowserdb
       vowserdb::listen('beforeTableAccess', function ($table) {
           self::decrypt($table);
       });
-
-      vowserdb::register_postfix('.encrypt');
-      vowserdb::register_postfix('.backup.encrypt');
   }
 
   public static function encrypt($table) {
