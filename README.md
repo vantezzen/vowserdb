@@ -35,7 +35,7 @@ You can also create a .htaccess in that folder to deny all requests to the datab
 You can find the full vowserDB documentation at https://vantezzen.github.io/vowserdb-docs/documentation.html
 
 ## updating from 2.X.X to 3.X.X
-If you want to update from vowserdb 2.X.X to 3.X.X take a look at [the corresponding documentation section](https://vantezzen.github.io/vowserdb-docs/index.html#updating)
+If you want to update from vowserdb 2.X.X to 3.X.X take a look at [the corresponding documentation section](https://vantezzen.github.io/vowserdb-docs/documentation.html#updating)
 
 # share some love
 If you like vowserdb, consider starring this repository and telling your friends and family about how awesome vowserdb is (yay!).
