@@ -36,7 +36,7 @@ class migrate_mysql extends vowserdb {
       }
       self::CREATE($table, $columns);
       foreach ($rows as $row) {
-          self::INSERT($row, $table);
+          self::INSERT($table, $row);
       }
   }
 
