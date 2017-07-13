@@ -18,6 +18,7 @@ class vowserdb
   public static $seperation_char = ',';
   private static $events = []; // Trigger events (used in extensions)
   private static $file_postfixes = array(''); // Possible file postfixes (e.g .encrypt or .backup)
+  private static $loaded_extensions =  [];
 
   /*
    * Do not edit the constants below
@@ -670,10 +671,22 @@ class vowserdb
 
     public static function load_extension($extension)
     {
-        include(realpath(dirname(__FILE__)).'/extensions/'.$extension.'.php');
-        if (method_exists($extension, 'init') && is_callable(array($extension, 'init'))) {
-            call_user_func(array($extension, 'init'));
+      if (file_exists(realpath(dirname(__FILE__)).'/extensions/'.$extension.'.json')) {
+        $conf = json_decode(file_get_contents(realpath(dirname(__FILE__)).'/extensions/'.$extension.'.json'), true);
+        if(isset($conf['uncompatible_with'])) {
+          foreach($conf['uncompatible_with'] as $uncompatible_extension) {
+            if (in_array($uncompatible_extension, self::$loaded_extensions)) {
+              echo('<br /><b>"' . $extension . '" is not compatible with the extension "' . $uncompatible_extension . '".</b><br />');
+              return false;
+            }
+          }
         }
-        return true;
+      }
+      include(realpath(dirname(__FILE__)).'/extensions/'.$extension.'.php');
+      if (method_exists($extension, 'init') && is_callable(array($extension, 'init'))) {
+          call_user_func(array($extension, 'init'));
+      }
+      self::$loaded_extensions[] = $extension;
+      return true;
     }
 }
