@@ -2,79 +2,67 @@
 //TODO: make it work
 class encrypt_tables extends vowserdb
 {
-    public static $file_encryption_blocks = 10000;
+  public static $file_encryption_blocks = 10000;
+  private static $defaultkey = '20E4A879C13ADB03A74324A8B9792C10';
 
-    // Set triggers
-    public static function init()
-    {
-        vowserdb::listen('onTableAccessEnd', function ($table) {
-            self::encrypt($table);
-            self::encryptbackup($table);
-        });
+  // Set triggers
+  public static function init()
+  {
+      vowserdb::listen('afterTableAccess', function ($table) {
+          self::encrypt($table);
+      });
 
-        vowserdb::listen('onTableAccessBegin', function ($table) {
-            self::decrypt($table);
-            self::decryptbackup($table);
-        });
+      vowserdb::listen('beforeTableAccess', function ($table) {
+          self::decrypt($table);
+      });
+
+      vowserdb::register_postfix('.encrypt');
+      vowserdb::register_postfix('.backup.encrypt');
+  }
+
+  public static function encrypt($table) {
+    $tablefile = vowserdb::get_table_path($table);
+    $encrypted = vowserdb::get_table_path($table . '.encrypt');
+    $backupfile= vowserdb::get_table_path($table . '.backup');
+    $backupencr= vowserdb::get_table_path($table . '.backup.encrypt');
+    $encrypkey = defined('VOWSERDBENCRKEY') ? VOWSERDBENCRKEY : '20E4A879C13ADB03A74324A8B9792C10';
+
+    // Encrypt table file
+    if (!file_exists($tablefile)) {
+      return false;
     }
-
-    public static function encrypt($table)
-    {
-        $encryptfile = self::$folder.$table.'.encrypt'.self::$file_extension;
-        $originalfile = self::$folder.$table.self::$file_extension;
-        $key = defined('VOWSERDBENCRKEY') ? VOWSERDBENCRKEY : '20E4A879C13ADB03A74324A8B9792C10';
-        if (!file_exists($originalfile)) {
-            return false;
-        }
-        if (file_get_contents($originalfile) == "encr") {
-            return array("error" => "Already encrypted");
-        }
-        self::encryptFile($originalfile, $key, $encryptfile);
-        $f = fopen($originalfile, 'w');
-        fwrite($f, 'encr');
-        fclose($f);
+    if (file_get_contents($tablefile) == "ENCRYPTED") {
+        return array("error" => "Already encrypted");
     }
+    self::encryptFile($tablefile, $encrypkey, $encrypted);
 
-    public static function encryptbackup($table)
-    {
-        $encryptfile = self::$folder.$table.'.backup.encrypt'.self::$file_extension;
-        $originalfile = self::$folder.$table.'.backup'.self::$file_extension;
-        $key = defined('VOWSERDBENCRKEY') ? VOWSERDBENCRKEY : '20E4A879C13ADB03A74324A8B9792C10';
-        if (!file_exists($originalfile)) {
-            return false;
-        }
-        if (file_get_contents($originalfile) == "encr") {
-            return array("error" => "Already encrypted");
-        }
-        self::encryptFile($originalfile, $key, $encryptfile);
-        $f = fopen($originalfile, 'w');
-        fwrite($f, 'encr');
-        fclose($f);
+    // Check if backup file exists, if yes encrypt it
+    if (file_exists($backupfile) && file_get_contents($backupfile) !== "ENCRYPTED") {
+      //self::encryptFile($backupfile, $encrypkey, $backupencr);
     }
+  }
 
-    private static function decrypt($table)
-    {
-        $encryptfile = self::$folder.$table.'.encrypt'.self::$file_extension;
-        $originalfile = self::$folder.$table.self::$file_extension;
-        $key = defined('VOWSERDBENCRKEY') ? VOWSERDBENCRKEY : '20E4A879C13ADB03A74324A8B9792C10';
-        if (!file_exists($encryptfile)) {
-            return array("error" => "Already decrypted");
-        }
-        self::decryptFile($encryptfile, $key, $originalfile);
-        unlink($encryptfile);
-    }
+  public static function decrypt($table) {
+    $tablefile = vowserdb::get_table_path($table);
+    $encrypted = vowserdb::get_table_path($table . '.encrypt');
+    $backupfile= vowserdb::get_table_path($table . '.backup');
+    $backupencr= vowserdb::get_table_path($table . '.backup.encrypt');
+    $encrypkey = defined('VOWSERDBENCRKEY') ? VOWSERDBENCRKEY : '20E4A879C13ADB03A74324A8B9792C10';
 
-    private static function decryptbackup($table)
-    {
-        $encryptfile = self::$folder.$table.'.backup.encrypt'.self::$file_extension;
-        $originalfile = self::$folder.$table.'.backup'.self::$file_extension;
-        $key = defined('VOWSERDBENCRKEY') ? VOWSERDBENCRKEY : '20E4A879C13ADB03A74324A8B9792C10';
-        if (!file_exists($encryptfile)) {
-            return array("error" => "Already decrypted");
-        }
-        self::decryptFile($encryptfile, $key, $originalfile);
-        unlink($encryptfile);
+    // Decrypt table file
+    if (!file_exists($encrypted)) {
+      return false;
     }
+    if (file_get_contents($encrypted) == "DECRYPTED") {
+        return array("error" => "Already decrypted");
+    }
+    self::decryptfile($encrypted, $encrypkey, $tablefile);
+
+    // Check if backup file exists, if yes decrypt it
+    if (file_exists($backupencr) && file_get_contents($backupencr) !== "DECRYPTED") {
+      self::decryptfile($backupencr, $encrypkey, $backupfile);
+    }
+  }
 
     private static function encryptFile($source, $key, $dest)
     {
@@ -102,6 +90,12 @@ class encrypt_tables extends vowserdb
             $error = true;
         }
 
+        if (!$error) {
+          $f = fopen($source, 'w');
+          fwrite($f, 'ENCRYPTED');
+          fclose($f);
+        }
+
         return $error ? false : $dest;
     }
     private static function decryptFile($source, $key, $dest)
@@ -127,6 +121,11 @@ class encrypt_tables extends vowserdb
             fclose($fpOut);
         } else {
             $error = true;
+        }
+        if (!$error) {
+          $f = fopen($source, 'w');
+          fwrite($f, 'DECRYPTED');
+          fclose($f);
         }
 
         return $error ? false : $dest;

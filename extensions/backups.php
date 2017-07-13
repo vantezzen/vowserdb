@@ -12,6 +12,8 @@ class backups extends vowserdb
               copy(self::$folder.$table.self::$file_extension, self::$folder.$table.'.backup'.self::$file_extension);
           }
       });
+
+      vowserdb::register_postfix('.backup');
   }
   /**
    * Restore the backup of a table (as long as it exists).

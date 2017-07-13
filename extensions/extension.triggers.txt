@@ -14,4 +14,5 @@ onDrop                table                                                 a ta
 
 onTableAccessBegin    table                                                 the table access has begun
 onTableAccessEnd      table                                                 the table access has ended
-beforeTableAccess     table                                                 before a table access is initiated
+afterTableAccess      table                                                 after a table access has been ended   (the table will be encrypted, ... at this trigger)
+beforeTableAccess     table                                                 before a table access is initiated    (the table can still be encrypted, ... at this trigger)

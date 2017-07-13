@@ -1,5 +1,5 @@
 <?php
-/* vowserDB -  v3.0.0 Alpha 3
+/* vowserDB -  v3.0.0 Beta 1
  * by vantezzen (http://vantezzen.de)
  *
  * For documentation check http://github.com/vantezzen/vowserdb
@@ -15,8 +15,9 @@ class vowserdb
   public static $folder = 'vowserdb/';     // Change the folder, where the tables will be saved to (notice the leading "/")
   public static $respectrelationshipsrelationship = false; // Should relationships on the relationship table be repected?
   public static $file_extension = '.csv';
-    public static $seperation_char = ',';
-    private static $events = []; // Trigger events (used in extensions)
+  public static $seperation_char = ',';
+  private static $events = []; // Trigger events (used in extensions)
+  private static $file_postfixes = array(''); // Possible file postfixes (e.g .encrypt or .backup)
 
   /*
    * Do not edit the constants below
@@ -130,8 +131,12 @@ class vowserdb
      *
      * @return array with the selected rows
      */
-    public static function SELECT($table, $requirements = array(), $ignorerelationships = false)
+    public static function SELECT($table, $requirements = array(), $ignorerelationships = false, $tableaccessinitiated = false)
     {
+        if (!$tableaccessinitiated) {
+          self::beforeTableAccess($table);
+          self::beginTableAccess($table);
+        }
         $path = self::get_table_path($table);
         $columns = self::GET_COLUMNS($table);
         $array = self::read_table($table);
@@ -151,6 +156,9 @@ class vowserdb
                         }
                     }
                 }
+            }
+            if (!$tableaccessinitiated) {
+              self::endTableAccess($table);
             }
             return $array;
         }
@@ -270,6 +278,9 @@ class vowserdb
                 }
             }
         }
+        if (!$tableaccessinitiated) {
+          self::endTableAccess($table);
+        }
         return $select;
     }
 
@@ -284,7 +295,7 @@ class vowserdb
     {
         self::beforeTableAccess($table);
         self::beginTableAccess($table);
-        $rows = self::SELECT($table, $where, true);
+        $rows = self::SELECT($table, $where, true, true);
         $path = self::get_table_path($table);
         $content = file_get_contents($path);
         foreach ($rows as $row) {
@@ -428,7 +439,7 @@ class vowserdb
     {
         self::beforeTableAccess($table);
         self::beginTableAccess($table);
-        $rows = self::SELECT($table, $where, true);
+        $rows = self::SELECT($table, $where, true, true);
         $path = self::get_table_path($table);
         $content = file_get_contents($path);
         foreach ($rows as $row) {
@@ -489,8 +500,12 @@ class vowserdb
     {
         self::beforeTableAccess($table);
         self::beginTableAccess($table);
-        $path = self::get_table_path($table);
-        unlink($path);
+        foreach(self::$file_postfixes as $postfix) {
+          $path = self::get_table_path($table . $postfix);
+          if (file_exists($path)) {
+            unlink($path);
+          }
+        }
         self::trigger('onDrop', $table);
         self::endTableAccess($table);
     }
@@ -573,6 +588,7 @@ class vowserdb
     private static function endTableAccess($table)
     {
         self::trigger('onTableAccessEnd', $table);
+        self::trigger('afterTableAccess', $table);
 
         return true;
     }
@@ -645,6 +661,10 @@ class vowserdb
                 call_user_func($callback, $param);
             }
         }
+    }
+
+    public static function register_postfix($postfix) {
+      self::$file_postfixes[] = $postfix;
     }
 
 
