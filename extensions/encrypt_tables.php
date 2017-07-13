@@ -1,5 +1,4 @@
 <?php
-//TODO: make it work
 class encrypt_tables extends vowserdb
 {
   public static $file_encryption_blocks = 10000;
