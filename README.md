@@ -5,7 +5,7 @@ It is written purely in PHP without any frameworks, additional services or deamo
 # installation
 You can install vowserdb manually or with composer.
 ## install manually
-Move the "vowserdb.php" script to your project folder and include it via
+Move the "vowserdb.php" script and the "extensions/" folder to your project folder(optinally into a seperate subfolder) and include it via
 
 ```PHP
 include("vowserdb.php");

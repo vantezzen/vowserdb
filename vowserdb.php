@@ -685,6 +685,10 @@ class vowserdb
 
     public static function load_extension($extension, $folder = 'extensions/')
     {
+        if (!file_exists(realpath(dirname(__FILE__)).'/'.$folder)) {
+          echo 'The provided extension folder (\'' . realpath(dirname(__FILE__)).'/'.$folder) . '\') does not exist. Please create it or provide the path to another folder.';
+          return false;
+        }
         if (self::in_array_r($extension, self::$uncompatible_extensions)) {
             $uncompatible_with = '';
             foreach (self::$uncompatible_extensions as $item) {
