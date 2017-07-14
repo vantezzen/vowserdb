@@ -49,8 +49,11 @@ class vowserdb
       if (!file_exists(self::$folder.'.htaccess') || file_get_contents(self::$folder.'.htaccess') !== 'deny from all') {
           $error[] = self::$folder.'.htaccess does not exists or may not have the right content';
       }
+      if (!file_exists(realpath(dirname(__FILE__)).'/extensions/')) {
+          $error[] = 'The default extensions folder (\'' . realpath(dirname(__FILE__)).'/extensions/') . '\') does not exist. Please copy it from the GitHub repo.';
+      }
 
-      self::trigger('onCheckDone');
+      self::trigger('onCheckDone', $error);
 
       return $error;
   }
