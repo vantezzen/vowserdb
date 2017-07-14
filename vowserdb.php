@@ -683,7 +683,7 @@ class vowserdb
     }
 
 
-    public static function load_extension($extension)
+    public static function load_extension($extension, $folder = 'extensions/')
     {
         if (self::in_array_r($extension, self::$uncompatible_extensions)) {
             $uncompatible_with = '';
@@ -702,7 +702,7 @@ class vowserdb
 
         }
 
-        if (file_exists(realpath(dirname(__FILE__)).'/extensions/'.$extension.'.json')) {
+        if (file_exists(realpath(dirname(__FILE__)).'/'.$folder.$extension.'.json')) {
             $conf = json_decode(file_get_contents(realpath(dirname(__FILE__)).'/extensions/'.$extension.'.json'), true);
             if (isset($conf['uncompatible_with'])) {
                 foreach ($conf['uncompatible_with'] as $uncompatible_extension) {
@@ -720,7 +720,7 @@ class vowserdb
             }
         }
 
-        include(realpath(dirname(__FILE__)).'/extensions/'.$extension.'.php');
+        include(realpath(dirname(__FILE__)).'/'.$folder.$extension.'.php');
         if (method_exists($extension, 'init') && is_callable(array($extension, 'init'))) {
             call_user_func(array($extension, 'init'));
         }
