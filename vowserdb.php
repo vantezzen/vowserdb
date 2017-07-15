@@ -40,22 +40,39 @@ class vowserdb
    *
    * @return Errors
    */
-  public static function check()
+  public static function check($disableecho = false)
   {
-      $error = array();
-      if (!file_exists(self::$folder) || !is_readable(self::$folder) || !is_writable(self::$folder)) {
-          $error[] = self::$folder.' is not readable, writable or does not exist';
+    $errors = array();
+    if (!file_exists(self::$folder)) {
+      $error = "The table folder (" . realpath(dirname(__FILE__)).'/'.self::$folder . ") does not exist. Please create it.";
+      if (!$disableecho) echo($error . "<br />");
+      $errors[] = $error;
+    } else {
+      if (!is_readable(self::$folder)) {
+        $error = "The table folder (" . realpath(dirname(__FILE__)).'/'.self::$folder . ") is not readable for PHP. Please give PHP (www-data) enough rights to read the folder.";
+        if (!$disableecho) echo($error . "<br />");
+        $errors[] = $error;
       }
-      if (!file_exists(self::$folder.'.htaccess') || file_get_contents(self::$folder.'.htaccess') !== 'deny from all') {
-          $error[] = self::$folder.'.htaccess does not exists or may not have the right content';
+      if (!is_writable(self::$folder)) {
+        $error = "The table folder (" . realpath(dirname(__FILE__)).'/'.self::$folder . ") is not writable for PHP. Please give PHP (www-data) enough rights to write the folder.";
+        if (!$disableecho) echo($error . "<br />");
+        $errors[] = $error;
       }
-      if (!file_exists(realpath(dirname(__FILE__)).'/extensions/')) {
-          $error[] = 'The default extensions folder (\'' . realpath(dirname(__FILE__)).'/extensions/') . '\') does not exist. Please copy it from the GitHub repo.';
-      }
+    }
+    if (!file_exists(self::$folder.'.htaccess')) {
+      $error = "There is no .htaccess file in the table folder (" . realpath(dirname(__FILE__)).'/'.self::$folder . "). This could mean that your tables are accessable for everyone.";
+      if (!$disableecho) echo($error . "<br />");
+      $errors[] = $error;
+    }
+    if (!file_exists(realpath(dirname(__FILE__)).'/extensions/')) {
+        $error = 'The default extensions folder (\'' . realpath(dirname(__FILE__)).'/extensions/' . '\') does not exist. Please copy it from the GitHub repo.';
+        if (!$disableecho) echo($error . "<br />");
+        $errors[] = $error;
+    }
 
-      self::trigger('onCheckDone', $error);
+    self::trigger('onCheckDone', $errors);
 
-      return $error;
+    return $errors;
   }
 
    /**
@@ -115,8 +132,12 @@ class vowserdb
      *
      * @return array with names of the columns
      */
-    public static function GET_COLUMNS($table)
+    public static function GET_COLUMNS($table, $tableaccessinitiated = true)
     {
+        if (!$tableaccessinitiated) {
+            self::beforeTableAccess($table);
+            self::beginTableAccess($table);
+        }
         $path = self::get_table_path($table);
         if (!file_exists($path) || !is_readable($path) || !is_writable($path)) {
             return array();
@@ -124,6 +145,10 @@ class vowserdb
         $f = fopen($path, 'r');
         $rows = fgetcsv($f);
         fclose($f);
+
+        if (!$tableaccessinitiated) {
+            self::endTableAccess($table);
+        }
 
         return $rows;
     }
@@ -689,7 +714,7 @@ class vowserdb
     public static function load_extension($extension, $folder = 'extensions/')
     {
         if (!file_exists(realpath(dirname(__FILE__)).'/'.$folder)) {
-          echo 'The provided extension folder (\'' . realpath(dirname(__FILE__)).'/'.$folder) . '\') does not exist. Please create it or provide the path to another folder.';
+          echo 'The provided extension folder (\'' . realpath(dirname(__FILE__)).'/'.$folder . '\') does not exist. Please create it or provide the path to another folder.';
           return false;
         }
         if (self::in_array_r($extension, self::$uncompatible_extensions)) {

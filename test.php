@@ -4,6 +4,16 @@ error_reporting(E_ALL);
 echo "testing vowserdb...";
 $notpassed = false;
 include("vowserdb.php");
+echo '<br />Include test: ';
+if (class_exists('vowserdb')) {
+  echo "PASSED";
+} else {
+  echo "vowserDB could not be included. Please make sure that this file is located in the same folder as vowserdb.php and the extensions/ folder.";
+  echo '<br /><br /><b style="color: red;">DID NOT PASS! Please correct the errors!</b>';
+  exit();
+}
+echo "<br />Executing 'check()' function<br />";
+vowserdb::check();
 echo "<br />Folder: ".vowserdb::$folder;
 echo "<br />Path for table 'test': ".vowserdb::get_table_path('test');
 echo '<br />Including extentions: <ul>';
@@ -20,8 +30,6 @@ foreach($extensions as $extension) {
 }
 echo '</ul>';
 
-echo "<br />vowserdb check: ";
-print_r(vowserdb::check());
 vowserdb::CREATE("testing", array("0", "1", "2", "3", "4", "5", "6", "7", "8", "9"));
 vowserdb::INSERT("testing", array("1" => "select me pls", "3" => "Heyy", "4" => "ahsdkahsdgasdagsjdgajsd", "8" => "a", "9" => "xxxx"));
 echo "<br />SELECT test: ";
@@ -57,6 +65,20 @@ if (json_encode(vowserdb::SELECT("table1")) == $expected) {
     echo '<br />Expected: ';
     print_r(json_decode($expected, true));
 }
+
+echo "<br />Extension load test: ";
+if (!file_exists(realpath(dirname(__FILE__)).'/extensions/migrate_mysql.php')) {
+  echo 'Could not execute test because the extension "migrate_mysql" is not availible';
+} else {
+  vowserdb::load_extension('migrate_mysql');
+  if (class_exists("migrate_mysql")) {
+    echo "PASSED";
+  } else {
+    echo "Not passed";
+    $notpassed = true;
+  }
+}
+
 echo "<br />Extension trigger test: ";
 
 class testextension extends vowserdb {
@@ -68,13 +90,47 @@ class testextension extends vowserdb {
   }
 }
 testextension::init();
-vowserdb::check();
+vowserdb::check(true);
 if (testextension::$passed) {
   echo 'PASSED';
 } else {
   $notpassed = true;
   echo 'Did not trigger event';
 }
+
+echo "<br />Column manipulation test: ";
+vowserdb::ADD_COLUMN("table1", "testcolumn");
+$notpassedcolumntest = false;
+$expect = '["user","text","addedOn","testcolumn"]';
+if (json_encode(vowserdb::GET_COLUMNS("table1", false)) !== $expect) {
+  $notpassedcolumntest = true;
+}
+vowserdb::RENAME("table1", "testcolumn", "newcolumn");
+$expect = '["user","text","addedOn","newcolumn"]';
+if (json_encode(vowserdb::GET_COLUMNS("table1", false)) !== $expect) {
+  $notpassedcolumntest = true;
+}
+vowserdb::REMOVE_COLUMN("table1", "newcolumn");
+$expect = '["user","text","addedOn"]';
+if (json_encode(vowserdb::GET_COLUMNS("table1", false)) !== $expect) {
+  $notpassedcolumntest = true;
+}
+if ($notpassedcolumntest) {
+  $notpassed = true;
+  echo 'Not passed';
+} else {
+  echo 'PASSED';
+}
+
+echo "<br />Table truncate test: ";
+vowserdb::TRUNCATE("table1");
+if (json_encode(vowserdb::SELECT("table1")) == "[]") {
+  echo "PASSED";
+} else {
+  echo "Not passed";
+  $notpassed = true;
+}
+
 
 if (!$notpassed) {
   echo '<br /><br /><b style="color: green;">The test was completed successfully!</b>';
