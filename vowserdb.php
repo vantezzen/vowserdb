@@ -1,14 +1,11 @@
 <?php
-/* vowserDB -  v2.9.0
+/* vowserDB -  v3.0.0
  * by vantezzen (http://vantezzen.de)
  *
  * For documentation check http://github.com/vantezzen/vowserdb
  *
  * TODO:
- * Add function to add/remove columns
- * Caching system
  */
-
 class vowserdb
 {
     /*
@@ -16,18 +13,20 @@ class vowserdb
    * Edit these settings to your needs
    */
   public static $folder = 'vowserdb/';     // Change the folder, where the tables will be saved to (notice the leading "/")
-  public static $dobackup = true;    // Do a backup of every table before editing it (e.g. UPDATE, ADD_COLUMN, etc.)
-  public static $disablelock = false; // Disable the table lock*
   public static $respectrelationshipsrelationship = false; // Should relationships on the relationship table be repected?
-  public static $encrypt = true; // Encrypt the tables
-  public static $file_encryption_blocks = 10000;
+  public static $file_extension = '.csv';
+  public static $seperation_char = ',';
+  private static $events = []; // Trigger events (used in extensions)
+  private static $file_postfixes = array(''); // Possible file postfixes (e.g .encrypt or .backup)
+  private static $loaded_extensions =  [];
+  private static $uncompatible_extensions = [];
 
   /*
    * Do not edit the constants below
    */
   const NEWLINE = '
 ';
-  const RELATIONSHIPTABLE = "vowserdb-table-relationships";
+    const RELATIONSHIPTABLE = "vowserdb-table-relationships";
 
   /*
    * * Table lock will protect a table when a script writes to it.
@@ -41,20 +40,39 @@ class vowserdb
    *
    * @return Errors
    */
-  public static function check()
+  public static function check($disableecho = false)
   {
-      $error = array();
-      if (!file_exists(self::$folder) || !is_readable(self::$folder) || !is_writable(self::$folder)) {
-          $error[] = self::$folder.' is not readable, writable or does not exist';
+    $errors = array();
+    if (!file_exists(self::$folder)) {
+      $error = "The table folder (" . realpath(dirname(__FILE__)).'/'.self::$folder . ") does not exist. Please create it.";
+      if (!$disableecho) echo($error . "<br />");
+      $errors[] = $error;
+    } else {
+      if (!is_readable(self::$folder)) {
+        $error = "The table folder (" . realpath(dirname(__FILE__)).'/'.self::$folder . ") is not readable for PHP. Please give PHP (www-data) enough rights to read the folder.";
+        if (!$disableecho) echo($error . "<br />");
+        $errors[] = $error;
       }
-      if (!file_exists(self::$folder.'.htaccess') || file_get_contents(self::$folder.'.htaccess') !== 'deny from all') {
-          $error[] = self::$folder.'.htaccess does not exists or may not have the right content';
+      if (!is_writable(self::$folder)) {
+        $error = "The table folder (" . realpath(dirname(__FILE__)).'/'.self::$folder . ") is not writable for PHP. Please give PHP (www-data) enough rights to write the folder.";
+        if (!$disableecho) echo($error . "<br />");
+        $errors[] = $error;
       }
-      if (self::$encrypt && !defined('VOWSERDBENCRKEY')) {
-          $error[] = 'Encryption is enabled but no custom encryption key is defined. Please define(\'VOWSERDBENCRKEY\') with a custom AES-128-CBC encryption key.';
-      }
+    }
+    if (!file_exists(self::$folder.'.htaccess')) {
+      $error = "There is no .htaccess file in the table folder (" . realpath(dirname(__FILE__)).'/'.self::$folder . "). This could mean that your tables are accessable for everyone.";
+      if (!$disableecho) echo($error . "<br />");
+      $errors[] = $error;
+    }
+    if (!file_exists(realpath(dirname(__FILE__)).'/extensions/')) {
+        $error = 'The default extensions folder (\'' . realpath(dirname(__FILE__)).'/extensions/' . '\') does not exist. Please copy it from the GitHub repo.';
+        if (!$disableecho) echo($error . "<br />");
+        $errors[] = $error;
+    }
 
-      return $error;
+    self::trigger('onCheckDone', $errors);
+
+    return $errors;
   }
 
    /**
@@ -64,35 +82,18 @@ class vowserdb
     */
    public static function CREATE($name, $columns)
    {
-       self::checklock($name);
-       self::setlock($name);
-       $folder = self::$folder;
-       $content = '';
-       foreach ($columns as $column) {
-           $content .= $column.';;';
+       self::beforeTableAccess($name);
+       self::beginTableAccess($name);
+       if (file_exists(self::get_table_path($name))) {
+           return false;
        }
-       $file = fopen($folder.$name.'.vowserdb', 'w');
-       fwrite($file, $content);
-       fclose($file);
-       self::removelock($name);
-   }
-   /**
-    * Escape a string to remove forbidden characters.
-    *
-    * @param string
-    *
-    * @return Escaped String
-    */
-   public static function ESCAPE($string)
-   {
-       $forbidden = array(
-       ';;',
-       '
-',
-     );
-       $string = str_replace($forbidden, '', $string);
 
-       return $string;
+       $file = fopen(self::$folder.$name.self::$file_extension, 'w');
+       fputcsv($file, $columns);
+       fclose($file);
+       self::endTableAccess($name);
+       self::trigger('onTableCreate', $name);
+       return true;
    }
 
     /**
@@ -101,23 +102,27 @@ class vowserdb
      * @param array of data to Insert
      * @param table to insert it to
      */
-    public static function INSERT($data, $table)
+    public static function INSERT($table, $data)
     {
-        self::checklock($table);
-        self::setlock($table);
-        $path = self::$folder.$table.'.vowserdb';
+        self::beforeTableAccess($table);
+        self::beginTableAccess($table);
+        $path = self::get_table_path($table);
         $columns = self::GET_COLUMNS($table);
-        $content = self::NEWLINE;
+        $columndata = array();
         foreach ($columns as $column) {
             if (isset($data[$column])) {
-                $content .= self::ESCAPE($data[$column]).';;';
+                $columndata[] = $data[$column];
             } else {
-                $content .= ';;';
+                $columndata[] = "";
             }
         }
         $file = fopen($path, 'a');
-        fwrite($file, $content);
-        self::removelock($table);
+        fwrite($file, self::NEWLINE);
+        fputcsv($file, $columndata);
+        fclose($file);
+
+        self::trigger('onInsert', array('name' => $table, 'data' => $data));
+        self::endTableAccess($table);
     }
 
     /**
@@ -127,19 +132,25 @@ class vowserdb
      *
      * @return array with names of the columns
      */
-    public static function GET_COLUMNS($table)
+    public static function GET_COLUMNS($table, $tableaccessinitiated = true)
     {
-        $path = self::$folder.$table.'.vowserdb';
+        if (!$tableaccessinitiated) {
+            self::beforeTableAccess($table);
+            self::beginTableAccess($table);
+        }
+        $path = self::get_table_path($table);
         if (!file_exists($path) || !is_readable($path) || !is_writable($path)) {
             return array();
         }
         $f = fopen($path, 'r');
-        $line = fgets($f);
+        $rows = fgetcsv($f);
         fclose($f);
-        $array = explode(';;', $line);
-        array_pop($array);
 
-        return $array;
+        if (!$tableaccessinitiated) {
+            self::endTableAccess($table);
+        }
+
+        return $rows;
     }
 
     /**
@@ -150,52 +161,40 @@ class vowserdb
      *
      * @return array with the selected rows
      */
-    public static function SELECT($table, $requirements = array(), $ignorerelationships = false)
+    public static function SELECT($table, $requirements = array(), $ignorerelationships = false, $tableaccessinitiated = false)
     {
-        $path = self::$folder.$table.'.vowserdb';
-        self::checklock($table);
-        self::setlock($table);
-        $columns = self::GET_COLUMNS($table);
-        $content = file_get_contents($path);
-        self::removelock($table);
-        $items = explode(self::NEWLINE, $content);
-        $items[0] = '';
-        $array = array();
-        $rows = array();
-        foreach ($items as $item) {
-            if (!empty($item)) {
-                $explode = explode(';;', $item);
-                array_pop($explode);
-                unset($row);
-                $row = array();
-                foreach ($explode as $key => $e) {
-                    $row[$columns[$key]] = $e;
-                }
-                $array[] = $row;
-            }
+        if (!$tableaccessinitiated) {
+            self::beforeTableAccess($table);
+            self::beginTableAccess($table);
         }
+        $path = self::get_table_path($table);
+        $columns = self::GET_COLUMNS($table);
+        $array = self::read_table($table);
+
+        self::trigger('onSelect', array('name' => $table, 'requirements' => $requirements));
+
         if ($requirements == array() || empty($requirements)) {
-          if ($table !== self::RELATIONSHIPTABLE && $ignorerelationships !== true) {
-            $relationships = self::getrelationships($table);
-            if (!empty($relationships)) {
-              foreach($relationships as $relationship) {
-                $row = $relationship["row1"];
-                $row2 = $relationship["row2"];
-                $table2 = $relationship["table2"];
-                foreach($array as $id => $entry) {
-                  if (!is_array($array[$id][$row])) {
-                    $array[$id][$row] = self::SELECT($table2, array($row2 => $array[$id][$row]), !self::$respectrelationshipsrelationship);
-                  }
+            if ($table !== self::RELATIONSHIPTABLE && $ignorerelationships !== true) {
+                $relationships = self::getrelationships($table);
+                if (!empty($relationships)) {
+                    foreach ($relationships as $relationship) {
+                        $row = $relationship["row1"];
+                        $row2 = $relationship["row2"];
+                        $table2 = $relationship["table2"];
+                        foreach ($array as $id => $entry) {
+                            $array[$id][$row] = self::SELECT($table2, array($row2 => $array[$id][$row]), !self::$respectrelationshipsrelationship);
+                        }
+                    }
                 }
-              }
             }
-          }
-          return $array;
+            if (!$tableaccessinitiated) {
+                self::endTableAccess($table);
+            }
+            return $array;
         }
         $select = array();
         $counter = 0;
         foreach ($requirements as $column => $value) {
-            $value = self::ESCAPE($value);
             if (preg_match('/^BIGGER THAN/', $value)) {
                 $mode = 'bigger';
                 $value = str_replace('BIGGER THAN ', '', $value);
@@ -297,19 +296,20 @@ class vowserdb
         }
 
         if ($table !== self::RELATIONSHIPTABLE && $ignorerelationships !== true) {
-          $relationships = self::getrelationships($table);
-          if (!empty($relationships)) {
-            foreach($relationships as $relationship) {
-              $row = $relationship["row1"];
-              $row2 = $relationship["row2"];
-              $table2 = $relationship["table2"];
-              foreach($select as $id => $entry) {
-                if (!is_array($array[$id][$row])) {
-                  $select[$id][$row] = self::SELECT($table2, array($row2 => $select[$id][$row]), !self::$respectrelationshipsrelationship);
+            $relationships = self::getrelationships($table);
+            if (!empty($relationships)) {
+                foreach ($relationships as $relationship) {
+                    $row = $relationship["row1"];
+                    $row2 = $relationship["row2"];
+                    $table2 = $relationship["table2"];
+                    foreach ($select as $id => $entry) {
+                        $select[$id][$row] = self::SELECT($table2, array($row2 => $select[$id][$row]), !self::$respectrelationshipsrelationship);
+                    }
                 }
-              }
             }
-          }
+        }
+        if (!$tableaccessinitiated) {
+            self::endTableAccess($table);
         }
         return $select;
     }
@@ -323,18 +323,17 @@ class vowserdb
      */
     public static function UPDATE($table, $data, $where = array())
     {
-        self::checklock($table);
-        self::setlock($table);
-        $rows = self::SELECT($table, $where, true);
-        $path = self::$folder.$table.'.vowserdb';
+        self::beforeTableAccess($table);
+        self::beginTableAccess($table);
+        $rows = self::SELECT($table, $where, true, true);
+        $path = self::get_table_path($table);
         $content = file_get_contents($path);
         foreach ($rows as $row) {
-            $oldrow = '';
-            $newrow = '';
+            $oldrow = self::str_putcsv($row);
+            $newrow = array();
             foreach ($row as $column => $value) {
-                $oldrow .= $value.';;';
                 if (isset($data[$column])) {
-                    $data[$column] = str_replace(';;', '', $data[$column]);
+                    $data[$column] = str_replace(self::$seperation_char, '', $data[$column]);
                     if (preg_match('/^INCREASE BY/', $data[$column])) {
                         $data[$column] = str_replace('INCREASE BY ', '', $data[$column]);
                         $value = $value + $data[$column];
@@ -350,17 +349,19 @@ class vowserdb
                     } else {
                         $value = $data[$column];
                     }
-                    $newrow .= $value.';;';
-                } else {
-                    $newrow .= $value.';;';
                 }
+                $newrow[] = $value;
             }
+            $newrow = self::str_putcsv($newrow);
             $content = str_replace($oldrow, $newrow, $content, $num);
         }
         $file = fopen($path, 'w');
         fwrite($file, $content);
         fclose($file);
-        self::removelock($table);
+
+        self::trigger('onUpdate', array('name' => $table, 'data' => $data, 'where' => $where));
+
+        self::endTableAccess($table);
     }
 
      /**
@@ -374,40 +375,29 @@ class vowserdb
       */
      public static function RENAME($table, $oldname, $newname)
      {
-         self::checklock($table);
-         self::setlock($table);
-         $path = self::$folder.$table.'.vowserdb';
-         if (!file_exists($path) || !is_readable($path) || !is_writable($path)) {
-             self::removelock($table);
+         self::beforeTableAccess($table);
+         self::beginTableAccess($table);
+         $path = self::get_table_path($table);
+         $content = explode(self::NEWLINE, file_get_contents($path));
 
-             return false;
-         }
-         $f = fopen($path, 'r');
-         $line = fgets($f);
-         fclose($f);
-         if (strpos($line, ';;'.$oldname.';;') !== false) {
-             $line = str_replace(';;'.$oldname.';;', ';;'.$newname.';;', $line);
-         } elseif (strpos($line, ';;'.$oldname) !== false) {
-             $line = str_replace(';;'.$oldname, ';;'.$newname, $line);
-         } elseif (strpos($line, $oldname.';;') !== false) {
-             $line = str_replace($oldname.';;', $newname.';;', $line);
-         } else {
-             self::removelock($table);
+         $columns = str_getcsv($content[0]);
 
-             return false;
+         foreach ($columns as $key => $column) {
+             if ($column == $oldname) {
+                 $columns[$key] = $newname;
+             }
          }
 
-         $content = file_get_contents($path);
-         $content = explode(self::NEWLINE, $content);
-         $content[0] = $line;
+         $content[0] = self::str_putcsv($columns);
+
          $content = implode(self::NEWLINE, $content);
-
          $file = fopen($path, 'w');
          fwrite($file, $content);
          fclose($file);
 
-         self::removelock($table);
+         self::trigger('onRename', array('name' => $table, 'oldname' => $oldname, 'newname' => $newname));
 
+         self::endTableAccess($table);
          return true;
      }
 
@@ -420,79 +410,51 @@ class vowserdb
       */
      public static function ADD_COLUMN($table, $column, $value = '')
      {
-         self::checklock($table);
-         self::setlock($table);
-         $path = self::$folder.$table.'.vowserdb';
-         if (!file_exists($path) || !is_readable($path) || !is_writable($path)) {
-             self::removelock($table);
+         self::beforeTableAccess($table);
+         self::beginTableAccess($table);
+         $path = self::get_table_path($table);
+         $content = explode(self::NEWLINE, file_get_contents($path));
 
-             return false;
-         }
-         $f = fopen($path, 'r');
-         $line = fgets($f);
-         fclose($f);
-         $line = str_replace(self::NEWLINE, '', $line);
-         $line .= $column.';;';
-         $content = file_get_contents($path);
-         $content = explode(self::NEWLINE, $content);
-         foreach ($content as $key => $l) {
-             if ($l !== '') {
-                 if ($key == 0) {
-                     $content[$key] = $line;
-                 } else {
-                     $content[$key] .= $value.';;';
-                 }
-             }
-         }
+         // Add column to columns
+         $columns = str_getcsv($content[0]);
+         $columns[] = $column;
+         $content[0] = self::str_putcsv($columns);
+
          $content = implode(self::NEWLINE, $content);
-
          $file = fopen($path, 'w');
          fwrite($file, $content);
          fclose($file);
 
-         self::removelock($table);
+         self::trigger('onColumnAdd', array('name' => $table, 'column' => $column));
+
+         self::endTableAccess($table);
      }
     public static function REMOVE_COLUMN($table, $column)
     {
-        self::checklock($table);
-        self::setlock($table);
-        $path = self::$folder.$table.'.vowserdb';
-        if (!file_exists($path) || !is_readable($path) || !is_writable($path)) {
-            self::removelock($table);
+        self::beforeTableAccess($table);
+        self::beginTableAccess($table);
+        $path = self::get_table_path($table);
+        $content = explode(self::NEWLINE, file_get_contents($path));
+        $columns = str_getcsv($content[0]);
 
-            return false;
-        }
-        $f = fopen($path, 'r');
-        $line = fgets($f);
-        fclose($f);
-        $line = str_replace(self::NEWLINE, '', $line);
-        $columns = explode(';;', $line);
-        foreach ($columns as $key => $c) {
-            if ($column == $c) {
-                $k = $key;
-                break;
+        $found = false;
+
+        foreach ($columns as $key => $columnname) {
+            if ($columnname == $column) {
+                unset($columns[$key]);
             }
         }
-        if (!isset($k)) {
-            self::removelock($table);
 
-            return false;
-        }
-        $content = file_get_contents($path);
-        $content = explode(self::NEWLINE, $content);
-        foreach ($content as $key => $line) {
-            $array = explode(';;', $line);
-            unset($array[$k]);
-            $line = implode(';;', $array);
-            $content[$key] = $line;
-        }
+        $content[0] = self::str_putcsv($columns);
+
         $content = implode(self::NEWLINE, $content);
-
         $file = fopen($path, 'w');
         fwrite($file, $content);
         fclose($file);
 
-        self::removelock($table);
+        self::trigger('onColumnRemove', array('name' => $table, 'column' => $column));
+
+        self::endTableAccess($table);
 
         return true;
     }
@@ -505,22 +467,20 @@ class vowserdb
      */
     public static function DELETE($table, $where = array())
     {
-        self::checklock($table);
-        self::setlock($table);
-        $rows = self::SELECT($table, $where, true);
-        $path = self::$folder.$table.'.vowserdb';
+        self::beforeTableAccess($table);
+        self::beginTableAccess($table);
+        $rows = self::SELECT($table, $where, true, true);
+        $path = self::get_table_path($table);
         $content = file_get_contents($path);
         foreach ($rows as $row) {
-            $oldrow = '';
-            foreach ($row as $column => $value) {
-                $oldrow .= $value.';;';
-            }
-            $content = str_replace($oldrow, '', $content, $num);
+            $oldrow = self::str_putcsv($row);
+            $content = str_replace($oldrow, '', $content);
         }
         $file = fopen($path, 'w');
         fwrite($file, $content);
         fclose($file);
-        self::removelock($table);
+        self::trigger('onDelete', array('name' => $table, 'select' => $where));
+        self::endTableAccess($table);
         self::CLEAR($table);
     }
 
@@ -532,7 +492,8 @@ class vowserdb
     public static function TRUNCATE($table)
     {
         //Alias for DELETE *
-     self::DELETE($table);
+      self::DELETE($table);
+        self::trigger('onTruncate', $table);
     }
 
     /**
@@ -542,21 +503,22 @@ class vowserdb
      */
     public static function CLEAR($table)
     {
-        self::checklock($table);
-        self::setlock($table);
-        $path = self::$folder.$table.'.vowserdb';
+        self::beforeTableAccess($table);
+        self::beginTableAccess($table);
+        $path = self::get_table_path($table);
         $content = file_get_contents($path);
         $rows = explode(self::NEWLINE, $content);
         $newcontent = '';
         foreach ($rows as $key => $row) {
-            if (!empty($row) && $row !== ' ') {
+            if (!empty(trim($row))) {
                 $newcontent .= $row.self::NEWLINE;
             }
         }
         $file = fopen($path, 'w');
         fwrite($file, $newcontent);
         fclose($file);
-        self::removelock($table);
+        self::trigger('onClear', $table);
+        self::endTableAccess($table);
     }
 
     /**
@@ -566,13 +528,16 @@ class vowserdb
      */
     public static function DROP($table)
     {
-        self::checklock($table);
-        self::setlock($table);
-        if (file_exists(self::$folder.$table.'.vowserdb')) unlink(self::$folder.$table.'.vowserdb');
-        if (file_exists(self::$folder.$table.'.encrypt.vowserdb')) unlink(self::$folder.$table.'.encrypt.vowserdb');
-        if (file_exists(self::$folder.$table.'.backup.vowserdb')) unlink(self::$folder.$table.'.backup.vowserdb');
-        if (file_exists(self::$folder.$table.'.backup.enrypt.vowserdb')) unlink(self::$folder.$table.'.backup.enrypt.vowserdb');
-        self::removelock($table);
+        self::beforeTableAccess($table);
+        self::beginTableAccess($table);
+        foreach (self::$file_postfixes as $postfix) {
+            $path = self::get_table_path($table . $postfix);
+            if (file_exists($path)) {
+                unlink($path);
+            }
+        }
+        self::trigger('onDrop', $table);
+        self::endTableAccess($table);
     }
 
     /**
@@ -583,340 +548,215 @@ class vowserdb
     public static function TABLES()
     {
         $tables = array();
-        foreach (glob(self::$folder.'*.vowserdb') as $table) {
-          if (!preg_match("/.backup.vowserdb$/", $table) && !preg_match("/.encrypt.vowserdb$/", $table) && !preg_match("/^vowserdb-/", $table)) {
-            $tables[] = str_replace(array(self::$folder, '.vowserdb'), '', $table);
-          }
+        foreach (glob(self::$folder.'*'.self::$file_extension) as $table) {
+            $tables[] = str_replace(array(self::$folder, self::$file_extension), '', $table);
         }
 
         return $tables;
-    }
-
-    /**
-     * Restore the backup of a table (as long as it exists).
-     *
-     * @param Name of the table
-     */
-    public static function RESTORE_BACKUP($table)
-    {
-        $backupfile = self::$folder.$table.'.backup.vowserdb';
-        $tablefile = self::$folder.$table.'.vowserdb';
-        if (file_exists($backupfile)) {
-            if (file_exists($tablefile)) {
-                rename($tablefile, $tablefile.'.moving');
-            }
-            rename($backupfile, $tablefile);
-            if (file_exists($tablefile.'.moving')) {
-                rename($tablefile.'.moving', $backupfile);
-            }
-
-            return true;
-        }
-
-        return false;
-    }
-
-   /*
-    * MySQL Table Migrating System.
-    */
-   /**
-    * Migrate a MySQL table to vowserdb.
-    *
-    * @param Host of the MySQL Server
-    * @param Username of the MySQL Server
-    * @param Password of the MySQL Server
-    * @param MySQL Database name
-    * @param MySQL table name
-    * @param MySQL WHERE statement
-    *
-    * @return Errors
-    */
-   public static function MIGRATE($host, $username, $password, $database, $table, $where = '1')
-   {
-       $db = mysqli_connect($host, $username, $password, $database);
-       if (mysqli_connect_errno()) {
-           return array('error' => mysqli_connect_error());
-       }
-       $command = 'SELECT * FROM `'.$table.'` WHERE '.$where;
-       $exe = mysqli_query($db, $command);
-       if ($exe == false) {
-           return array('error' => 'SELECT failed');
-       }
-       $columns = '';
-       $rows = array();
-       while ($row = mysqli_fetch_assoc($exe)) {
-           if (empty($columns)) {
-               $columns = array_keys($row);
-           }
-           $rows[] = $row;
-       }
-       self::CREATE($table, $columns);
-       foreach ($rows as $row) {
-           self::INSERT($row, $table);
-       }
-   }
-
-    /**
-     * Migrate a MySQL database to vowserdb.
-     *
-     * @param Host of the MySQL Server
-     * @param Username of the MySQL Server
-     * @param Password of the MySQL Server
-     * @param MySQL Database name
-     *
-     * @return Errors
-     */
-    public static function MIGRATE_DB($host, $username, $password, $database)
-    {
-        $db = mysqli_connect($host, $username, $password, $database);
-        if (mysqli_connect_errno()) {
-            return array('error' => mysqli_connect_error());
-        }
-        $command = 'SHOW TABLES';
-        $exe = mysqli_query($db, $command);
-        if ($exe == false) {
-            return array('error' => 'SELECT failed');
-        }
-        $columnname = 'Tables_in_'.$database;
-        while ($row = mysqli_fetch_assoc($exe)) {
-            self::MIGRATE($host, $username, $password, $database, $row[$columnname]);
-        }
     }
 
   /*
    * Relationships
    */
 
-   public static function relationship($table1, $row1, $table2, $row2) {
-     if (!file_exists(self::$folder.self::RELATIONSHIPTABLE.'.vowserdb')) {
-       self::CREATE(self::RELATIONSHIPTABLE, array("table1", "row1", "table2", "row2"));
-     }
-     if (!empty(self::SELECT(self::RELATIONSHIPTABLE, array("table1" => $table1, "row1" => $row1, "table2" => $table2, "row2" => $row2)))) {
-       return array("error" => "Relationship already exists");
-     } else {
-       self::INSERT(array("table1" => $table1, "row1" => $row1, "table2" => $table2, "row2" => $row2), self::RELATIONSHIPTABLE);
-       return true;
-     }
+   public static function relationship($table1, $row1, $table2, $row2)
+   {
+       if (!file_exists(self::$folder.self::RELATIONSHIPTABLE.self::$file_extension)) {
+           self::CREATE(self::RELATIONSHIPTABLE, array("table1", "row1", "table2", "row2"));
+       }
+       if (!empty(self::SELECT(self::RELATIONSHIPTABLE, array("table1" => $table1, "row1" => $row1, "table2" => $table2, "row2" => $row2)))) {
+           return array("error" => "Relationship already exists");
+       } else {
+           self::INSERT(self::RELATIONSHIPTABLE, array("table1" => $table1, "row1" => $row1, "table2" => $table2, "row2" => $row2));
+           return true;
+       }
    }
-   public static function destroyrelationship($table1, $row1, $table2, $row2) {
-     if (!file_exists(self::$folder.self::RELATIONSHIPTABLE.'.vowserdb')) {
-       return array("error" => "Relationship not found");
-     }
-     if (empty(self::SELECT(self::RELATIONSHIPTABLE, array("table1" => $table1, "row1" => $row1, "table2" => $table2, "row2" => $row2)))) {
-       return array("error" => "Relationship not found");
-     } else {
-       self::DELETE(self::RELATIONSHIPTABLE, array("table1" => $table1, "row1" => $row1, "table2" => $table2, "row2" => $row2));
-       return true;
-     }
-   }
-   private static function getrelationships($table) {
-     if (!file_exists(self::$folder.self::RELATIONSHIPTABLE.'.vowserdb')) {
-       return array();
-     }
-     return self::SELECT(self::RELATIONSHIPTABLE, array("table1" => $table));
-   }
+    public static function destroyrelationship($table1, $row1, $table2, $row2)
+    {
+        if ((!file_exists(self::$folder.self::RELATIONSHIPTABLE.self::$file_extension)) || (empty(self::SELECT(self::RELATIONSHIPTABLE, array("table1" => $table1, "row1" => $row1, "table2" => $table2, "row2" => $row2))))) {
+            return array("error" => "Relationship not found");
+        } else {
+            self::DELETE(self::RELATIONSHIPTABLE, array("table1" => $table1, "row1" => $row1, "table2" => $table2, "row2" => $row2));
+            return true;
+        }
+    }
+    private static function getrelationships($table)
+    {
+        if (!file_exists(self::$folder.self::RELATIONSHIPTABLE.self::$file_extension)) {
+            return array();
+        }
+        return self::SELECT(self::RELATIONSHIPTABLE, array("table1" => $table));
+    }
 
   /*
    * INTERNAL FUNCTIONS
    */
    /*
-    * Lock mechanism.
+    * Table access triggers
     */
    /**
-    * Set a lock for a table.
+    * Execute triggers at the beggining of the table access
     *
     * @param Table name
     *
     * @return true
     */
-   private static function setlock($table)
+   private static function beginTableAccess($table)
    {
-       if (self::$disablelock == false) {
-           $path = self::$folder.$table.'.lock';
-           $file = fopen($path, 'w');
-           fwrite($file, 'LOCKED');
-           fclose($file);
-       }
-       if (self::$encrypt) {
-         self::decrypt($table);
-         self::decryptbackup($table);
-       }
-       if (self::$dobackup == true) {
-           if (file_exists(self::$folder.$table.'.backup.vowserdb')) {
-               unlink(self::$folder.$table.'.backup.vowserdb');
-           }
-           if (file_exists(self::$folder.$table.'.vowserdb')) {
-             copy(self::$folder.$table.'.vowserdb', self::$folder.$table.'.backup.vowserdb');
-           }
-       }
+       self::trigger('onTableAccessBegin', $table);
 
        return true;
    }
 
     /**
-     * Remove the lock of a database.
+     * Execute triggers at the end of the table access
      *
      * @param Name of the table
      *
      * @return true
      */
-    private static function removelock($table)
+    private static function endTableAccess($table)
     {
-        if (self::$disablelock == false) {
-            $path = self::$folder.$table.'.lock';
-            if (file_exists($path)) unlink($path);
-        }
-        if (self::$encrypt) {
-          self::encrypt($table);
-          self::encryptbackup($table);
-        }
+        self::trigger('onTableAccessEnd', $table);
+        self::trigger('afterTableAccess', $table);
 
         return true;
     }
 
     /**
-     * Wait for a table to get unlocked.
+     * Execute triggers before a table is being accessed.
      *
      * @param Name of the table
      *
      * @return true
      */
-    private static function checklock($table)
+    private static function beforeTableAccess($table)
     {
-        if (self::$disablelock == false) {
-            $lockfile = self::$folder.$table.'.lock';
-            $i = 0;
-            while (file_exists($lockfile) && $i < 1000) {
-                usleep(10);
-                ++$i;
-            }
-        }
+        self::trigger('beforeTableAccess', $table);
 
         return true;
     }
 
-    /*
-     * Encryption/Decryption of tables
-     */
-     public static function decryptall()
-     {
-       foreach(self::TABLES() as $table) {
-         self::decrypt($table);
-         self::decryptbackup($table);
-       }
-     }
+    private static function read_table($table)
+    {
+        $path = self::get_table_path($table);
+        $columns = self::GET_COLUMNS($table);
+        $f = fopen($path, 'r');
+        $array = array();
+        while (($data = fgetcsv($f)) !== false) {
+            if (!empty($data) && array_filter($data, 'trim')) {
+                $row = array();
+                foreach ($data as $key => $e) {
+                    $row[$columns[$key]] = $e;
+                }
+                $array[] = $row;
+            }
+        }
+        fclose($f);
 
-     private static function encrypt($table)
-     {
-       $encryptfile = self::$folder.$table.'.encrypt.vowserdb';
-       $originalfile = self::$folder.$table.'.vowserdb';
-       $key = defined('VOWSERDBENCRKEY') ? VOWSERDBENCRKEY : '20E4A879C13ADB03A74324A8B9792C10';
-       if (!file_exists($originalfile)) {
-         return false;
-       }
-       if (file_get_contents($originalfile) == "encr") {
-         return array("error" => "Already encrypted");
-       }
-       self::encryptFile($originalfile, $key, $encryptfile);
-       $f = fopen($originalfile, 'w');
-       fwrite($f, 'encr');
-       fclose($f);
-     }
+        array_shift($array);
 
-     private static function encryptbackup($table)
-     {
-       $encryptfile = self::$folder.$table.'.backup.encrypt.vowserdb';
-       $originalfile = self::$folder.$table.'.backup.vowserdb';
-       $key = defined('VOWSERDBENCRKEY') ? VOWSERDBENCRKEY : '20E4A879C13ADB03A74324A8B9792C10';
-       if (!file_exists($originalfile)) {
-         return false;
-       }
-       if (file_get_contents($originalfile) == "encr") {
-         return array("error" => "Already encrypted");
-       }
-       self::encryptFile($originalfile, $key, $encryptfile);
-       $f = fopen($originalfile, 'w');
-       fwrite($f, 'encr');
-       fclose($f);
-     }
+        self::trigger('onTableRead', $table);
 
-     private static function decrypt($table)
-     {
-       $encryptfile = self::$folder.$table.'.encrypt.vowserdb';
-       $originalfile = self::$folder.$table.'.vowserdb';
-       $key = defined('VOWSERDBENCRKEY') ? VOWSERDBENCRKEY : '20E4A879C13ADB03A74324A8B9792C10';
-       if (!file_exists($encryptfile)) {
-         return array("error" => "Already decrypted");
-       }
-       self::decryptFile($encryptfile, $key, $originalfile);
-       unlink($encryptfile);
-     }
+        return $array;
+    }
 
-     private static function decryptbackup($table)
-     {
-       $encryptfile = self::$folder.$table.'.backup.encrypt.vowserdb';
-       $originalfile = self::$folder.$table.'.backup.vowserdb';
-       $key = defined('VOWSERDBENCRKEY') ? VOWSERDBENCRKEY : '20E4A879C13ADB03A74324A8B9792C10';
-       if (!file_exists($encryptfile)) {
-         return array("error" => "Already decrypted");
-       }
-       self::decryptFile($encryptfile, $key, $originalfile);
-       unlink($encryptfile);
-     }
+    public static function get_table_path($table)
+    {
+        return realpath(dirname(__FILE__)).'/'.self::$folder.$table.self::$file_extension;
+    }
 
-     private static function encryptFile($source, $key, $dest)
-     {
-         $key = substr(sha1($key, true), 0, 16);
-         $iv = openssl_random_pseudo_bytes(16);
+    // Source: https://stackoverflow.com/questions/4128323/in-array-and-multidimensional-array
+    public static function in_array_r($needle, $haystack, $strict = false)
+    {
+        foreach ($haystack as $item) {
+            if (($strict ? $item === $needle : $item == $needle) || (is_array($item) && self::in_array_r($needle, $item, $strict))) {
+                return true;
+            }
+        }
 
-         $error = false;
-         if ($fpOut = fopen($dest, 'w')) {
-             // Put the initialzation vector to the beginning of the file
-             fwrite($fpOut, $iv);
-             if ($fpIn = fopen($source, 'rb')) {
-                 while (!feof($fpIn)) {
-                     $plaintext = fread($fpIn, 16 * 10000);
-                     $ciphertext = openssl_encrypt($plaintext, 'AES-128-CBC', $key, OPENSSL_RAW_DATA, $iv);
-                     // Use the first 16 bytes of the ciphertext as the next initialization vector
-                     $iv = substr($ciphertext, 0, 16);
-                     fwrite($fpOut, $ciphertext);
-                 }
-                 fclose($fpIn);
-             } else {
-                 $error = true;
-             }
-             fclose($fpOut);
-         } else {
-             $error = true;
-         }
+        return false;
+    }
 
-         return $error ? false : $dest;
-     }
-     private static function decryptFile($source, $key, $dest)
-     {
-         $key = substr(sha1($key, true), 0, 16);
+    // Source: https://gist.github.com/johanmeiring/2894568
+    private static function str_putcsv($input, $delimiter = ',', $enclosure = '"')
+    {
+        $fp = fopen('php://temp', 'r+');
+        fputcsv($fp, $input, $delimiter, $enclosure);
+        rewind($fp);
+        $data = fread($fp, 1048576);
+        fclose($fp);
+        return rtrim($data, "\n");
+    }
 
-         $error = false;
-         if ($fpOut = fopen($dest, 'w')) {
-             if ($fpIn = fopen($source, 'rb')) {
-                 // Get the initialzation vector from the beginning of the file
-                 $iv = fread($fpIn, 16);
-                 while (!feof($fpIn)) {
-                     $ciphertext = fread($fpIn, 16 * (10000 + 1)); // we have to read one block more for decrypting than for encrypting
-                     $plaintext = openssl_decrypt($ciphertext, 'AES-128-CBC', $key, OPENSSL_RAW_DATA, $iv);
-                     // Use the first 16 bytes of the ciphertext as the next initialization vector
-                     $iv = substr($ciphertext, 0, 16);
-                     fwrite($fpOut, $plaintext);
-                 }
-                 fclose($fpIn);
-             } else {
-                 $error = true;
-             }
-             fclose($fpOut);
-         } else {
-             $error = true;
-         }
+    // Functions for extensions
 
-         return $error ? false : $dest;
-     }
+    // Source: https://gist.github.com/im4aLL/548c11c56dbc7267a2fe96bda6ed348b
+    public static function listen($name, $callback)
+    {
+        self::$events[$name][] = $callback;
+    }
+    public static function trigger($name, $param = '')
+    {
+        if (isset(self::$events[$name]) && !empty(self::$events[$name])) {
+            foreach (self::$events[$name] as $event => $callback) {
+                call_user_func($callback, $param);
+            }
+        }
+    }
+
+    public static function register_postfix($postfix)
+    {
+        self::$file_postfixes[] = $postfix;
+    }
+
+
+    public static function load_extension($extension, $folder = 'extensions/')
+    {
+        if (!file_exists(realpath(dirname(__FILE__)).'/'.$folder)) {
+          echo 'The provided extension folder (\'' . realpath(dirname(__FILE__)).'/'.$folder . '\') does not exist. Please create it or provide the path to another folder.';
+          return false;
+        }
+        if (self::in_array_r($extension, self::$uncompatible_extensions)) {
+            $uncompatible_with = '';
+            foreach (self::$uncompatible_extensions as $item) {
+                if ($item === $extension || (is_array($item) && self::in_array_r($extension, $item))) {
+                    $uncompatible_with = $item[0];
+                }
+            }
+            if (!empty($uncompatible_with)) {
+              echo('<br /><b>"' . $uncompatible_with . '" is not compatible with the extension "' . $extension . '" and thus "' . $extension . '" hasn\'t been loaded.</b><br />');
+              return false;
+            } else {
+              echo('<br /><b>"' . $extension . '" is not compatible with another loaded extension and thus hasn\'t been loaded.</b><br />');
+              return false;
+            }
+
+        }
+
+        if (file_exists(realpath(dirname(__FILE__)).'/'.$folder.$extension.'.json')) {
+            $conf = json_decode(file_get_contents(realpath(dirname(__FILE__)).'/extensions/'.$extension.'.json'), true);
+            if (isset($conf['uncompatible_with'])) {
+                foreach ($conf['uncompatible_with'] as $uncompatible_extension) {
+                    if (in_array($uncompatible_extension, self::$loaded_extensions)) {
+                        echo('<br /><b>"' . $extension . '" is not compatible with the extension "' . $uncompatible_extension . '" and thus hasn\'t been loaded.</b><br />');
+                        return false;
+                    }
+                    self::$uncompatible_extensions[] = array($extension, $uncompatible_extension);
+                }
+            }
+            if (isset($conf['postfixes'])) {
+              foreach($conf['postfixes'] as $postfix) {
+                self::$file_postfixes[] = $postfix;
+              }
+            }
+        }
+
+        include(realpath(dirname(__FILE__)).'/'.$folder.$extension.'.php');
+        if (method_exists($extension, 'init') && is_callable(array($extension, 'init'))) {
+            call_user_func(array($extension, 'init'));
+        }
+        self::$loaded_extensions[] = $extension;
+        return true;
+    }
 }
