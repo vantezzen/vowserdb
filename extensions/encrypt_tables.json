@@ -4,5 +4,6 @@
   "postfixes": [
     ".encrypt",
     ".backup.encrypt"
-  ]
+  ],
+  "vowserdb_min": "4.0.0"
 }

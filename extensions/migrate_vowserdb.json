@@ -1,0 +1,5 @@
+{
+  "name": "migrate_vowserdb",
+  "description": "This extension allows you to migrate old vowserDB 2.X.X tables to newer versions",
+  "vowserdb_min": "4.0.0"
+}
