@@ -77,7 +77,6 @@ class vowserdb
     */
    public static function CREATE($name, $columns)
    {
-       self::beforeTableAccess($name);
        self::beginTableAccess($name);
        if (file_exists(self::get_table_path($name))) {
            return false;
@@ -99,7 +98,6 @@ class vowserdb
      */
     public static function INSERT($table, $data)
     {
-        self::beforeTableAccess($table);
         self::beginTableAccess($table);
         $path = self::get_table_path($table);
         $columns = self::GET_COLUMNS($table);
@@ -130,7 +128,6 @@ class vowserdb
     public static function GET_COLUMNS($table, $tableaccessinitiated = true)
     {
         if (!$tableaccessinitiated) {
-            self::beforeTableAccess($table);
             self::beginTableAccess($table);
         }
         $path = self::get_table_path($table);
@@ -159,7 +156,6 @@ class vowserdb
     public static function SELECT($table, $requirements = array(), $ignorerelationships = false, $tableaccessinitiated = false)
     {
         if (!$tableaccessinitiated) {
-            self::beforeTableAccess($table);
             self::beginTableAccess($table);
         }
         $path = self::get_table_path($table);
@@ -318,7 +314,6 @@ class vowserdb
      */
     public static function UPDATE($table, $data, $where = array())
     {
-        self::beforeTableAccess($table);
         self::beginTableAccess($table);
         $rows = self::SELECT($table, $where, true, true);
         $path = self::get_table_path($table);
@@ -370,7 +365,6 @@ class vowserdb
       */
      public static function RENAME($table, $oldname, $newname)
      {
-         self::beforeTableAccess($table);
          self::beginTableAccess($table);
          $path = self::get_table_path($table);
          $content = explode(self::NEWLINE, file_get_contents($path));
@@ -405,7 +399,6 @@ class vowserdb
       */
      public static function ADD_COLUMN($table, $column, $value = '')
      {
-         self::beforeTableAccess($table);
          self::beginTableAccess($table);
          $path = self::get_table_path($table);
          $content = explode(self::NEWLINE, file_get_contents($path));
@@ -426,7 +419,6 @@ class vowserdb
      }
     public static function REMOVE_COLUMN($table, $column)
     {
-        self::beforeTableAccess($table);
         self::beginTableAccess($table);
         $path = self::get_table_path($table);
         $content = explode(self::NEWLINE, file_get_contents($path));
@@ -462,7 +454,6 @@ class vowserdb
      */
     public static function DELETE($table, $where = array())
     {
-        self::beforeTableAccess($table);
         self::beginTableAccess($table);
         $rows = self::SELECT($table, $where, true, true);
         $path = self::get_table_path($table);
@@ -498,7 +489,6 @@ class vowserdb
      */
     public static function CLEAR($table)
     {
-        self::beforeTableAccess($table);
         self::beginTableAccess($table);
         $path = self::get_table_path($table);
         $content = file_get_contents($path);
@@ -523,7 +513,6 @@ class vowserdb
      */
     public static function DROP($table)
     {
-        self::beforeTableAccess($table);
         self::beginTableAccess($table);
         foreach (self::$file_postfixes as $postfix) {
             $path = self::get_table_path($table . $postfix);
@@ -598,9 +587,10 @@ class vowserdb
     */
    private static function beginTableAccess($table)
    {
-       self::trigger('onTableAccessBegin', $table);
+      self::trigger('beforeTableAccess', $table);
+      self::trigger('onTableAccessBegin', $table);
 
-       return true;
+      return true;
    }
 
     /**
@@ -614,20 +604,6 @@ class vowserdb
     {
         self::trigger('onTableAccessEnd', $table);
         self::trigger('afterTableAccess', $table);
-
-        return true;
-    }
-
-    /**
-     * Execute triggers before a table is being accessed.
-     *
-     * @param Name of the table
-     *
-     * @return true
-     */
-    private static function beforeTableAccess($table)
-    {
-        self::trigger('beforeTableAccess', $table);
 
         return true;
     }
