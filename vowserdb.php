@@ -1,5 +1,5 @@
 <?php
-/* vowserDB -  v3.1.0
+/* vowserDB -  v4.0.0 Alpha 1
  * by vantezzen (http://vantezzen.de)
  *
  * For documentation check http://github.com/vantezzen/vowserdb
@@ -21,7 +21,7 @@ class vowserdb
   /*
    * Do not edit the constants and variables below
    */
-  public static $version = '3.1.0';
+  public static $version = '4.0.0';
   private static $events = []; // Trigger events (used in extensions)
   private static $file_postfixes = array(''); // Possible file postfixes (e.g .encrypt or .backup)
   private static $loaded_extensions =  [];
