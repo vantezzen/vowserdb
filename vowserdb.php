@@ -681,9 +681,17 @@ class vowserdb
         self::$file_postfixes[] = $postfix;
     }
 
+    public static function get_extension_path($ext, $folder = 'extensions/', $file = 'php') {
+      return realpath(dirname(__FILE__) . '/' . $folder) . '/' . $ext . '.' . $file;
+    }
+
 
     public static function load_extension($extension, $folder = 'extensions/')
     {
+        if (in_array($extension, self::$loaded_extensions)) {
+          self::handle('Info', '"' . $extension . '" is already loaded and won\'t be loaded again.');
+          return false;
+        }
         if (!file_exists(realpath(dirname(__FILE__)).'/'.$folder)) {
           self::handle('Warning', 'The provided extension folder (\'' . realpath(dirname(__FILE__)).'/'.$folder . '\') does not exist. Please create it or provide the path to another folder.');
           return false;
@@ -716,9 +724,29 @@ class vowserdb
                     self::$uncompatible_extensions[] = array($extension, $uncompatible_extension);
                 }
             }
+            if (isset($conf['dependencies'])) {
+              foreach($conf['dependencies'] as $dep) {
+                if (file_exists(self::get_extension_path($dep['name'], $folder))) {
+                  self::load_extension($dep['name'], $folder);
+                } else if (file_exists(self::get_extension_path($dep['name']))) {
+                  self::load_extension($dep['name']);
+                } else {
+                  self::handle('Warning', 'The extension "' . $extension . '" requires the dependecy "' . $dep['name'] . '" to work properly. Please install the dependecy from the links below and try it again');
+                  if (isset($dep['project_url'])) {
+                    self::handle('Info', 'Project page from the dependecy: ' + $dep['project_url']);
+                  }
+                  if (isset($dep['direct_php'])) {
+                    self::handle('Info', 'Direct link to the dependencies PHP code: ' + $dep['direct_php']);
+                  }
+                  if (isset($dep['direct_json'])) {
+                    self::handle('Info', 'Direct link to the dependencies configuration JSON (Please ALWAYS copy this you install the extention): ' + $dep['direct_php']);
+                  }
+                }
+              }
+            }
             if (isset($conf['postfixes'])) {
               foreach($conf['postfixes'] as $postfix) {
-                self::$file_postfixes[] = $postfix;
+                self::register_postfix($postfix);
               }
             }
         }
