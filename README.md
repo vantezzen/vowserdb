@@ -1,4 +1,4 @@
-# vowserdb (former sdb)
+# vowserdb
 vowserdb allows you to use csv files as a standalone database with SQL-like commands.
 It is written purely in PHP without any frameworks, additional services or deamons.
 
@@ -41,6 +41,6 @@ If you want to update from vowserdb 2.X.X to 3.X.X take a look at [the correspon
 # share some love
 If you like vowserdb, consider starring this repository and telling your friends and family about how awesome vowserdb is (yay!).
 You can also check out my other repositories on GitHub, maybe you'll find some other things, that might interest you.
-<br />
-<br />
+
+
 vantezzen
