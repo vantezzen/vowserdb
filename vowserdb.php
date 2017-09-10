@@ -1,5 +1,5 @@
 <?php
-/* vowserDB -  v3.0.0
+/* vowserDB -  v3.1.0
  * by vantezzen (http://vantezzen.de)
  *
  * For documentation check http://github.com/vantezzen/vowserdb
@@ -8,32 +8,27 @@
  */
 class vowserdb
 {
-    /*
+  /*
    * Configuration
    * Edit these settings to your needs
    */
   public static $folder = 'vowserdb/';     // Change the folder, where the tables will be saved to (notice the leading "/")
   public static $respectrelationshipsrelationship = false; // Should relationships on the relationship table be repected?
+  public static $productionmode = false; // Change to true to enable production mode ()
   public static $file_extension = '.csv';
   public static $seperation_char = ',';
+
+  /*
+   * Do not edit the constants and variables below
+   */
+  public static $version = '3.1.0';
   private static $events = []; // Trigger events (used in extensions)
   private static $file_postfixes = array(''); // Possible file postfixes (e.g .encrypt or .backup)
   private static $loaded_extensions =  [];
   private static $uncompatible_extensions = [];
-
-  /*
-   * Do not edit the constants below
-   */
   const NEWLINE = '
 ';
-    const RELATIONSHIPTABLE = "vowserdb-table-relationships";
-
-  /*
-   * * Table lock will protect a table when a script writes to it.
-   *   This can prevent data loss when two scripts try to write
-   *   to the same table at the same time. It will temporarely
-   *   create a *.lock file named after the table name.
-   */
+  const RELATIONSHIPTABLE = "vowserdb-table-relationships";
 
   /**
    * Check requirements.
@@ -714,7 +709,7 @@ class vowserdb
     public static function load_extension($extension, $folder = 'extensions/')
     {
         if (!file_exists(realpath(dirname(__FILE__)).'/'.$folder)) {
-          echo 'The provided extension folder (\'' . realpath(dirname(__FILE__)).'/'.$folder . '\') does not exist. Please create it or provide the path to another folder.';
+          self::handle('Warning', 'The provided extension folder (\'' . realpath(dirname(__FILE__)).'/'.$folder . '\') does not exist. Please create it or provide the path to another folder.');
           return false;
         }
         if (self::in_array_r($extension, self::$uncompatible_extensions)) {
@@ -725,10 +720,10 @@ class vowserdb
                 }
             }
             if (!empty($uncompatible_with)) {
-              echo('<br /><b>"' . $uncompatible_with . '" is not compatible with the extension "' . $extension . '" and thus "' . $extension . '" hasn\'t been loaded.</b><br />');
+              self::handle('Warning', '<br /><b>"' . $uncompatible_with . '" is not compatible with the extension "' . $extension . '" and thus "' . $extension . '" hasn\'t been loaded.</b><br />');
               return false;
             } else {
-              echo('<br /><b>"' . $extension . '" is not compatible with another loaded extension and thus hasn\'t been loaded.</b><br />');
+              self::handle('Warning', '<br /><b>"' . $extension . '" is not compatible with another loaded extension and thus hasn\'t been loaded.</b><br />');
               return false;
             }
 
@@ -739,7 +734,7 @@ class vowserdb
             if (isset($conf['uncompatible_with'])) {
                 foreach ($conf['uncompatible_with'] as $uncompatible_extension) {
                     if (in_array($uncompatible_extension, self::$loaded_extensions)) {
-                        echo('<br /><b>"' . $extension . '" is not compatible with the extension "' . $uncompatible_extension . '" and thus hasn\'t been loaded.</b><br />');
+                        self::handle('Warning', '<br /><b>"' . $extension . '" is not compatible with the extension "' . $uncompatible_extension . '" and thus hasn\'t been loaded.</b><br />');
                         return false;
                     }
                     self::$uncompatible_extensions[] = array($extension, $uncompatible_extension);
@@ -758,5 +753,29 @@ class vowserdb
         }
         self::$loaded_extensions[] = $extension;
         return true;
+    }
+
+    /*
+     * VowserDB error/info handler
+     */
+    private static function handle($type, $data) {
+      if (self::$productionmode == true) {
+        $text = 'vowserDB '.$type.': ';
+        if (is_array($data)) {
+          $text .= var_export($data, true);
+        } else {
+          $text .= $data;
+        }
+        $f = fopen(self::$folder . 'vowserdb-production.txt', 'a');
+        fwrite($f, $text);
+        fclose($f);
+      } else {
+        echo 'vowserDB '.$type.': ';
+        if (is_array($data)) {
+          print_r($data);
+        } else {
+          echo $data;
+        }
+      }
     }
 }
