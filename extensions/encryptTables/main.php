@@ -1,7 +1,6 @@
 <?php
-class encrypt_tables extends vowserdb
+class encryptTables extends vowserdb
 {
-  public static $file_encryption_blocks = 10000;
   private static $defaultkey = '20E4A879C13ADB03A74324A8B9792C10';
 
   // Set triggers

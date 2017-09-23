@@ -1,5 +1,5 @@
 {
-  "name": "table_lock",
+  "name": "tableLock",
   "description": "This extension helps minimizing the chance of data loss when two scripts are writing to the same table at the same time",
   "vowserdb_min": "4.0.0"
 }

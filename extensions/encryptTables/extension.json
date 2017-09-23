@@ -1,5 +1,5 @@
 {
-  "name": "encrypt_tables",
+  "name": "encryptTables",
   "description": "encrypt_tables will automatically en- and decrypt your tables",
   "postfixes": [
     ".encrypt",

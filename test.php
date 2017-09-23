@@ -17,7 +17,7 @@ vowserdb::check();
 echo "<br />Folder: ".vowserdb::$folder;
 echo "<br />Path for table 'test': ".vowserdb::get_table_path('test');
 echo '<br />Including extentions: <ul>';
-$extensions = array('backups', 'encrypt_tables', 'table_lock');
+$extensions = array('backups', 'encryptTables', 'tableLock');
 foreach($extensions as $extension) {
   echo '<br /><li>'.$extension;
   vowserdb::load_extension($extension);
@@ -67,11 +67,11 @@ if (json_encode(vowserdb::SELECT("table1")) == $expected) {
 }
 
 echo "<br />Extension load test: ";
-if (!file_exists(realpath(dirname(__FILE__)).'/extensions/migrate_mysql.php')) {
-  echo 'Could not execute test because the extension "migrate_mysql" is not availible';
+if (!file_exists(realpath(dirname(__FILE__)).'/extensions/migrateMysql/main.php')) {
+  echo 'Could not execute test because the extension "migrateMysql" is not availible';
 } else {
-  vowserdb::load_extension('migrate_mysql');
-  if (class_exists("migrate_mysql")) {
+  vowserdb::load_extension('migrateMysql');
+  if (class_exists("migrateMysql")) {
     echo "PASSED";
   } else {
     echo "Not passed";
@@ -81,7 +81,7 @@ if (!file_exists(realpath(dirname(__FILE__)).'/extensions/migrate_mysql.php')) {
 
 echo "<br />Extension trigger test: ";
 
-class testextension extends vowserdb {
+class testExtension extends vowserdb {
   public static $passed = false;
   public static function init() {
     vowserdb::listen('onCheckDone', function() {
@@ -89,9 +89,9 @@ class testextension extends vowserdb {
     });
   }
 }
-testextension::init();
+testExtension::init();
 vowserdb::check(true);
-if (testextension::$passed) {
+if (testExtension::$passed) {
   echo 'PASSED';
 } else {
   $notpassed = true;
