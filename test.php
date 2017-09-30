@@ -65,6 +65,7 @@ if (json_encode(vowserdb::SELECT("table1")) == $expected) {
     echo '<br />Expected: ';
     print_r(json_decode($expected, true));
 }
+vowserdb::destroyrelationship("table1", "user", "table2", "username");
 
 echo "<br />Extension load test: ";
 if (!file_exists(realpath(dirname(__FILE__)).'/extensions/migrateMysql/main.php')) {
