@@ -12,8 +12,8 @@ if (class_exists('vowserdb')) {
   echo '<br /><br /><b style="color: red;">DID NOT PASS! Please correct the errors!</b>';
   exit();
 }
-echo "<br />Executing 'check()' function<br />";
-vowserdb::check();
+echo "<br />Executing 'initiate()' function<br />";
+vowserdb::initiate();
 echo "<br />Folder: ".vowserdb::$folder;
 echo "<br />Path for table 'test': ".vowserdb::get_table_path('test');
 echo '<br />Including extentions: <ul>';
@@ -85,13 +85,13 @@ echo "<br />Extension trigger test: ";
 class testExtension extends vowserdb {
   public static $passed = false;
   public static function init() {
-    vowserdb::listen('onCheckDone', function() {
+    vowserdb::listen('onInitDone', function() {
       self::$passed = true;
     });
   }
 }
 testExtension::init();
-vowserdb::check(true);
+vowserdb::initiate(true);
 if (testExtension::$passed) {
   echo 'PASSED';
 } else {

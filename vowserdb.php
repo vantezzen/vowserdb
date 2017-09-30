@@ -1,5 +1,5 @@
 <?php
-/* vowserDB -  v4.0.0 Alpha 2
+/* vowserDB -  v4.0.0 Alpha 3
  * by vantezzen (http://vantezzen.de)
  *
  * For documentation check http://github.com/vantezzen/vowserdb
@@ -8,7 +8,7 @@
  */
 class vowserdb
 {
-  /*
+    /*
    * Configuration
    * Edit these settings to your needs
    */
@@ -16,66 +16,82 @@ class vowserdb
   public static $respectrelationshipsrelationship = false; // Should relationships on the relationship table be repected?
   public static $productionmode = false; // Change to true to enable production mode ()
   public static $file_extension = '.csv';
-  public static $seperation_char = ',';
+    public static $seperation_char = ',';
 
   /*
    * Do not edit the constants and variables below
    */
   public static $version = '4.0.0';
-  private static $events = []; // Trigger events (used in extensions)
+    private static $events = []; // Trigger events (used in extensions)
   private static $file_postfixes = array(''); // Possible file postfixes (e.g .encrypt or .backup)
   private static $loaded_extensions =  [];
-  private static $uncompatible_extensions = [];
-  const NEWLINE = PHP_EOL;
-  const RELATIONSHIPTABLE = "vowserdb-table-relationships";
+    private static $uncompatible_extensions = [];
+    const NEWLINE = PHP_EOL;
+    const RELATIONSHIPTABLE = "vowserdb-table-relationships";
 
   /**
-   * Check requirements.
-   *
-   * @return Errors
+   * Initiate vowserDB by creating a database
    */
-  public static function check($disableecho = false)
+  public static function initiate($disableecho = false)
   {
       $errors = array();
       if (!file_exists(self::$folder)) {
-          $error = "The table folder (" . realpath(dirname(__FILE__)).'/'.self::$folder . ") does not exist. Please create it.";
-          if (!$disableecho) {
-              echo($error . "<br />");
-          }
-          $errors[] = $error;
-      } else {
-          if (!is_readable(self::$folder)) {
-              $error = "The table folder (" . realpath(dirname(__FILE__)).'/'.self::$folder . ") is not readable for PHP. Please give PHP (www-data) enough rights to read the folder.";
-              if (!$disableecho) {
-                  echo($error . "<br />");
-              }
-              $errors[] = $error;
-          }
-          if (!is_writable(self::$folder)) {
-              $error = "The table folder (" . realpath(dirname(__FILE__)).'/'.self::$folder . ") is not writable for PHP. Please give PHP (www-data) enough rights to write the folder.";
+          if (!mkdir('./test')) {
+              $error = "We could not find and create the database server (\"" . self::$folder . "\"). Please create it and give PHP/www-data enough file permissions to read and write to it.";
               if (!$disableecho) {
                   echo($error . "<br />");
               }
               $errors[] = $error;
           }
       }
+      if (!is_readable(self::$folder)) {
+          $error = "The table folder (" . realpath(dirname(__FILE__)).'/'.self::$folder . ") is not readable for PHP. Please give PHP (www-data) enough rights to read the folder.";
+          if (!$disableecho) {
+              echo($error . "<br />");
+          }
+          $errors[] = $error;
+      }
+      if (!is_writable(self::$folder)) {
+          $error = "The table folder (" . realpath(dirname(__FILE__)).'/'.self::$folder . ") is not writable for PHP. Please give PHP (www-data) enough rights to write the folder.";
+          if (!$disableecho) {
+              echo($error . "<br />");
+          }
+          $errors[] = $error;
+      }
+
       if (!file_exists(self::$folder.'.htaccess')) {
-          $error = "There is no .htaccess file in the table folder (" . realpath(dirname(__FILE__)).'/'.self::$folder . "). This could mean that your tables are accessable for everyone.";
-          if (!$disableecho) {
-              echo($error . "<br />");
+          try {
+              $htaccess = fopen(self::$folder.'.htaccess', 'w');
+              if (!$htaccess) {
+                  throw new Exception('File open failed.');
+              }
+              fwrite($htaccess, 'deny from all');
+              fclose($htaccess);
+          } catch (Exception $e) {
+              $error = "We have tried to create an .htaccess file in your database folder (" . self::$folder . ") but  the access was denied.";
+              if (!$disableecho) {
+                  echo($error . "<br />");
+              }
+              $errors[] = $error;
           }
-          $errors[] = $error;
       }
+
       if (!file_exists(realpath(dirname(__FILE__)).'/extensions/')) {
-          $error = 'The default extensions folder (\'' . realpath(dirname(__FILE__)).'/extensions/' . '\') does not exist. Please copy it from the GitHub repo.';
+          $error = 'The default extensions folder (\'' . realpath(dirname(__FILE__)).'/extensions/' . '\') does not exist. Please copy it from the GitHub repo if you want to use vowserDB\'s extensions.';
           if (!$disableecho) {
               echo($error . "<br />");
           }
           $errors[] = $error;
       }
 
-      self::trigger('onCheckDone', $errors);
+      self::trigger('onInitDone', $errors);
 
+      if (empty($errors)) {
+        if (!$disableecho) {
+            echo("Initiated vowserDB sucessfully<br />");
+        }
+        return true;
+      }
       return $errors;
   }
 
