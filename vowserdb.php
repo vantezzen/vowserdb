@@ -8,7 +8,7 @@
  */
 class vowserdb
 {
-    /*
+  /*
    * Configuration
    * Edit these settings to your needs
    */
@@ -16,19 +16,18 @@ class vowserdb
   public static $respectrelationshipsrelationship = false; // Should relationships on the relationship table be repected?
   public static $productionmode = false; // Change to true to enable production mode ()
   public static $file_extension = '.csv';
-    public static $seperation_char = ',';
+  public static $seperation_char = ',';
 
   /*
    * Do not edit the constants and variables below
    */
   public static $version = '4.0.0';
-    private static $events = []; // Trigger events (used in extensions)
+  private static $events = []; // Trigger events (used in extensions)
   private static $file_postfixes = array(''); // Possible file postfixes (e.g .encrypt or .backup)
   private static $loaded_extensions =  [];
-    private static $uncompatible_extensions = [];
-    const NEWLINE = '
-';
-    const RELATIONSHIPTABLE = "vowserdb-table-relationships";
+  private static $uncompatible_extensions = [];
+  const NEWLINE = PHP_EOL;
+  const RELATIONSHIPTABLE = "vowserdb-table-relationships";
 
   /**
    * Check requirements.
