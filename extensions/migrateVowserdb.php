@@ -1,6 +1,6 @@
 <?php
 // This function is used to update old .vowserdb tables from vowserDB 2.X.X
-class migrate_vowserdb extends vowserdb {
+class migrateVowserdb extends vowserdb {
   public static function migrate($table) {
     $file = vowserdb::$folder.$table.'.vowserdb';
     if (!file_exists($file)) {

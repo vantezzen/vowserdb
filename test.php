@@ -12,12 +12,12 @@ if (class_exists('vowserdb')) {
   echo '<br /><br /><b style="color: red;">DID NOT PASS! Please correct the errors!</b>';
   exit();
 }
-echo "<br />Executing 'check()' function<br />";
-vowserdb::check();
+echo "<br />Executing 'initiate()' function<br />";
+vowserdb::initiate();
 echo "<br />Folder: ".vowserdb::$folder;
 echo "<br />Path for table 'test': ".vowserdb::get_table_path('test');
 echo '<br />Including extentions: <ul>';
-$extensions = array('backups', 'encrypt_tables', 'table_lock');
+$extensions = array('backups', 'encryptTables', 'tableLock');
 foreach($extensions as $extension) {
   echo '<br /><li>'.$extension;
   vowserdb::load_extension($extension);
@@ -65,13 +65,14 @@ if (json_encode(vowserdb::SELECT("table1")) == $expected) {
     echo '<br />Expected: ';
     print_r(json_decode($expected, true));
 }
+vowserdb::destroyrelationship("table1", "user", "table2", "username");
 
 echo "<br />Extension load test: ";
-if (!file_exists(realpath(dirname(__FILE__)).'/extensions/migrate_mysql.php')) {
-  echo 'Could not execute test because the extension "migrate_mysql" is not availible';
+if (!file_exists(realpath(dirname(__FILE__)).'/extensions/migrateMysql.php')) {
+  echo 'Could not execute test because the extension "migrateMysql" is not availible';
 } else {
-  vowserdb::load_extension('migrate_mysql');
-  if (class_exists("migrate_mysql")) {
+  vowserdb::load_extension('migrateMysql');
+  if (class_exists("migrateMysql")) {
     echo "PASSED";
   } else {
     echo "Not passed";
@@ -81,17 +82,17 @@ if (!file_exists(realpath(dirname(__FILE__)).'/extensions/migrate_mysql.php')) {
 
 echo "<br />Extension trigger test: ";
 
-class testextension extends vowserdb {
+class testExtension extends vowserdb {
   public static $passed = false;
   public static function init() {
-    vowserdb::listen('onCheckDone', function() {
+    vowserdb::listen('onInitDone', function() {
       self::$passed = true;
     });
   }
 }
-testextension::init();
-vowserdb::check(true);
-if (testextension::$passed) {
+testExtension::init();
+vowserdb::initiate(true);
+if (testExtension::$passed) {
   echo 'PASSED';
 } else {
   $notpassed = true;

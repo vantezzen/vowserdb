@@ -1,8 +1,9 @@
 {
-  "name": "encrypt_tables",
+  "name": "encryptTables",
   "description": "encrypt_tables will automatically en- and decrypt your tables",
   "postfixes": [
     ".encrypt",
     ".backup.encrypt"
-  ]
+  ],
+  "vowserdb_min": "4.0.0"
 }

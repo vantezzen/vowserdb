@@ -1,14 +1,20 @@
 <?php
-/* vowserDB -  v3.1.0
- * by vantezzen (http://vantezzen.de)
+/**
+ * vowserDB : Standalone database software for PHP (https://vantezzen.github.io/vowserdb-docs/index.html)
+ * Copyright (c) vantezzen (https://github.com/vantezzen/)
  *
- * For documentation check http://github.com/vantezzen/vowserdb
+ * Licensed under MIT License
+ * For full copyright and license information, please see the LICENSE file
+ * Redistributions of files must retain the above copyright notice.
  *
- * TODO:
+ * @copyright     Copyright (c) vantezzen (https://github.com/vantezzen/)
+ * @link          https://vantezzen.github.io/vowserdb-docs/index.html vowserDB
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
+
 class vowserdb
 {
-  /*
+    /*
    * Configuration
    * Edit these settings to your needs
    */
@@ -21,53 +27,78 @@ class vowserdb
   /*
    * Do not edit the constants and variables below
    */
-  public static $version = '3.1.0';
+  public static $version = '4.0.0';
   private static $events = []; // Trigger events (used in extensions)
   private static $file_postfixes = array(''); // Possible file postfixes (e.g .encrypt or .backup)
   private static $loaded_extensions =  [];
   private static $uncompatible_extensions = [];
-  const NEWLINE = '
-';
+  const NEWLINE = PHP_EOL;
   const RELATIONSHIPTABLE = "vowserdb-table-relationships";
 
   /**
-   * Check requirements.
-   *
-   * @return Errors
+   * Initiate vowserDB by creating a database
    */
-  public static function check($disableecho = false)
+  public static function initiate($disableecho = false)
   {
-    $errors = array();
-    if (!file_exists(self::$folder)) {
-      $error = "The table folder (" . realpath(dirname(__FILE__)).'/'.self::$folder . ") does not exist. Please create it.";
-      if (!$disableecho) echo($error . "<br />");
-      $errors[] = $error;
-    } else {
+      $errors = array();
+      if (!file_exists(self::$folder)) {
+          if (!mkdir('./test')) {
+              $error = "We could not find and create the database server (\"" . self::$folder . "\"). Please create it and give PHP/www-data enough file permissions to read and write to it.";
+              if (!$disableecho) {
+                  echo($error . "<br />");
+              }
+              $errors[] = $error;
+          }
+      }
       if (!is_readable(self::$folder)) {
-        $error = "The table folder (" . realpath(dirname(__FILE__)).'/'.self::$folder . ") is not readable for PHP. Please give PHP (www-data) enough rights to read the folder.";
-        if (!$disableecho) echo($error . "<br />");
-        $errors[] = $error;
+          $error = "The table folder (" . realpath(dirname(__FILE__)).'/'.self::$folder . ") is not readable for PHP. Please give PHP (www-data) enough rights to read the folder.";
+          if (!$disableecho) {
+              echo($error . "<br />");
+          }
+          $errors[] = $error;
       }
       if (!is_writable(self::$folder)) {
-        $error = "The table folder (" . realpath(dirname(__FILE__)).'/'.self::$folder . ") is not writable for PHP. Please give PHP (www-data) enough rights to write the folder.";
-        if (!$disableecho) echo($error . "<br />");
-        $errors[] = $error;
+          $error = "The table folder (" . realpath(dirname(__FILE__)).'/'.self::$folder . ") is not writable for PHP. Please give PHP (www-data) enough rights to write the folder.";
+          if (!$disableecho) {
+              echo($error . "<br />");
+          }
+          $errors[] = $error;
       }
-    }
-    if (!file_exists(self::$folder.'.htaccess')) {
-      $error = "There is no .htaccess file in the table folder (" . realpath(dirname(__FILE__)).'/'.self::$folder . "). This could mean that your tables are accessable for everyone.";
-      if (!$disableecho) echo($error . "<br />");
-      $errors[] = $error;
-    }
-    if (!file_exists(realpath(dirname(__FILE__)).'/extensions/')) {
-        $error = 'The default extensions folder (\'' . realpath(dirname(__FILE__)).'/extensions/' . '\') does not exist. Please copy it from the GitHub repo.';
-        if (!$disableecho) echo($error . "<br />");
-        $errors[] = $error;
-    }
 
-    self::trigger('onCheckDone', $errors);
+      if (!file_exists(self::$folder.'.htaccess')) {
+          try {
+              $htaccess = fopen(self::$folder.'.htaccess', 'w');
+              if (!$htaccess) {
+                  throw new Exception('File open failed.');
+              }
+              fwrite($htaccess, 'deny from all');
+              fclose($htaccess);
+          } catch (Exception $e) {
+              $error = "We have tried to create an .htaccess file in your database folder (" . self::$folder . ") but  the access was denied.";
+              if (!$disableecho) {
+                  echo($error . "<br />");
+              }
+              $errors[] = $error;
+          }
+      }
 
-    return $errors;
+      if (!file_exists(realpath(dirname(__FILE__)).'/extensions/')) {
+          $error = 'The default extensions folder (\'' . realpath(dirname(__FILE__)).'/extensions/' . '\') does not exist. Please copy it from the GitHub repo if you want to use vowserDB\'s extensions.';
+          if (!$disableecho) {
+              echo($error . "<br />");
+          }
+          $errors[] = $error;
+      }
+
+      self::trigger('onInitDone', $errors);
+
+      if (empty($errors)) {
+        if (!$disableecho) {
+            echo("Initiated vowserDB sucessfully<br />");
+        }
+        return true;
+      }
+      return $errors;
   }
 
    /**
@@ -77,7 +108,6 @@ class vowserdb
     */
    public static function CREATE($name, $columns)
    {
-       self::beforeTableAccess($name);
        self::beginTableAccess($name);
        if (file_exists(self::get_table_path($name))) {
            return false;
@@ -99,7 +129,6 @@ class vowserdb
      */
     public static function INSERT($table, $data)
     {
-        self::beforeTableAccess($table);
         self::beginTableAccess($table);
         $path = self::get_table_path($table);
         $columns = self::GET_COLUMNS($table);
@@ -130,7 +159,6 @@ class vowserdb
     public static function GET_COLUMNS($table, $tableaccessinitiated = true)
     {
         if (!$tableaccessinitiated) {
-            self::beforeTableAccess($table);
             self::beginTableAccess($table);
         }
         $path = self::get_table_path($table);
@@ -159,7 +187,6 @@ class vowserdb
     public static function SELECT($table, $requirements = array(), $ignorerelationships = false, $tableaccessinitiated = false)
     {
         if (!$tableaccessinitiated) {
-            self::beforeTableAccess($table);
             self::beginTableAccess($table);
         }
         $path = self::get_table_path($table);
@@ -318,7 +345,6 @@ class vowserdb
      */
     public static function UPDATE($table, $data, $where = array())
     {
-        self::beforeTableAccess($table);
         self::beginTableAccess($table);
         $rows = self::SELECT($table, $where, true, true);
         $path = self::get_table_path($table);
@@ -370,7 +396,6 @@ class vowserdb
       */
      public static function RENAME($table, $oldname, $newname)
      {
-         self::beforeTableAccess($table);
          self::beginTableAccess($table);
          $path = self::get_table_path($table);
          $content = explode(self::NEWLINE, file_get_contents($path));
@@ -405,7 +430,6 @@ class vowserdb
       */
      public static function ADD_COLUMN($table, $column, $value = '')
      {
-         self::beforeTableAccess($table);
          self::beginTableAccess($table);
          $path = self::get_table_path($table);
          $content = explode(self::NEWLINE, file_get_contents($path));
@@ -426,7 +450,6 @@ class vowserdb
      }
     public static function REMOVE_COLUMN($table, $column)
     {
-        self::beforeTableAccess($table);
         self::beginTableAccess($table);
         $path = self::get_table_path($table);
         $content = explode(self::NEWLINE, file_get_contents($path));
@@ -462,7 +485,6 @@ class vowserdb
      */
     public static function DELETE($table, $where = array())
     {
-        self::beforeTableAccess($table);
         self::beginTableAccess($table);
         $rows = self::SELECT($table, $where, true, true);
         $path = self::get_table_path($table);
@@ -498,7 +520,6 @@ class vowserdb
      */
     public static function CLEAR($table)
     {
-        self::beforeTableAccess($table);
         self::beginTableAccess($table);
         $path = self::get_table_path($table);
         $content = file_get_contents($path);
@@ -523,7 +544,6 @@ class vowserdb
      */
     public static function DROP($table)
     {
-        self::beforeTableAccess($table);
         self::beginTableAccess($table);
         foreach (self::$file_postfixes as $postfix) {
             $path = self::get_table_path($table . $postfix);
@@ -577,7 +597,7 @@ class vowserdb
     }
     private static function getrelationships($table)
     {
-        if (!file_exists(self::$folder.self::RELATIONSHIPTABLE.self::$file_extension)) {
+        if (!file_exists(self::get_table_path(self::RELATIONSHIPTABLE))) {
             return array();
         }
         return self::SELECT(self::RELATIONSHIPTABLE, array("table1" => $table));
@@ -598,6 +618,7 @@ class vowserdb
     */
    private static function beginTableAccess($table)
    {
+       self::trigger('beforeTableAccess', $table);
        self::trigger('onTableAccessBegin', $table);
 
        return true;
@@ -614,20 +635,6 @@ class vowserdb
     {
         self::trigger('onTableAccessEnd', $table);
         self::trigger('afterTableAccess', $table);
-
-        return true;
-    }
-
-    /**
-     * Execute triggers before a table is being accessed.
-     *
-     * @param Name of the table
-     *
-     * @return true
-     */
-    private static function beforeTableAccess($table)
-    {
-        self::trigger('beforeTableAccess', $table);
 
         return true;
     }
@@ -705,12 +712,28 @@ class vowserdb
         self::$file_postfixes[] = $postfix;
     }
 
+    public static function get_extension_path($ext, $folder = 'extensions/', $type = 'php')
+    {
+        return realpath(dirname(__FILE__) . '/' . $folder) . '/' . $ext . '.' . $type;
+    }
 
     public static function load_extension($extension, $folder = 'extensions/')
     {
+        if (strpos($extension, '_') !== false) {
+            self::handle('vowserDB Deprecated error', 'Please convert extension names to camelCase', E_USER_NOTICE);
+            if (file_exists(get_extension_path($extension, $folder))) {
+              self::handle('vowserDB Deprecated error', 'Please update your extension folder (' . $folder . ') by using the extension folder from the vowserDB GitHub repository.', E_USER_NOTICE);
+            } else {
+              $extension = str_replace('_', '', lcfirst(ucwords($extension, '_')));
+            }
+        }
+        if (in_array($extension, self::$loaded_extensions)) {
+            self::handle('Info', '"' . $extension . '" is already loaded and won\'t be loaded again.');
+            return false;
+        }
         if (!file_exists(realpath(dirname(__FILE__)).'/'.$folder)) {
-          self::handle('Warning', 'The provided extension folder (\'' . realpath(dirname(__FILE__)).'/'.$folder . '\') does not exist. Please create it or provide the path to another folder.');
-          return false;
+            self::handle('Warning', 'The provided extension folder (\'' . realpath(dirname(__FILE__)).'/'.$folder . '\') does not exist. Please create it or provide the path to another folder.');
+            return false;
         }
         if (self::in_array_r($extension, self::$uncompatible_extensions)) {
             $uncompatible_with = '';
@@ -720,34 +743,46 @@ class vowserdb
                 }
             }
             if (!empty($uncompatible_with)) {
-              self::handle('Warning', '<br /><b>"' . $uncompatible_with . '" is not compatible with the extension "' . $extension . '" and thus "' . $extension . '" hasn\'t been loaded.</b><br />');
-              return false;
+                self::handle('Warning', '"' . $uncompatible_with . '" is not compatible with the extension "' . $extension . '" and thus "' . $extension . '" hasn\'t been loaded.');
+                return false;
             } else {
-              self::handle('Warning', '<br /><b>"' . $extension . '" is not compatible with another loaded extension and thus hasn\'t been loaded.</b><br />');
-              return false;
+                self::handle('Warning', '"' . $extension . '" is not compatible with another loaded extension and thus hasn\'t been loaded.');
+                return false;
             }
-
         }
 
-        if (file_exists(realpath(dirname(__FILE__)).'/'.$folder.$extension.'.json')) {
-            $conf = json_decode(file_get_contents(realpath(dirname(__FILE__)).'/extensions/'.$extension.'.json'), true);
+        if (file_exists(self::get_extension_path($extension, $folder, 'json'))) {
+            $conf = json_decode(file_get_contents(self::get_extension_path($extension, $folder, 'json')), true);
             if (isset($conf['uncompatible_with'])) {
                 foreach ($conf['uncompatible_with'] as $uncompatible_extension) {
                     if (in_array($uncompatible_extension, self::$loaded_extensions)) {
-                        self::handle('Warning', '<br /><b>"' . $extension . '" is not compatible with the extension "' . $uncompatible_extension . '" and thus hasn\'t been loaded.</b><br />');
+                        self::handle('Warning', '"' . $extension . '" is not compatible with the extension "' . $uncompatible_extension . '" and thus hasn\'t been loaded.');
                         return false;
                     }
                     self::$uncompatible_extensions[] = array($extension, $uncompatible_extension);
                 }
             }
+            if (isset($conf['vowserdb_min'])) {
+                if (!version_compare(self::$version, $conf['vowserdb_min'], '>=')) {
+                    self::handle('Warning', '"' . $extension . '" requires at least vowserDB v' . $conf['vowserdb_min'] . ' to run. The extension won\'t be loaded.');
+                    return false;
+                }
+            }
+            if (isset($conf['vowserdb_max'])) {
+                if (!version_compare(self::$version, $conf['vowserdb_max'], '<=')) {
+                    self::handle('Warning', '"' . $extension . '" won\'t run with vowserDB versions over ' . $conf['vowserdb_max'] . '. The extension won\'t be loaded.');
+                    return false;
+                }
+            }
+
             if (isset($conf['postfixes'])) {
-              foreach($conf['postfixes'] as $postfix) {
-                self::$file_postfixes[] = $postfix;
-              }
+                foreach ($conf['postfixes'] as $postfix) {
+                    self::register_postfix($postfix);
+                }
             }
         }
 
-        include(realpath(dirname(__FILE__)).'/'.$folder.$extension.'.php');
+        include(self::get_extension_path($extension, $folder));
         if (method_exists($extension, 'init') && is_callable(array($extension, 'init'))) {
             call_user_func(array($extension, 'init'));
         }
@@ -758,24 +793,26 @@ class vowserdb
     /*
      * VowserDB error/info handler
      */
-    private static function handle($type, $data) {
-      if (self::$productionmode == true) {
-        $text = 'vowserDB '.$type.': ';
-        if (is_array($data)) {
-          $text .= var_export($data, true);
+    private static function handle($type, $data)
+    {
+        if (self::$productionmode == true) {
+            $text = 'vowserDB '.$type.': ';
+            if (is_array($data)) {
+                $text .= var_export($data, true);
+            } else {
+                $text .= $data;
+            }
+            $f = fopen(self::$folder . 'vowserdb-production.txt', 'a');
+            fwrite($f, $text);
+            fclose($f);
         } else {
-          $text .= $data;
+            echo '<br />vowserDB '.$type.': ';
+            if (is_array($data)) {
+                print_r($data);
+            } else {
+                echo $data;
+            }
+            echo '<br />';
         }
-        $f = fopen(self::$folder . 'vowserdb-production.txt', 'a');
-        fwrite($f, $text);
-        fclose($f);
-      } else {
-        echo 'vowserDB '.$type.': ';
-        if (is_array($data)) {
-          print_r($data);
-        } else {
-          echo $data;
-        }
-      }
     }
 }

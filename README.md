@@ -1,6 +1,7 @@
 ![vowserDB logo](https://github.com/vantezzen/vowserDB/blob/master/logo.png?raw=true)
 # vowserDB
 vowserDB allows you to use csv files as a standalone database with SQL-like commands.
+
 It is written purely in PHP without any frameworks, additional services or deamons.
 
 # Getting started with vowserDB

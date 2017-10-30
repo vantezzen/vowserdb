@@ -1,5 +1,5 @@
 <?php
-class table_lock extends vowserdb
+class tableLock extends vowserdb
 {
     // Init
   public static function init()

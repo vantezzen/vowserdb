@@ -1,5 +1,5 @@
 Trigger name          Param return ('name in array')            (is array)  Triggers when...
-onCheckDone           results                                               after check() has been executed
+onInitDone            results                                               after initiate() has been executed
 onTableRead           table name                                            the table has been read using the read_table() function
 onTableCreate         table name                                            a table is being created
 onInsert              table('name') & data                         (array)  data has been inserted into a table

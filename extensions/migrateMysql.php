@@ -1,5 +1,5 @@
 <?php
-class migrate_mysql extends vowserdb {
+class migrateMysql extends vowserdb {
   /*
    * MySQL Table Migrating System.
    */
