@@ -591,7 +591,7 @@ class vowserdb
     }
     private static function getrelationships($table)
     {
-        if (!file_exists(self::$folder.self::RELATIONSHIPTABLE.self::$file_extension)) {
+        if (!file_exists(self::get_table_path(self::RELATIONSHIPTABLE))) {
             return array();
         }
         return self::SELECT(self::RELATIONSHIPTABLE, array("table1" => $table));
