@@ -68,7 +68,7 @@ if (json_encode(vowserdb::SELECT("table1")) == $expected) {
 vowserdb::destroyrelationship("table1", "user", "table2", "username");
 
 echo "<br />Extension load test: ";
-if (!file_exists(realpath(dirname(__FILE__)).'/extensions/migrateMysql/main.php')) {
+if (!file_exists(realpath(dirname(__FILE__)).'/extensions/migrateMysql.php')) {
   echo 'Could not execute test because the extension "migrateMysql" is not availible';
 } else {
   vowserdb::load_extension('migrateMysql');

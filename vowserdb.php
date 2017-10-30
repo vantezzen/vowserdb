@@ -16,18 +16,18 @@ class vowserdb
   public static $respectrelationshipsrelationship = false; // Should relationships on the relationship table be repected?
   public static $productionmode = false; // Change to true to enable production mode ()
   public static $file_extension = '.csv';
-    public static $seperation_char = ',';
+  public static $seperation_char = ',';
 
   /*
    * Do not edit the constants and variables below
    */
   public static $version = '4.0.0';
-    private static $events = []; // Trigger events (used in extensions)
+  private static $events = []; // Trigger events (used in extensions)
   private static $file_postfixes = array(''); // Possible file postfixes (e.g .encrypt or .backup)
   private static $loaded_extensions =  [];
-    private static $uncompatible_extensions = [];
-    const NEWLINE = PHP_EOL;
-    const RELATIONSHIPTABLE = "vowserdb-table-relationships";
+  private static $uncompatible_extensions = [];
+  const NEWLINE = PHP_EOL;
+  const RELATIONSHIPTABLE = "vowserdb-table-relationships";
 
   /**
    * Initiate vowserDB by creating a database
@@ -706,15 +706,20 @@ class vowserdb
         self::$file_postfixes[] = $postfix;
     }
 
-    public static function get_extension_path($ext, $folder = 'extensions/', $file = 'main.php')
+    public static function get_extension_path($ext, $folder = 'extensions/', $type = 'php')
     {
-        return realpath(dirname(__FILE__) . '/' . $folder) . '/' . $ext . '/' . $file;
+        return realpath(dirname(__FILE__) . '/' . $folder) . '/' . $ext . '.' . $type;
     }
 
     public static function load_extension($extension, $folder = 'extensions/')
     {
         if (strpos($extension, '_') !== false) {
-            trigger_error('vowserDB Deprecated error: Please convert extension names to camelCase', E_USER_NOTICE);
+            self::handle('vowserDB Deprecated error', 'Please convert extension names to camelCase', E_USER_NOTICE);
+            if (file_exists(get_extension_path($extension, $folder))) {
+              self::handle('vowserDB Deprecated error', 'Please update your extension folder (' . $folder . ') by using the extension folder from the vowserDB GitHub repository.', E_USER_NOTICE);
+            } else {
+              $extension = str_replace('_', '', lcfirst(ucwords($extension, '_')));
+            }
         }
         if (in_array($extension, self::$loaded_extensions)) {
             self::handle('Info', '"' . $extension . '" is already loaded and won\'t be loaded again.');
@@ -732,20 +737,20 @@ class vowserdb
                 }
             }
             if (!empty($uncompatible_with)) {
-                self::handle('Warning', '<br /><b>"' . $uncompatible_with . '" is not compatible with the extension "' . $extension . '" and thus "' . $extension . '" hasn\'t been loaded.</b><br />');
+                self::handle('Warning', '"' . $uncompatible_with . '" is not compatible with the extension "' . $extension . '" and thus "' . $extension . '" hasn\'t been loaded.');
                 return false;
             } else {
-                self::handle('Warning', '<br /><b>"' . $extension . '" is not compatible with another loaded extension and thus hasn\'t been loaded.</b><br />');
+                self::handle('Warning', '"' . $extension . '" is not compatible with another loaded extension and thus hasn\'t been loaded.');
                 return false;
             }
         }
 
-        if (file_exists(realpath(dirname(__FILE__)).'/'.$folder.'/'.$extension.'/extension.json')) {
-            $conf = json_decode(file_get_contents(self::get_extension_path($extension, $folder, 'extension.json')), true);
+        if (file_exists(self::get_extension_path($extension, $folder, 'json'))) {
+            $conf = json_decode(file_get_contents(self::get_extension_path($extension, $folder, 'json')), true);
             if (isset($conf['uncompatible_with'])) {
                 foreach ($conf['uncompatible_with'] as $uncompatible_extension) {
                     if (in_array($uncompatible_extension, self::$loaded_extensions)) {
-                        self::handle('Warning', '<br /><b>"' . $extension . '" is not compatible with the extension "' . $uncompatible_extension . '" and thus hasn\'t been loaded.</b><br />');
+                        self::handle('Warning', '"' . $extension . '" is not compatible with the extension "' . $uncompatible_extension . '" and thus hasn\'t been loaded.');
                         return false;
                     }
                     self::$uncompatible_extensions[] = array($extension, $uncompatible_extension);
@@ -764,26 +769,6 @@ class vowserdb
                 }
             }
 
-            if (isset($conf['dependencies'])) {
-                foreach ($conf['dependencies'] as $dep) {
-                    if (file_exists(self::get_extension_path($dep['name'], $folder))) {
-                        self::load_extension($dep['name'], $folder);
-                    } elseif (file_exists(self::get_extension_path($dep['name']))) {
-                        self::load_extension($dep['name']);
-                    } else {
-                        self::handle('Warning', 'The extension "' . $extension . '" requires the dependecy "' . $dep['name'] . '" to work properly. Please install the dependecy from the links below and try it again');
-                        if (isset($dep['project_url'])) {
-                            self::handle('Info', 'Project page from the dependecy: ' + $dep['project_url'] . ' . Please visit this site to get informations on how to install this extension.');
-                        }
-                        if (isset($dep['direct_php'])) {
-                            self::handle('Info', 'Direct link to the dependencies PHP code: ' + $dep['direct_php']);
-                        }
-                        if (isset($dep['direct_json'])) {
-                            self::handle('Info', 'Direct link to the dependencies configuration JSON (Please ALWAYS copy this you install the extention): ' + $dep['direct_php']);
-                        }
-                    }
-                }
-            }
             if (isset($conf['postfixes'])) {
                 foreach ($conf['postfixes'] as $postfix) {
                     self::register_postfix($postfix);
@@ -791,7 +776,7 @@ class vowserdb
             }
         }
 
-        include(realpath(dirname(__FILE__)).'/'.$folder. '/' .$extension.'/main.php');
+        include(self::get_extension_path($extension, $folder));
         if (method_exists($extension, 'init') && is_callable(array($extension, 'init'))) {
             call_user_func(array($extension, 'init'));
         }
