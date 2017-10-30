@@ -1,11 +1,17 @@
 <?php
-/* vowserDB -  v4.0.0 Alpha 3
- * by vantezzen (http://vantezzen.de)
+/**
+ * vowserDB : Standalone database software for PHP (https://vantezzen.github.io/vowserdb-docs/index.html)
+ * Copyright (c) vantezzen (https://github.com/vantezzen/)
  *
- * For documentation check http://github.com/vantezzen/vowserdb
+ * Licensed under MIT License
+ * For full copyright and license information, please see the LICENSE file
+ * Redistributions of files must retain the above copyright notice.
  *
- * TODO:
+ * @copyright     Copyright (c) vantezzen (https://github.com/vantezzen/)
+ * @link          https://vantezzen.github.io/vowserdb-docs/index.html vowserDB
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
+
 class vowserdb
 {
     /*
