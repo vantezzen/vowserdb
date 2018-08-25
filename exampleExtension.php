@@ -1,6 +1,7 @@
 <?php
+use vowserDB\AbstractExtension;
 
-class exampleExtension {
+class exampleExtension extends AbstractExtension {
     /**
      * Listeners that will be attached to the current vowserDB instance.
      * The name of the event will be the function name that got called,

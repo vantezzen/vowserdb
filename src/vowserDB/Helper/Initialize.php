@@ -49,7 +49,7 @@ class Initialize {
      * @param string $path  Path to the database folder
      * @return bool True, if initialization and creation was successful, false if not
      */
-    public static function database($path) {
+    public static function database(string $path): bool {
         $folder = dirname($path);
         if (!file_exists($folder)) {
             try {
@@ -81,7 +81,7 @@ class Initialize {
      * @param array $additionalColumns Columns to add to a given template (optional)
      * @return bool Success state of the initialization
      */
-    public static function table($path, $columns, $additionalColumns = false) {
+    public static function table(string $path, array $columns, bool $additionalColumns = false): bool {
         if (!self::database($path)) {
             return false;
         }

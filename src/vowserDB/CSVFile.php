@@ -15,6 +15,8 @@
 
 namespace vowserDB;
 
+use vowserDB\Helper\Armor;
+
 class CSVFile {
     /**
      * Read a CSV file and remove the first row as it is used for column decleration
@@ -24,14 +26,14 @@ class CSVFile {
      * 
      * @return array Data from the file associated with the given column names
      */
-    public static function read($file, $columns) {
+    public static function read(string $file, array $columns): array {
         $f = fopen($file, 'r');
         $content = array();
         while (($data = fgetcsv($f)) !== false) {
             if (!empty($data) && array_filter($data, 'trim')) {
                 $row = array();
                 foreach ($data as $key => $e) {
-                    $row[$columns[$key]] = $e;
+                    $row[$columns[$key]] = Armor::unarmor($e);
                 }
                 $content[] = $row;
             }
@@ -49,7 +51,7 @@ class CSVFile {
      * @param string $file  Path to a table file
      * @return array Array of the columns in the file
      */
-    public static function columns($file) {
+    public static function columns(string $file): array {
         $f = fopen($file, 'r');
         $rows = fgetcsv($f);
         fclose($f);
@@ -65,7 +67,7 @@ class CSVFile {
      * @param bool $dontCloseFile Don't close the file but rather return it
      * @return file Table file if $dontCloseFile is true
      */
-    public static function writeColumns($file, $columns, $dontCloseFile = false) {
+    public static function writeColumns(string $file, array $columns, bool $dontCloseFile = false) {
         $file = fopen($file, 'w');
         fputcsv($file, $columns);
         if ($dontCloseFile) {
@@ -82,12 +84,12 @@ class CSVFile {
      * @param array $columns Array of column names of the table
      * @param array $data    Data that will be saved to the table
      */
-    public static function save($file, $columns, $data) {
+    public static function save(path $file, array $columns, array $data) {
         $file = self::writeColumns($file, $columns, true);
         foreach ($data as $row) {
             $final = array();
             foreach ($columns as $column) {
-                $final[] = isset($row[$column]) ? $row[$column] : "";
+                $final[] = isset($row[$column]) ? Armor::armor($row[$column]) : "";
             }
             fputcsv($file, $final);
         }
@@ -99,7 +101,7 @@ class CSVFile {
      * 
      * @param string $file  Path to the table file to delete
      */
-    public static function delete($file) {
+    public static function delete(string $file) {
         unlink($file);
     }
 }

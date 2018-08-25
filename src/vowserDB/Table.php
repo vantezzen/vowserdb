@@ -73,9 +73,18 @@ class Table {
 
     /**
      * Boolean that saves if the table has unsaved changes
+     * 
+     * @type bool
      */
     protected $hasChanges = false;
 
+    /**
+     * Instance of vowserDB\Helper\Extension connected to the current instance of Table.
+     * This extension instance will manage extension functionality such as attaching, methods and listeners.
+     * It will be initialized in the __constructor method
+     * 
+     * @type vowserDB\Helper\Extension
+     */
     protected $extension;
 
     /**
@@ -117,7 +126,7 @@ class Table {
      *
      * @return array
      */
-    public function data() {
+    public function data(): array {
         return $this->data;
     }
 
@@ -126,7 +135,7 @@ class Table {
      *
      * @return array
      */
-    public function selected() {
+    public function selected(): array {
         return $this->selected;
     }
 
@@ -136,7 +145,9 @@ class Table {
      * @return Table $this
      */
     public function read() {
+        $this->extension->trigger('beforeRead');
         $this->data = CSVFile::read($this->path, $this->columns);
+        $this->extension->trigger('afterRead');
         return $this;
     }
     
@@ -155,18 +166,52 @@ class Table {
      * @param bool $fromSelected          If the selection should be made from only the previous selected data or all data from the table (default: false)
      * @return Table $this
      */
-    public function select($selection, $fromSelected = false) {
+    public function select(array $selection, bool $fromSelected = false, bool $particalArrayMatch = false): self {
         $data = $fromSelected ? $this->selected : $this->data;
         if (empty($this->selected) && $fromSelected == true) {
             $data = $this->data;
         }
-        $this->selected = CRUD::applySelection($data, $selection, $this->columns);
+        $this->selected = CRUD::applySelection($data, $selection, $this->columns, $particalArrayMatch);
         $this->lastSelection = $selection;
 
         $this->extension->trigger('select', [
             "args" => func_get_args()
         ]);
 
+        return $this;
+    }
+
+    /**
+     * Select the first row of selected or data
+     * 
+     * @param bool $fromSelected Whether the first row should be from the selected array (default: true)
+     * @return Table $this
+     */
+    public function first(bool $fromSelected = true): self {
+        if ($fromSelected) {
+            $this->selected = $this->selected[0];
+        } else {
+            $this->selected = $this->data[0];
+        }
+        return $this;
+    }
+
+    /**
+     * Limit the number of selected items.
+     * This function can be used with one or two parameters
+     * If only one parameter is given, the slice will be from 0 to $limit1,
+     * otherwise it will be from $limit1 to $limit2
+     * 
+     * @param int $limit1 First limit of items
+     * @param int $limit2 Upper limit of items (optional)
+     * @return Table $this
+     */
+    public function limit(int $limit1, $limit2 = false): self {
+        if ($limit2 === false) {
+            $this->selected = array_slice($this->selected, 0, $limit1 - 1);
+        } else {
+            $this->selected = array_slice($this->selected, $limit1 - 1, $limit2 - 1);
+        }
         return $this;
     }
     
@@ -180,7 +225,7 @@ class Table {
      * @param array $data   Data to insert into the table
      * @return Table $this
      */
-    public function insert($data) {
+    public function insert(array $data): self {
         // Check if array is associative (one-dimensional) and convert to two-dimensional
         $isAssociative = (array_keys($data) !== range(0, count($data) - 1));
         if ($isAssociative) {
@@ -203,7 +248,7 @@ class Table {
      * @param array $update Updated values for the column. This supports update keywords
      * @return Table $this
      */
-    public function update($update) {
+    public function update(array $update): self {
         $this->data = CRUD::update($this->selected, $this->data, $update);
         $this->select($this->lastSelection);
 
@@ -215,7 +260,7 @@ class Table {
      * 
      * @return Table $this
      */
-    public function delete() {
+    public function delete(): self {
         $this->data = CRUD::delete($this->selected, $this->data);
         $this->select($this->lastSelection);
 
@@ -227,7 +272,7 @@ class Table {
      *
      * @return Table $this
      */
-    public function truncate() {
+    public function truncate(): self {
         $this->data = [];
         $this->selected = [];
 
@@ -239,11 +284,13 @@ class Table {
      * 
      * @return Table $this
      */
-    public function save() {
+    public function save(): self {
         if (!$this->hasChanges) {
             return $this;
         }
+        $this->extension->trigger('beforeSave');
         CSVFile::save($this->path, $this->columns, $this->data);
+        $this->extension->trigger('afterSave');
         $this->hasChanges = false;
 
         return $this;
@@ -254,7 +301,7 @@ class Table {
      * 
      * @return Table $this
      */
-    public function drop() {
+    public function drop(): self {
         CSVFile::delete($this->path);
 
         return $this;
@@ -264,12 +311,14 @@ class Table {
      * Attach an extension to the current table
      * 
      * @param Class $extension  Constructed class of the extension
+     * @return Table $this
      */
-    public function attachExtension($extension) {
+    public function attach($extension): self {
         $this->extension->attach($extension);
         if(method_exists($extension, 'onAttach')) {
             $extension->onAttach($this->table, $this->path, $this);
         }
+        return $this;
     }
 
     /* MAGIC FUNCTIONS */
