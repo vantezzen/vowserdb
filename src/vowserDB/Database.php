@@ -16,4 +16,40 @@
 
 namespace vowserDB;
 
-//WIP
+class Database {
+    public static function getPath($folder) {
+        if ($folder === false) {
+            $folder = 'vowserdb/';
+        }
+        if ($folder instanceof Table) {
+            $folder = dirname($folder->path);
+        }
+        
+        $folder = realpath($folder);
+
+        return $folder;
+    }
+
+    public static function tables($folder = false) {
+        $path = self::getPath($folder);
+        
+        $files = glob($path . '/*.csv');
+
+        // Get table name from absolute path
+        foreach($files as $key => $file) {
+            $files[$key] = basename($file, '.csv');
+        }
+
+        return $files;
+    }
+
+    public static function truncate($folder = false) {
+        $tables = self::tables($folder);
+        $folder = self::getPath($folder);
+
+        foreach($tables as $table) {
+            $columns = CSVFile::columns($folder . $table . '.csv');
+            CSVFile::writeColumns(folder . $table . '.csv', $columns);
+        }
+    }
+}

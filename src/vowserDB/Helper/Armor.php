@@ -22,7 +22,7 @@ class Armor {
      * @param mixed $value Value to armor
      * @return string Armored value
      */
-    public static function armor(mixed $value): string {
+    public static function armor($value): string {
         if (is_array($value)) {
             $value = "vowserDBArray" . json_encode($value);
         }
@@ -35,7 +35,7 @@ class Armor {
      * @param string $value Armored value
      * @return mixed Unarmored value
      */
-    public static function unarmor(string $value): mixed {
+    public static function unarmor(string $value) {
         if (preg_match('/^vowserDBArray.*/', $value)) {
             $value = str_replace("vowserDBArray", "", $value);
             $value = json_decode($value, true);

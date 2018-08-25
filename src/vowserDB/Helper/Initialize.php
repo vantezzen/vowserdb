@@ -61,6 +61,7 @@ class Initialize {
             }
         }
         if (!is_readable($folder)) {
+            echo "FOlder is " . realpath($folder);
             throw new Exception("vowserDB database folder is not readable.");
             return false;
         }
@@ -74,27 +75,36 @@ class Initialize {
     /**
      * Create and initialize a table with given column names
      * If the table doesn't exist it will be created and the column declreation row will be written
-     * This function supports templates as columns
+     * This function supports templates as columns.
+     * If the table already exists, $columns won't be used and can be set to false, but it is highly
+     * adviced to always supply columns.
      * 
      * @param string $path  Path to the table
      * @param mixed $columns Column array or template to initialize table with
      * @param array $additionalColumns Columns to add to a given template (optional)
      * @return bool Success state of the initialization
      */
-    public static function table(string $path, array $columns, bool $additionalColumns = false): bool {
+    public static function table(string $path, $columns, bool $additionalColumns = false): bool {
+        // Check if the database exists and can be accessed
         if (!self::database($path)) {
             return false;
         }
+
+        // Create table if not exists
         if (!file_exists($path)) {
             if (empty($columns) || $columns == false) {
                 throw new Exception("No columns for vowserDB table given.");
                 return false;
             } else if (!is_array($columns)) {
+                // Apply table template if $columns is not an array
                 $columns = self::$templates[$columns];
                 if ($additionalColumns !== false) {
+                    // Merge with $additionalColumns if availible
                     $columns = array_merge($columns, $additionalColumns);
                 }
             }
+
+            // Write columns - this will automatically create the file
             CSVFile::writeColumns($path, $columns);
         }
         return true;

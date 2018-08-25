@@ -55,7 +55,7 @@ class Table {
       *
       * @type string
       */
-    protected $path;
+    public $path;
 
     /**
       * Complete array with all data rows of the opened table
@@ -166,7 +166,7 @@ class Table {
      * @param bool $fromSelected          If the selection should be made from only the previous selected data or all data from the table (default: false)
      * @return Table $this
      */
-    public function select(array $selection, bool $fromSelected = false, bool $particalArrayMatch = false): self {
+    public function select($selection, bool $fromSelected = false, bool $particalArrayMatch = false): self {
         $data = $fromSelected ? $this->selected : $this->data;
         if (empty($this->selected) && $fromSelected == true) {
             $data = $this->data;
