@@ -24,7 +24,7 @@ class Initialize {
      * 
      * @type array
      */
-    protected $templates = [
+    protected static $templates = [
         "users" => array(
             "username",
             "uuid",
@@ -61,7 +61,6 @@ class Initialize {
             }
         }
         if (!is_readable($folder)) {
-            echo "FOlder is " . realpath($folder);
             throw new Exception("vowserDB database folder is not readable.");
             return false;
         }
@@ -84,7 +83,7 @@ class Initialize {
      * @param array $additionalColumns Columns to add to a given template (optional)
      * @return bool Success state of the initialization
      */
-    public static function table(string $path, $columns, bool $additionalColumns = false): bool {
+    public static function table(string $path, $columns, $additionalColumns = false): bool {
         // Check if the database exists and can be accessed
         if (!self::database($path)) {
             return false;

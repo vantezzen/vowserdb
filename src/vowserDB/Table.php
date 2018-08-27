@@ -98,14 +98,15 @@ class Table {
      * @param array $additional_columns  Additional columns that will be added to the used template columns (optional)
      * @param array $config              Array of additional configuration data (optional)
      */
-    public function __construct($table, $columns = false, $additionalColumns = false, $config = false) {
+    public function __construct(string $table, $columns = false, $additionalColumns = false, $config = false) {
         $this->table = $table;
         if ($config !== false) {
             if (isset($config['folder'])) {
                 $this->folder = $config['folder'];
             }
         }
-        $this->path = realpath($this->folder . $this->table . ".csv");
+        // $this->path = realpath($this->folder) . $this->table . ".csv";
+        $this->path = getcwd() . '/' . $this->folder . $this->table . ".csv";
 
         if (!Initialize::table($this->path, $columns, $additionalColumns)) {
             throw new Exception("Could not open table " . $table);

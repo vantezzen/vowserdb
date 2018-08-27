@@ -50,6 +50,8 @@ class TableTest extends TestCase {
             Table::class,
             $sameTable
         );
+
+        $table->drop();
     }
 
     public static function tearDownAfterClass() {
