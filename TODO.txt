@@ -8,5 +8,5 @@
     MySQL table migration ('migrate_mysql')(Migrate a MySQL table)
     .vowserdb table migration ('migrate_vowserdb')
     Automatic table locking ('table_lock')(Lock mechanism)
-- Relationships
+    - Relationships
 //- Abstract extension template

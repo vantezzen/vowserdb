@@ -16,13 +16,16 @@
 namespace vowserDB\Helper;
 
 use vowserDB\CSVFile;
+use vowserDB\Exception\DatabaseCreationException;
+use vowserDB\Exception\UnknownColumnsException;
+use vowserDB\Exception\PermissionException;
 use Exception;
 
 class Initialize {
     /**
      * Pre-made templates that can be used when creating a new table
      * 
-     * @type array
+     * @var array
      */
     protected static $templates = [
         "users" => array(
@@ -48,6 +51,8 @@ class Initialize {
      * 
      * @param string $path  Path to the database folder
      * @return bool True, if initialization and creation was successful, false if not
+     * @throws vowserDB\Exception\DatabaseCreationException When the database folder does not exist and can not be created
+     * @throws vowserDB\Exception\PermissionException If the database folder can not be read or written to
      */
     public static function database(string $path): bool {
         $folder = dirname($path);
@@ -55,17 +60,17 @@ class Initialize {
             try {
                 mkdir($folder);
             } catch(Exception $e) {
-                throw new Exception("vowserDB database folder doesn't exist and couldn't be created.");
+                throw new DatabaseCreationException("vowserDB database folder doesn't exist and couldn't be created.");
                 throw new $e;
                 return false;
             }
         }
         if (!is_readable($folder)) {
-            throw new Exception("vowserDB database folder is not readable.");
+            throw new PermissionException("vowserDB database folder is not readable.");
             return false;
         }
         if (!is_writable($folder)) {
-            throw new Exception("vowserDB database folder is not writable.");
+            throw new PermissionException("vowserDB database folder is not writable.");
             return false;
         }
         return true;
@@ -82,6 +87,7 @@ class Initialize {
      * @param mixed $columns Column array or template to initialize table with
      * @param array $additionalColumns Columns to add to a given template (optional)
      * @return bool Success state of the initialization
+     * @throws vowserDB\Exception\UnknownColumnsException If the table does not exist yet and no columns have been provided
      */
     public static function table(string $path, $columns, $additionalColumns = false): bool {
         // Check if the database exists and can be accessed
@@ -92,7 +98,7 @@ class Initialize {
         // Create table if not exists
         if (!file_exists($path)) {
             if (empty($columns) || $columns == false) {
-                throw new Exception("No columns for vowserDB table given.");
+                throw new UnknownColumnsException("No columns for vowserDB table given.");
                 return false;
             } else if (!is_array($columns)) {
                 // Apply table template if $columns is not an array

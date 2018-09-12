@@ -41,14 +41,18 @@ $rows = $table->selected();
 ```
 
 # Documentation
-For information on how to use vowserDB please take a look at the [documentation](https://vantezzen.github.io/vowserDB)
+The documentation can be found at [https://vantezzen.github.io/vowserDB](https://vantezzen.github.io/vowserDB). It can also be viewed from `docs/index.html` when cloning the repository or by opening `docs/Readme.md`. 
+The documentation is powered by [Flatdoc](http://ricostacruz.com/flatdoc).
 
 # Bugs and feature requests
-Bugs and feature request are tracked on [GitHub](https://github.com/vantezzen/vowserDB/issues)
+Bugs and feature request are tracked on [GitHub](https://github.com/vantezzen/vowserDB/issues).
 
 # Licence
-vowserDB is licensed under the MIT License - see the `LICENSE` file for details
+vowserDB is licensed under the MIT License - see the `LICENSE` file for details.
 
 # Acknowledgements
 
 This library is heavily inspired by Laravels Eloquent syntax.
+
+# Unit Test
+Unit tests can be executed via `composer test`.

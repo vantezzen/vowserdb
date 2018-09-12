@@ -21,7 +21,7 @@ class Extension {
      * 
      * $listeners[$eventName] is an array with all listeners for event with $eventName
      * 
-     * @type array
+     * @var array
      */
     protected $listeners = [];
 
@@ -30,15 +30,24 @@ class Extension {
      * 
      * $method[$methodName] is an array with information about the listener for the method
      * 
-     * @type array
+     * @var array
      */
     protected $methods = [];
+
+    /**
+     * All middlewares from extensions
+     * 
+     * $middlewares[$eventName] is an array with information about the middlewares for the event
+     * 
+     * @var array
+     */
+    protected $middlewares = [];
 
     /**
      * Name of the table the Extension instance is attached to.
      * Filled in __construct
      * 
-     * @type string
+     * @var string
      */
     protected $table;
 
@@ -46,7 +55,7 @@ class Extension {
      * Absolute Path of the table the Extension instance is attached to.
      * Filled in __construct
      * 
-     * @type string
+     * @var string
      */
     protected $path;
 
@@ -75,6 +84,11 @@ class Extension {
         if (isset($extension->methods)) {
             foreach($extension->methods as $function => $handler) {
                 $this->registerMethod($function, $extension, $handler);
+            }
+        }
+        if (isset($extension->middlewares)) {
+            foreach($extension->middlewares as $function => $handler) {
+                $this->registerMiddleware($function, $extension, $handler);
             }
         }
     }
@@ -142,7 +156,39 @@ class Extension {
         foreach($listeners as $listener) {
             $class = $listener['class'];
             $function = $listener['function'];
-            $class->$function($event, $data);
+            $class->$function($event, $data, $this->table);
         }
+    }
+
+    /**
+     * Register a new middleware to the Extension instance
+     * This function will automatically be called once a table has been attached.
+     * 
+     * @param string $name Event triggering the middleware
+     * @param class $extension Instance of the extension that registeres the method
+     * @param string $handler Name of the handler function on the extension instance
+     */
+    public function registerMiddleware(string $event, $extension, string $handler) {
+        $this->middlewares[$event][] = [
+            "extension" => $extension,
+            "handler" => $handler
+        ];
+    }
+
+    /**
+     * Apply middlewares
+     * This method will be executed by the vowserDB\Table instance to apply middlewares
+     * 
+     * @param string $event Name of the event to trigger
+     * @param array $data Data to pass to the middleware
+     */
+    public function applyMiddlewares(string $event, $data = []) {
+        $middlewares = isset($this->middlewares[$event]) ? $this->middlewares[$event] : [];
+        foreach($middlewares as $middleware) {
+            $class = $middleware['extension'];
+            $function = $middleware['handler'];
+            $data = $class->$function($event, $data, $this->table);
+        }
+        return $data;
     }
 }

@@ -84,7 +84,7 @@ class CSVFile {
      * @param array $columns Array of column names of the table
      * @param array $data    Data that will be saved to the table
      */
-    public static function save(path $file, array $columns, array $data) {
+    public static function save(string $file, array $columns, array $data) {
         $file = self::writeColumns($file, $columns, true);
         foreach ($data as $row) {
             $final = array();

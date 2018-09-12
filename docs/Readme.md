@@ -2,7 +2,7 @@
 vowserDB can be installed using composer using the packagist package "vowserDB"
 
 ```bash
-composer install vowserdb
+composer require vowserdb
 ```
 
 # Components
@@ -85,7 +85,6 @@ Availible table templates are:
 | ----- | --------------------------------------- |
 | users | username, uuid, password, mail, data    |
 | posts | uuid, post_id, type, data, created_date |
-
 ```php
 "users" => array(
     "username",
@@ -105,8 +104,11 @@ Availible table templates are:
 
 ### Config argument
 When opening or creating a table via `new Table` you can add a config array as the 4th argument.
-This argument currently supports the following:
-- folder: Folder to save vowserDB tables into (default: "vowserDB/")
+This argument currently supports:
+
+| Name   | Description                                                |
+| ------ | ---------------------------------------------------------- |
+| folder | Folder to save vowserDB tables into (default: "vowserDB/") |
 
 Example: Change the folder to "tables/"
 ```php

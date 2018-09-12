@@ -15,13 +15,13 @@
 
 namespace vowserDB;
 
-abstract class AbstractExtension {
+abstract class AbstractExtension implements ExtensionInterface {
     /**
      * Listeners that will be attached to the current vowserDB instance.
      * The name of the event will be the function name that got called,
      * the name of the listener is a function name of the extensions class
      * 
-     * @type public array
+     * @var public array
      */
     public $listeners = [];
 
@@ -31,7 +31,7 @@ abstract class AbstractExtension {
      * the name of the method is a function name of the extensions class.
      * Methods will not overwrite internal functions
      * 
-     * @type public array
+     * @var public array
      */
     public $methods = [];
 
@@ -49,5 +49,5 @@ abstract class AbstractExtension {
      * @param string $path Absolute path to the tables file
      * @param Table $instance Current vowserDB\Table instance the extension got attached to
      */
-    abstract public function onAttach(string $table, string $path, vowserDB\Table $instance);
+    abstract public function onAttach(string $table, string $path, Table $instance);
 }

@@ -7,7 +7,7 @@ class exampleExtension extends AbstractExtension {
      * The name of the event will be the function name that got called,
      * the name of the listener is a function name of the extensions class
      * 
-     * @type public array
+     * @var public array
      */
     public $listeners = [
         "select" => "myEventListener"

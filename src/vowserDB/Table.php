@@ -19,6 +19,7 @@ use vowserDB\CSVFile;
 use vowserDB\Helper\CRUD;
 use vowserDB\Helper\Initialize;
 use vowserDB\Helper\Extension;
+use vowserDB\Exception\TableInitializeException;
 use Exception;
 
 class Table {
@@ -26,55 +27,55 @@ class Table {
     /**
       * Path to the folder in which tables will be saved
       *
-      * @type string
+      * @var string
       */
     public $folder = "vowserDB/";
 
     /**
       * Name of the opened table
       *
-      * @type string
+      * @var string
       */
     protected $table;
     /**
       * Array of columns that exist in the open table
       *
-      * @type array
+      * @var array
       */
-    protected $columns;
+    public $columns;
 
     /**
       * Last argument that has been used when calling "select" function
       *
-      * @type mixed
+      * @var mixed
       */
-    protected $lastSelection = '*';
+    public $lastSelection = '*';
 
     /**
       * Absolute path to the currently open table
       *
-      * @type string
+      * @var string
       */
     public $path;
 
     /**
       * Complete array with all data rows of the opened table
       *
-      * @type array
+      * @var array
       */
     protected $data;
 
     /**
       * Array with all selected rows in the opened table
       *
-      * @type array
+      * @var array
       */
     protected $selected;
 
     /**
      * Boolean that saves if the table has unsaved changes
      * 
-     * @type bool
+     * @var bool
      */
     protected $hasChanges = false;
 
@@ -83,7 +84,7 @@ class Table {
      * This extension instance will manage extension functionality such as attaching, methods and listeners.
      * It will be initialized in the __constructor method
      * 
-     * @type vowserDB\Helper\Extension
+     * @var vowserDB\Helper\Extension
      */
     protected $extension;
 
@@ -109,7 +110,7 @@ class Table {
         $this->path = getcwd() . '/' . $this->folder . $this->table . ".csv";
 
         if (!Initialize::table($this->path, $columns, $additionalColumns)) {
-            throw new Exception("Could not open table " . $table);
+            throw new TableInitializeException("Could not open and initialize table " . $table);
             return false;
         }
 
@@ -128,7 +129,8 @@ class Table {
      * @return array
      */
     public function data(): array {
-        return $this->data;
+        $data = $this->extension->applyMiddlewares('data', $this->data);
+        return $data;
     }
 
     /**
@@ -137,7 +139,8 @@ class Table {
      * @return array
      */
     public function selected(): array {
-        return $this->selected;
+        $selected = $this->extension->applyMiddlewares('selected', $this->selected);
+        return $selected;
     }
 
     /**
