@@ -94,6 +94,16 @@ class Extension {
     }
 
     /**
+     * Detach all extensions
+     */
+    public function detach() {
+        // Clear all variables
+        $this->listeners = [];
+        $this->methods = [];
+        $this->middlewares = [];
+    }
+
+    /**
      * Register a new method to the Extension instance
      * This function will automatically be called once a table has been attached.
      * 

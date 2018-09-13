@@ -192,14 +192,14 @@ class TableTest extends TestCase {
 
         // UPDATE
         // Simple update
-        $table->select(['one' => 'updated_row1']);
+        $table->select(['two' => 'updated_row2__']);
         $this->assertCount(0, $table->selected());
 
-        $table->select(['one' => 'row1'])->update(['one' => 'updated_row1']);
+        $table->select(['two' => 'row2__'])->update(['two' => 'updated_row2__']);
 
-        $table->select(['one' => 'row1']);
+        $table->select(['two' => 'row2__']);
         $this->assertCount(0, $table->selected());
-        $table->select(['one' => 'updated_row1']);
+        $table->select(['two' => 'updated_row2__']);
         $this->assertCount(1, $table->selected());
 
         // Update with update arguments
@@ -217,8 +217,23 @@ class TableTest extends TestCase {
         $table->select(['one' => 1]);
         $this->assertCount(0, $table->selected());
         $table->select(['one' => 5]);
-        var_dump($table->selected());
         $this->assertCount(1, $table->selected());
+
+        // DELETE
+        // Delete single row
+        $this->assertCount(6, $table->data());
+        $table->select(['one' => 5])->delete();
+        $this->assertCount(5, $table->data());
+
+        // Delete multiple rows
+        $this->assertCount(5, $table->data());
+        $table->select(['one' => "row1"])->delete();
+        $this->assertCount(3, $table->data());
+
+        // Truncate table
+        $this->assertCount(3, $table->data());
+        $table->truncate();
+        $this->assertCount(0, $table->data());
     }
 
     public static function tearDownAfterClass() {

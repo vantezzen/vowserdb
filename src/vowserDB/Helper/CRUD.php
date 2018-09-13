@@ -169,24 +169,21 @@ class CRUD {
      * @return array Updated $data array
      */
     public static function update(array $selection, array $data, array $update): array {
-        // Create a copy of the $selection array for updating main data array later
-        $selected = $selection;
+        foreach($selection as $key => $row) {
+            // Apply update to row
+            $updated = $row;
 
-        // Update values on the selection array
-        foreach ($selection as $key => $row) {
-            foreach ($row as $column => $value) {
+            foreach($row as $column => $value) {
                 if (isset($update[$column])) {
                     $value = self::getUpdatedValue($value, $update[$column]);
-                    $selection[$key][$column] = $value;
+                    $updated[$column] = $value;
                 }
             }
-        }
 
-        // Replace old with updated data in data array
-        foreach ($selected as $skey => $selected_row) {
-            foreach ($data as $dkey => $d) {
-                if ($selected_row == $d) {
-                    $data[$dkey] = $selection[$skey];
+            // Transfer updated row to data array
+            foreach($data as $dataKey => $dataRow) {
+                if ($row === $dataRow) {
+                    $data[$dataKey] = $updated;
                 }
             }
         }

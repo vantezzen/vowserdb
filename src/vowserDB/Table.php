@@ -98,6 +98,7 @@ class Table {
      * @param mixed $columns             Array of columns for the table or name of column template (see $templates) (optional)
      * @param array $additional_columns  Additional columns that will be added to the used template columns (optional)
      * @param array $config              Array of additional configuration data (optional)
+     * @throws vowserDB\Exception\TableInitializeException If the table can not be opened and initialized. When this error gets thrown, another error will be thrown by 'Initialize::table' giving more information about the error
      */
     public function __construct(string $table, $columns = false, $additionalColumns = false, $config = false) {
         $this->table = $table;
@@ -322,6 +323,16 @@ class Table {
         if(method_exists($extension, 'onAttach')) {
             $extension->onAttach($this->table, $this->path, $this);
         }
+        return $this;
+    }
+
+    /**
+     * Detach all extensions attached to the current table
+     * 
+     * @return Table $this
+     */
+    public function detach(): self {
+        $this->extension->detach();
         return $this;
     }
 

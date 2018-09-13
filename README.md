@@ -1,10 +1,22 @@
-# vowserDB 4
+<p align="center">
+    <a href="https://packagist.org/packages/vowserdb/vowserdb">
+        <img src="https://poser.pugx.org/vowserdb/vowserdb/v/stable.svg" alt="Stable version">
+    </a>
+    <a href="https://packagist.org/packages/vowserdb/vowserdb">
+        <img src="https://poser.pugx.org/vowserdb/vowserdb/v/unstable.svg" alt="Unstable version">
+    </a>
+    <a href="https://packagist.org/packages/vowserdb/vowserdb">
+        <img src="https://poser.pugx.org/vowserdb/vowserdb/license.svg" alt="License">
+    </a>
+</p>
+
+# vowserDB
 vowserDB allows you to use csv files as a standalone database for PHP with SQL-like commands.
 
 It is written purely in PHP without any dependencies.
 
 # WIP
-This version is still work in progress and shouldn't be used yet as there could be breaking changes in the future.
+This version (4) is still work in progress and shouldn't be used yet as there could be breaking changes in the future.
 
 # Installation
 vowserDB can be installed via composer by running
