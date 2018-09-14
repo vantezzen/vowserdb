@@ -1,11 +1,8 @@
 - Column manipulation
-- Array support
-//- first(), limit(5)
-//- Database(), get tables, truncate database
-- Extensions (encryption)
-    Automatic table backups ('backups')
+
+--- Long term ---
+- Advanced array support
+- Extensions:
     Automatic table encryption ('encrypt_tables')
     MySQL table migration ('migrate_mysql')(Migrate a MySQL table)
     Automatic table locking ('table_lock')(Lock mechanism)
-    - Relationships
-//- Abstract extension template

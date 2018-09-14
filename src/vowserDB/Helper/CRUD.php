@@ -115,19 +115,43 @@ class CRUD {
         $modeInfo = self::getMode($selection);
         $mode = $modeInfo[0];
         $value = $modeInfo[1];
-        $matches = (
-            ($mode == 'normal'        && $field === $value)                ||
-            ($mode == 'bigger'        && $field > $value)                  ||
-            ($mode == 'smaller'       && $field < $value)                  ||
-            ($mode == 'biggerequal'   && $field >= $value)                 ||
-            ($mode == 'smallerequal'  && $field <= $value)                 ||
-            ($mode == 'like'          && stristr($field, (string) $value)) ||
-            ($mode == 'match'         && preg_match($value, $field))       ||
-            ($mode == 'isnot'         && $field !== $value)                ||
-            
-            ($mode == 'array'         && $particalArrayMatch === false && $field == $value) ||
-            ($mode == 'array'         && $particalArrayMatch === true  && self::particalArrayMatch($field, $value))
-        );
+
+        switch ($mode) {
+            case 'bigger':
+                $matches = $field > $value;
+                break;
+            case 'smaller':
+                $matches = $field < $value;
+                break;
+            case 'biggerequal':
+                $matches = $field >= $value;
+                break;
+            case 'smallerequal':
+                $matches = $field <= $value;
+                break;
+            case 'like':
+                $matches = stristr($field, (string) $value);
+                break;
+            case 'match':
+                $matches = preg_match($value, $field);
+                break;
+            case 'isnot':
+                $matches = $field !== $value;
+                break;
+
+            case 'array':
+                if ($particalArrayMatch === false) {
+                    $matches = $field == $value;
+                } else {
+                    $matches = self::particalArrayMatch($field, $value);
+                }
+                break;
+
+            default:
+                $matches = $field === $value;
+                break;
+        }
+
         return $matches;
     }
 
@@ -144,17 +168,11 @@ class CRUD {
             return false;
         }
         $isAssociative = (array_keys($partialArray) !== range(0, count($partialArray) - 1));
-        if ($isAssociative) {
-            foreach($partialArray as $key => $value) {
-                if (!isset($fullArray[$key]) || $fullArray[$key] !== $value) {
-                    return false;
-                }
-            }
-        } else {
-            foreach($partialArray as $key => $value) {
-                if (!in_array($value, $fullArray)) {
-                    return false;
-                }
+        foreach($partialArray as $key => $value) {
+            if ($isAssociative && (!isset($fullArray[$key]) || $fullArray[$key] !== $value)) {
+                return false;
+            } else if (!$isAssociative && (!in_array($value, $fullArray))) {
+                return false;
             }
         }
         return true;

@@ -150,7 +150,9 @@ class Table {
      * @return Table $this
      */
     public function read() {
+        $this->extension->trigger('waitForRead');
         $this->extension->trigger('beforeRead');
+        $this->extension->trigger('readyForRead');
         $this->data = CSVFile::read($this->path, $this->columns);
         $this->extension->trigger('afterRead');
         return $this;
