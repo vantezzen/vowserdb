@@ -29,8 +29,12 @@ class encryptExtension extends AbstractExtension {
     protected $decryptedPath;
     protected $encryptedPath;
 
-    public function __construct($key = "") {
+    // Configuration
+    protected $cipher; // Cipher method to use for openssl_encrypt
+
+    public function __construct($key = "", $cipher = 'aes-128-gcm') {
         $this->key = $key;
+        $this->cipher = $cipher;
     }
 
     public function onAttach($table, $path, $instance) {
@@ -43,5 +47,21 @@ class encryptExtension extends AbstractExtension {
     }
 
     public function encrypt() {
+    }
+
+    /**
+     * Get current encryption status of table
+     * 
+     * @return int Encryption status of the table as an int (0 => not encrypted, 1 => encrypted)
+     */
+    public function status() {
+        if (!file_exists($this->encryptedPath)) {
+            return 0;
+        } else if (file_get_contents($this->encryptedPath) == 'decrypted') {
+            return 0;
+        } if (file_get_contents($this->decryptedPath) == 'encrypted,file') {
+            return 1;
+        }
+        return 0;
     }
 }

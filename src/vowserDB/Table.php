@@ -286,6 +286,49 @@ class Table {
         return $this;
     }
 
+    
+    /**
+     * Alter column name in the table
+     * 
+     * @param string Old name of the column
+     * @param string New name the column should be renamed to
+     * @return Table $this
+     */
+    public function columnRename($old, $new) {
+        // TODO: Add functionality
+    }
+
+    /**
+     * Remove a column from the table
+     * 
+     * @param string Name of the column to remove
+     * @return Table $this
+     */
+    public function columnDelete($column) {
+        // TODO: Add functionality
+    }
+
+    /**
+     * Add a column to the table
+     * 
+     * @param string Name of the column to add
+     * @return Table $this
+     */
+    public function columnAdd($column) {
+        // TODO: Add functionality
+    }
+
+
+    /**
+     * Rename the current table
+     * 
+     * @param string New name for the table
+     * @return Table $this
+     */
+    public function rename($name) {
+        // TODO: Add functionality
+    }
+
     /**
      * Save data from data array to the table file
      * 
