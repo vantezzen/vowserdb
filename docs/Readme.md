@@ -1,8 +1,8 @@
 # Installation
-vowserDB can be installed using composer using the packagist package "vowserDB"
+vowserDB can be installed using composer using the packagist package "vowserdb/vowserdb"
 
 ```bash
-composer require vowserdb
+composer require vowserdb/vowserdb
 ```
 
 # Components

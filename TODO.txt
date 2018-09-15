@@ -1,6 +1,5 @@
-- Column manipulation
-
 --- Long term ---
+- Column manipulation
 - Advanced array support
 - Extensions:
     Automatic table encryption ('encrypt_tables')

@@ -8,9 +8,9 @@
  * Redistributions of files must retain the above copyright notice.
  *
  * @copyright     Copyright (c) vantezzen (https://github.com/vantezzen/)
- * @link          https://vantezzen.github.io/vowserdb-docs/index.html vowserDB
+ * @link          https://vantezzen.github.io/vowserdb
  * @license       https://opensource.org/licenses/mit-license.php MIT License
- * @version       4.0.0 - Alpha 1
+ * @version       4.0.0
  */
 
 namespace vowserDB;
@@ -20,7 +20,6 @@ use vowserDB\Helper\CRUD;
 use vowserDB\Helper\Initialize;
 use vowserDB\Helper\Extension;
 use vowserDB\Exception\TableInitializeException;
-use Exception;
 
 class Table {
 
@@ -284,49 +283,6 @@ class Table {
         $this->selected = [];
 
         return $this;
-    }
-
-    
-    /**
-     * Alter column name in the table
-     * 
-     * @param string Old name of the column
-     * @param string New name the column should be renamed to
-     * @return Table $this
-     */
-    public function columnRename($old, $new) {
-        // TODO: Add functionality
-    }
-
-    /**
-     * Remove a column from the table
-     * 
-     * @param string Name of the column to remove
-     * @return Table $this
-     */
-    public function columnDelete($column) {
-        // TODO: Add functionality
-    }
-
-    /**
-     * Add a column to the table
-     * 
-     * @param string Name of the column to add
-     * @return Table $this
-     */
-    public function columnAdd($column) {
-        // TODO: Add functionality
-    }
-
-
-    /**
-     * Rename the current table
-     * 
-     * @param string New name for the table
-     * @return Table $this
-     */
-    public function rename($name) {
-        // TODO: Add functionality
     }
 
     /**
