@@ -1,0 +1,33 @@
+{
+    "name": "vantezzen/vowserdb",
+    "version": "4.0.0",
+    "homepage": "https://vantezzen.github.io/vowserdb",
+    "description": "vowserDB allows you to use csv files as a standalone database",
+    "keywords": [
+        "database",
+        "csv",
+        "standalone"
+    ],
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "vantezzen",
+            "homepage": "https://github.com/vantezzen"
+        }
+    ],
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "vowserDB\\": "src/vowserDB"
+        }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^7"
+    },
+    "scripts": {
+        "test": [
+            "./vendor/bin/phpunit --bootstrap vendor/autoload.php tests"
+        ]
+    }
+}

@@ -1,37 +1,67 @@
-![vowserDB logo](https://github.com/vantezzen/vowserDB/blob/master/logo.png?raw=true)
+<p align="center">
+    <a href="https://packagist.org/packages/vowserdb/vowserdb">
+        <img src="https://poser.pugx.org/vowserdb/vowserdb/v/stable.svg" alt="Stable version">
+    </a>
+    <a href="https://packagist.org/packages/vowserdb/vowserdb">
+        <img src="https://poser.pugx.org/vowserdb/vowserdb/v/unstable.svg" alt="Unstable version">
+    </a>
+    <a href="https://packagist.org/packages/vowserdb/vowserdb">
+        <img src="https://poser.pugx.org/vowserdb/vowserdb/license.svg" alt="License">
+    </a>
+</p>
+
 # vowserDB
-vowserDB allows you to use csv files as a standalone database with SQL-like commands.
+vowserDB allows you to use csv files as a standalone database for PHP with SQL-like commands.
 
-It is written purely in PHP without any frameworks, additional services or deamons.
+It is written purely in PHP without any dependencies.
 
-# Getting started with vowserDB
-If you want to get started with vowserDB but you don't want to dig through its documentation right away you can take the vowserDB Getting-Started online course in your browser. [Click here to get to it](https://vantezzen.github.io/vowserdb-tryit/)
-
-# installation and usage
-vowserDB can be eather installed manually or using composer.
-
-## install manually
-Move the "vowserdb.php" script and the "extensions/" folder to your project folder (optinally into a seperate subfolder) and include it via
-
-```PHP
-include("vowserdb.php");
+# Installation
+vowserDB can be installed via composer by running
+```php
+composer require vowserDB
 ```
 
-## install with composer
+# Basic usage
+```php
+<?php
+use vowserDB\Table;
 
-Simply run
+// Use table 'users' with sepecified columns
+$table = new Table('users', ['username', 'password', 'mail']);
 
+// Insert new user into table
+$table->insert([
+    'username' => 'testuser',
+    'password' => '1234',
+    'mail' => 'mail@example.com'
+]);
+
+// Save changes to table file
+$table->save();
+
+// Select row from the table and update the password of the selected rows
+$table
+    ->select(['username' => 'testuser'])
+    ->update(['password' => '5678'])
+    ->save();
+
+// Get selected rows
+$rows = $table->selected();
 ```
-composer require "vowserdb/vowserdb":"*"
-```
 
-or add `vowserdb/vowserdb` to your requirements.
+# Documentation
+The documentation can be found at [https://vantezzen.github.io/vowserDB](https://vantezzen.github.io/vowserDB). It can also be viewed from `docs/index.html` when cloning the repository or by opening `docs/Readme.md`. 
+The documentation is powered by [Flatdoc](http://ricostacruz.com/flatdoc).
 
-To include vowserdb, use the autoloader and `use vowserdb\vowserdb`
+# Bugs and feature requests
+Bugs and feature request are tracked on [GitHub](https://github.com/vantezzen/vowserDB/issues).
 
-```PHP
-require __DIR__ . '/vendor/autoload.php';
-use vowserdb\vowserdb;
-```
+# Licence
+vowserDB is licensed under the MIT License - see the `LICENSE` file for details.
 
-You can find the full vowserDB documentation at https://vantezzen.github.io/vowserdb-docs/documentation.html
+# Acknowledgements
+
+This library is heavily inspired by Laravels Eloquent syntax.
+
+# Unit Test
+Unit tests can be executed via `composer test`.
