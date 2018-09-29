@@ -1,5 +1,0 @@
-{
-  "name": "migrateMysql",
-  "description": "This extension helps you migrating your existing MySQL tables to vowserDB",
-  "vowserdb_min": "4.0.0"
-}

@@ -1,8 +1,0 @@
-{
-  "name": "backups",
-  "description": "backups will automatically backup your tables to a seperate file",
-  "postfixes": [
-    ".backup"
-  ],
-  "vowserdb_min": "4.0.0"
-}
