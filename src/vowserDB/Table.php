@@ -258,6 +258,8 @@ class Table {
         $this->data = CRUD::update($this->selected, $this->data, $update);
         $this->select($this->lastSelection);
 
+        $this->hasChanges = true;
+
         return $this;
     }
     
@@ -270,6 +272,8 @@ class Table {
         $this->data = CRUD::delete($this->selected, $this->data);
         $this->select($this->lastSelection);
 
+        $this->hasChanges = true;
+
         return $this;
     }
 
@@ -281,6 +285,8 @@ class Table {
     public function truncate(): self {
         $this->data = [];
         $this->selected = [];
+
+        $this->hasChanges = true;
 
         return $this;
     }
@@ -309,6 +315,8 @@ class Table {
      */
     public function drop(): self {
         CSVFile::delete($this->path);
+
+        $this->hasChanges = true;
 
         return $this;
     }
