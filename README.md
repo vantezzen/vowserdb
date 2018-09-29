@@ -18,7 +18,7 @@ It is written purely in PHP without any dependencies.
 # Installation
 vowserDB can be installed via composer by running
 ```php
-composer require vowserDB
+composer require vowserdb/vowserdb
 ```
 
 # Basic usage
@@ -50,11 +50,11 @@ $rows = $table->selected();
 ```
 
 # Documentation
-The documentation can be found at [https://vantezzen.github.io/vowserDB](https://vantezzen.github.io/vowserDB). It can also be viewed from `docs/index.html` when cloning the repository or by opening `docs/Readme.md`. 
+The documentation can be found at [https://vantezzen.github.io/vowserdb](https://vantezzen.github.io/vowserdb). It can also be viewed from `docs/index.html` when cloning the repository or by opening `docs/Readme.md`. 
 The documentation is powered by [Flatdoc](http://ricostacruz.com/flatdoc).
 
 # Bugs and feature requests
-Bugs and feature request are tracked on [GitHub](https://github.com/vantezzen/vowserDB/issues).
+Bugs and feature request are tracked on [GitHub](https://github.com/vantezzen/vowserdb/issues).
 
 # Licence
 vowserDB is licensed under the MIT License - see the `LICENSE` file for details.
