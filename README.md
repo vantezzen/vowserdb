@@ -1,4 +1,5 @@
 <p align="center">
+    <img src="logo.png">
     <a href="https://packagist.org/packages/vowserdb/vowserdb">
         <img src="https://poser.pugx.org/vowserdb/vowserdb/v/stable.svg" alt="Stable version">
     </a>
