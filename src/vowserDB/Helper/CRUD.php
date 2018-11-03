@@ -26,7 +26,7 @@ class CRUD {
      * 
      * @return array Filtered data
      */
-    public function applySelection(array $data, $selection, array $columns, bool $particalArrayMatch): array {
+    public static function applySelection(array $data, $selection, array $columns, bool $particalArrayMatch): array {
         // If should select all, just return the data
         if ($selection == array() || empty($selection) || $selection == '*') {
             return $data;
@@ -246,7 +246,7 @@ class CRUD {
      * @param array $data       Data array to delete the selection from
      * @return array $data with $selection removed
      */
-    public function delete(array $selection, array $data) {
+    public static function delete(array $selection, array $data) {
         // Remove selection from data array
         foreach ($selection as $skey => $selected) {
             foreach ($data as $dkey => $d) {

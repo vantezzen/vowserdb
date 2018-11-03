@@ -1,6 +1,6 @@
 {
     "name": "vantezzen/vowserdb",
-    "version": "4.0.1",
+    "version": "4.0.2",
     "homepage": "https://vantezzen.github.io/vowserdb",
     "description": "vowserDB allows you to use csv files as a standalone database",
     "keywords": [
