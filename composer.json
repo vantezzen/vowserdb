@@ -23,7 +23,7 @@
         }
     },
     "require-dev": {
-        "phpunit/phpunit": "*",
+        "phpunit/phpunit": "^7",
         "php": "^7.1"
     },
     "scripts": {

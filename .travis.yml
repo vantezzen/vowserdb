@@ -1,15 +1,7 @@
 language: php
 
-env:
-  global:
-    - setup=stable
-
 matrix:
   include:
-    - php: 5.5
-      env: OLDPHP=true
-    - php: 5.6
-      env: OLDPHP=true
     - php: 7.1
     - php: 7.2
     - php: 7.3
