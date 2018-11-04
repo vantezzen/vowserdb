@@ -5,12 +5,7 @@ env:
     - setup=stable
 
 matrix:
-  fast_finish: true
   include:
-    - php: 5.3
-      env: OLDPHP=true
-    - php: 5.4
-      env: OLDPHP=true
     - php: 5.5
       env: OLDPHP=true
     - php: 5.6
