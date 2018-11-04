@@ -15,8 +15,6 @@ matrix:
     - php: 7.3
     - php: nightly
 
-install:
-  - if [[ $OLDPHP == true ]]; then composer require "phpunit/phpunit:5.7"; fi
-  - if [[ $OLDPHP != true ]]; then composer install; fi
+install: composer install
 
 script: phpunit --bootstrap vendor/autoload.php tests
