@@ -42,6 +42,17 @@ class TableTest extends TestCase {
         $table->drop();
     }
 
+    public function testTemplateTableNameConstruct() {
+        $table = new Table('users');
+        $this->assertInstanceOf(
+            Table::class,
+            $table
+        );
+        $this->assertFileExists("vowserDB/users.csv");
+        $this->assertEquals($table->columns, ["username","uuid","password","mail","data"]);
+        $table->drop();
+    }
+
     public function testFileExistsConstruct() {
         $table = new Table('unitTestFileExistsConstruct', 'users', ['column', 'col']);
         
