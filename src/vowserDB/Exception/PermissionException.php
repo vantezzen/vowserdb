@@ -10,7 +10,7 @@
  * @copyright     Copyright (c) vantezzen (https://github.com/vantezzen/)
  * @link          https://vantezzen.github.io/vowserdb
  * @license       https://opensource.org/licenses/mit-license.php MIT License
- * @version       4.0.0
+ * @version       4.1.0
  */
 namespace vowserDB\Exception;
 
