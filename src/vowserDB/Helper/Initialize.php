@@ -10,7 +10,7 @@
  * @copyright     Copyright (c) vantezzen (https://github.com/vantezzen/)
  * @link          https://vantezzen.github.io/vowserdb
  * @license       https://opensource.org/licenses/mit-license.php MIT License
- * @version       4.0.0
+ * @version       4.1.0
  */
 
 namespace vowserDB\Helper;
@@ -89,7 +89,7 @@ class Initialize {
      * @return bool Success state of the initialization
      * @throws vowserDB\Exception\UnknownColumnsException If the table does not exist yet and no columns have been provided
      */
-    public static function table(string $path, $columns, $additionalColumns = false): bool {
+    public static function table(string $path, string $table, $columns, $additionalColumns = false): bool {
         // Check if the database exists and can be accessed
         if (!self::database($path)) {
             return false;
@@ -97,12 +97,18 @@ class Initialize {
 
         // Create table if not exists
         if (!file_exists($path)) {
-            if (empty($columns) || $columns == false) {
+            if ((empty($columns) || $columns == false) && !isset(self::$templates[$table])) {
                 throw new UnknownColumnsException("No columns for vowserDB table given.");
                 return false;
             } else if (!is_array($columns)) {
-                // Apply table template if $columns is not an array
-                $columns = self::$templates[$columns];
+                if ($columns == false) {
+                    // Apply table template if $table is table template name
+                    $columns = self::$templates[$table];
+                } else {
+                    // Apply table template if $columns is table template name
+                    $columns = self::$templates[$columns];
+                }
+               
                 if ($additionalColumns !== false) {
                     // Merge with $additionalColumns if availible
                     $columns = array_merge($columns, $additionalColumns);
