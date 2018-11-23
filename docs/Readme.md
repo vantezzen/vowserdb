@@ -78,6 +78,13 @@ Example: Creating and/or using a table with the name 'posts' (first argument) us
 $table = new Table('posts', 'posts', ['updated_date', 'comments']);
 ```
 
+You can also create a table with the same name as a [table template](#table-templates) (e.g. `users`) without additional columns specified. This will use the [table template](#table-templates) when creating the table.
+
+Example: Creating and/or using a table with the name 'users' without any columns specified. This will use the table template 'users'.
+```php
+$table = new Table('users');
+```
+
 ### Table templates
 Availible table templates are:
 
