@@ -404,6 +404,9 @@ $posts->attach(new exampleExtension());
 ```
 Please take a look at the extensions documentation for more information about how to use it. Some extensions may require additional configuration.
 
+### Build-in extensions
+For documentation of vowserDBs build-in extensions visit [the vowserDB extension documentation](https://vantezzen.github.io/vowserdb/extensions.html)
+
 # vowserDB\Database
 ## General usage
 You should add a `use` to your file so you can work with it easier.
