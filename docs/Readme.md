@@ -113,9 +113,10 @@ Availible table templates are:
 When opening or creating a table via `new Table` you can add a config array as the 4th argument.
 This argument currently supports:
 
-| Name   | Description                                                |
-| ------ | ---------------------------------------------------------- |
-| folder | Folder to save vowserDB tables into (default: "vowserDB/") |
+| Name      | Description                                                |
+| --------- | ---------------------------------------------------------- |
+| folder    | Folder to save vowserDB tables into (default: "vowserDB/") |
+| skip_read | Don't read table contents when initializing                |
 
 Example: Change the folder to "tables/"
 ```php
