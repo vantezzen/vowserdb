@@ -118,9 +118,12 @@ class Table {
 
         $this->extension = new Extension($table, $this->path);
 
-        $this->read();
+        if (
+            (!\is_array($config)) ||(!isset($config['skip_read'])) || $config['skip_read'] === false) {
+            $this->read();
 
-        $this->select('*');
+            $this->select('*');
+        }
     }
 
     /**
