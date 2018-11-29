@@ -1,61 +1,69 @@
 <?php
+
 use PHPUnit\Framework\TestCase;
 use vowserDB\Table;
 
-class TableTest extends TestCase {
+class TableTest extends TestCase
+{
     protected static $table;
 
-    public static function setUpBeforeClass() {
+    public static function setUpBeforeClass()
+    {
         self::$table = new Table('unitTest', ['one', 'two', 'three', 'four']);
     }
 
     /**
-     * Test the constructor
+     * Test the constructor.
      */
-    public function testSimpleConstruct() {
+    public function testSimpleConstruct()
+    {
         $table = new Table('unitTestSimpleConstruct', ['col1', 'col2', 'col3']);
         $this->assertInstanceOf(
             Table::class,
             $table
         );
-        $this->assertFileExists("vowserDB/unitTestSimpleConstruct.csv");
+        $this->assertFileExists('vowserDB/unitTestSimpleConstruct.csv');
         $table->drop();
     }
 
-    public function testTemplateConstruct() {
+    public function testTemplateConstruct()
+    {
         $table = new Table('unitTestTemplateConstruct', 'users');
         $this->assertInstanceOf(
             Table::class,
             $table
         );
-        $this->assertFileExists("vowserDB/unitTestTemplateConstruct.csv");
+        $this->assertFileExists('vowserDB/unitTestTemplateConstruct.csv');
         $table->drop();
     }
 
-    public function testAdvancedTemplateConstruct() {
+    public function testAdvancedTemplateConstruct()
+    {
         $table = new Table('unitTestAdvancedTemplateConstruct', 'users', ['column', 'col']);
         $this->assertInstanceOf(
             Table::class,
             $table
         );
-        $this->assertFileExists("vowserDB/unitTestAdvancedTemplateConstruct.csv");
+        $this->assertFileExists('vowserDB/unitTestAdvancedTemplateConstruct.csv');
         $table->drop();
     }
 
-    public function testTemplateTableNameConstruct() {
+    public function testTemplateTableNameConstruct()
+    {
         $table = new Table('users');
         $this->assertInstanceOf(
             Table::class,
             $table
         );
-        $this->assertFileExists("vowserDB/users.csv");
-        $this->assertEquals($table->columns, ["username","uuid","password","mail","data"]);
+        $this->assertFileExists('vowserDB/users.csv');
+        $this->assertEquals($table->columns, ['username', 'uuid', 'password', 'mail', 'data']);
         $table->drop();
     }
 
-    public function testFileExistsConstruct() {
+    public function testFileExistsConstruct()
+    {
         $table = new Table('unitTestFileExistsConstruct', 'users', ['column', 'col']);
-        
+
         $sameTable = new Table('unitTestFileExistsConstruct');
         $this->assertInstanceOf(
             Table::class,
@@ -64,16 +72,18 @@ class TableTest extends TestCase {
 
         $table->drop();
     }
+
     /**
-     * Test CRUD
+     * Test CRUD.
      */
-    public function testCrud() {
+    public function testCrud()
+    {
         $table = self::$table;
 
         $data = [
-            'one' => 'first',
-            'two' => 'second',
-            'four' => 'forth'
+            'one'  => 'first',
+            'two'  => 'second',
+            'four' => 'forth',
         ];
 
         // Lines in table file
@@ -93,35 +103,35 @@ class TableTest extends TestCase {
         // SELECT
         // Insert more data
         $table->insert([
-            'one' => 'row1',
-            'two' => 'row2',
+            'one'   => 'row1',
+            'two'   => 'row2',
             'three' => 'row3',
-            'four' => 'row4'
+            'four'  => 'row4',
         ]);
         $table->insert([
-            'one' => 'row1',
-            'two' => 'row2__',
+            'one'   => 'row1',
+            'two'   => 'row2__',
             'three' => 'row3__',
-            'four' => 'row4__'
+            'four'  => 'row4__',
         ]);
         $table->insert([
-            'one' => '1st',
-            'two' => '2nd',
+            'one'   => '1st',
+            'two'   => '2nd',
             'three' => '3rd',
-            'four' => '4th'
+            'four'  => '4th',
         ]);
         $arrayTestRow = [
             'one' => 'row_data_1',
             'two' => [
                 'two_one' => 'data_two_one',
-                'two_two' => 'data_two_two'
+                'two_two' => 'data_two_two',
             ],
             'three' => 'row_data_3',
-            'four' => [
+            'four'  => [
                 'data_1',
                 'data_2',
-                'data_3'
-            ]
+                'data_3',
+            ],
         ];
         $table->insert($arrayTestRow);
 
@@ -129,41 +139,41 @@ class TableTest extends TestCase {
         $table->select(['one' => 'row1']);
         $this->assertCount(2, $table->selected());
         $this->assertEquals([[
-            'one' => 'row1',
-            'two' => 'row2',
+            'one'   => 'row1',
+            'two'   => 'row2',
             'three' => 'row3',
-            'four' => 'row4'],
-            ['one' => 'row1',
-            'two' => 'row2__',
+            'four'  => 'row4', ],
+            ['one'  => 'row1',
+            'two'   => 'row2__',
             'three' => 'row3__',
-            'four' => 'row4__'
-        ]], $table->selected());
-        
+            'four'  => 'row4__',
+        ], ], $table->selected());
+
         $table->select(['one' => '1st']);
         $this->assertCount(1, $table->selected());
         $this->assertEquals([[
-            'one' => '1st',
-            'two' => '2nd',
+            'one'   => '1st',
+            'two'   => '2nd',
             'three' => '3rd',
-            'four' => '4th'
+            'four'  => '4th',
         ]], $table->selected());
 
         $table->select(['one' => 'row1', 'two' => 'row2']);
         $this->assertCount(1, $table->selected());
         $this->assertEquals([[
-            'one' => 'row1',
-            'two' => 'row2',
+            'one'   => 'row1',
+            'two'   => 'row2',
             'three' => 'row3',
-            'four' => 'row4'
+            'four'  => 'row4',
         ]], $table->selected());
 
         $table->select(['one' => 'row1'])->select(['two' => 'row2'], true);
         $this->assertCount(1, $table->selected());
         $this->assertEquals([[
-            'one' => 'row1',
-            'two' => 'row2',
+            'one'   => 'row1',
+            'two'   => 'row2',
             'three' => 'row3',
-            'four' => 'row4'
+            'four'  => 'row4',
         ]], $table->selected());
 
         // Array select
@@ -171,14 +181,14 @@ class TableTest extends TestCase {
         // Full match
         $table->select(['two' => [
             'two_one' => 'data_two_one',
-            'two_two' => 'data_two_two'
+            'two_two' => 'data_two_two',
         ]]);
         $this->assertCount(1, $table->selected());
         $this->assertEquals([$arrayTestRow], $table->selected());
 
         // Partial match
         $table->select(['two' => [
-            'two_one' => 'data_two_one'
+            'two_one' => 'data_two_one',
         ]], false, true);
         $this->assertCount(1, $table->selected());
         $this->assertEquals([$arrayTestRow], $table->selected());
@@ -188,7 +198,7 @@ class TableTest extends TestCase {
         $table->select(['four' => [
             'data_1',
             'data_2',
-            'data_3'
+            'data_3',
         ]]);
         $this->assertCount(1, $table->selected());
         $this->assertEquals([$arrayTestRow], $table->selected());
@@ -196,7 +206,7 @@ class TableTest extends TestCase {
         // Partial match
         $table->select(['four' => [
             'data_1',
-            'data_2'
+            'data_2',
         ]], false, true);
         $this->assertCount(1, $table->selected());
         $this->assertEquals([$arrayTestRow], $table->selected());
@@ -215,14 +225,14 @@ class TableTest extends TestCase {
 
         // Update with update arguments
         $table->insert([
-            'one' => 1,
-            'two' => 2,
+            'one'   => 1,
+            'two'   => 2,
             'three' => 3,
-            'four' => 4
+            'four'  => 4,
         ]);
         $table->select(['one' => 5]);
         $this->assertCount(0, $table->selected());
-        
+
         $table->select(['one' => 1])->update(['one' => 'INCREASE BY 4']);
 
         $table->select(['one' => 1]);
@@ -238,7 +248,7 @@ class TableTest extends TestCase {
 
         // Delete multiple rows
         $this->assertCount(5, $table->data());
-        $table->select(['one' => "row1"])->delete();
+        $table->select(['one' => 'row1'])->delete();
         $this->assertCount(3, $table->data());
 
         // Truncate table
@@ -247,7 +257,8 @@ class TableTest extends TestCase {
         $this->assertCount(0, $table->data());
     }
 
-    public static function tearDownAfterClass() {
+    public static function tearDownAfterClass()
+    {
         self::$table->drop();
     }
 }
