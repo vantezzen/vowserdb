@@ -49,7 +49,7 @@ class Database {
 
         foreach($tables as $table) {
             $columns = CSVFile::columns($folder . $table . '.csv');
-            CSVFile::writeColumns(folder . $table . '.csv', $columns);
+            CSVFile::writeColumns($folder . $table . '.csv', $columns);
         }
     }
 }
