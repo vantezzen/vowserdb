@@ -54,9 +54,9 @@ class Database
         $tables = self::tables($folder);
         $folder = self::getPath($folder);
 
-        foreach($tables as $table) {
-            $columns = CSVFile::columns($folder . $table . '.csv');
-            CSVFile::writeColumns($folder . $table . '.csv', $columns);
+        foreach ($tables as $table) {
+            $columns = CSVFile::columns($folder.$table.'.csv');
+            CSVFile::writeColumns($folder.$table.'.csv', $columns);
         }
     }
 }
