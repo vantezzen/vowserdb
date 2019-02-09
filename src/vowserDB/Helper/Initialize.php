@@ -19,7 +19,6 @@
 namespace vowserDB\Helper;
 
 use Exception;
-use vowserDB\CSVFile;
 use vowserDB\Exception\DatabaseCreationException;
 use vowserDB\Exception\PermissionException;
 use vowserDB\Exception\UnknownColumnsException;
@@ -93,13 +92,14 @@ class Initialize
      *
      * @param string $path              Path to the table
      * @param mixed  $columns           Column array or template to initialize table with
+     * @param Class  $storageProvider   Storage provider for the table file
      * @param array  $additionalColumns Columns to add to a given template (optional)
      *
      * @throws vowserDB\Exception\UnknownColumnsException If the table does not exist yet and no columns have been provided
      *
      * @return bool Success state of the initialization
      */
-    public static function table(string $path, string $table, $columns, $additionalColumns = false): bool
+    public static function table(string $path, string $table, $columns, $storageProvider, $additionalColumns = false): bool
     {
         // Check if the database exists and can be accessed
         if (!self::database($path)) {
@@ -127,7 +127,7 @@ class Initialize
             }
 
             // Write columns - this will automatically create the file
-            CSVFile::writeColumns($path, $columns);
+            $storageProvider->writeColumns($path, $columns);
         }
 
         return true;

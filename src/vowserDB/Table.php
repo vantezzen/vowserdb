@@ -81,6 +81,13 @@ class Table
     protected $hasChanges = false;
 
     /**
+     * Storage provider used for storing the table.
+     *
+     * @var Class
+     */
+    protected $storage;
+
+    /**
      * Instance of vowserDB\Helper\Extension connected to the current instance of Table.
      * This extension instance will manage extension functionality such as attaching, methods and listeners.
      * It will be initialized in the __constructor method.
@@ -105,23 +112,38 @@ class Table
     public function __construct(string $table, $columns = false, $additionalColumns = false, $config = false)
     {
         $this->table = $table;
+
+        // Use config
         if ($config !== false) {
             if (isset($config['folder'])) {
                 $this->folder = $config['folder'];
             }
+            if (isset($config['storage'])) {
+                $this->storage = $config['storage'];
+            }
         }
-        // $this->path = realpath($this->folder) . $this->table . ".csv";
-        $this->path = getcwd().'/'.$this->folder.$this->table.'.csv';
 
-        if (!Initialize::table($this->path, $this->table, $columns, $additionalColumns)) {
+        // Create new storage provider
+        if (empty($this->storage)) {
+            $this->storage = new \vowserDB\Storage\CSV;
+        }
+
+        // Get path for table
+        $this->path = getcwd().'/'.$this->folder.$this->table.'.'. $this->storage->extension;
+        
+        // Try to initialize table and database
+        if (!Initialize::table($this->path, $this->table, $columns, $this->storage, $additionalColumns)) {
             throw new TableInitializeException('Could not open and initialize table '.$table);
             return false;
         }
 
-        $this->columns = CSVFile::columns($this->path);
+        // Get columns from strage provider
+        $this->columns = $this->storage->columns($this->path);
 
+        // Create new Extension helper
         $this->extension = new Extension($table, $this->path);
 
+        // Read table if not forbidden
         if (
             (!\is_array($config)) || (!isset($config['skip_read'])) || $config['skip_read'] === false) {
             $this->read();
@@ -164,7 +186,7 @@ class Table
         $this->extension->trigger('waitForRead');
         $this->extension->trigger('beforeRead');
         $this->extension->trigger('readyForRead');
-        $this->data = CSVFile::read($this->path, $this->columns);
+        $this->data = $this->storage->read($this->path, $this->columns);
         $this->extension->trigger('afterRead');
 
         return $this;
@@ -329,7 +351,7 @@ class Table
             return $this;
         }
         $this->extension->trigger('beforeSave');
-        CSVFile::save($this->path, $this->columns, $this->data);
+        $this->storage->save($this->path, $this->columns, $this->data);
         $this->extension->trigger('afterSave');
         $this->hasChanges = false;
 
@@ -343,7 +365,7 @@ class Table
      */
     public function drop(): self
     {
-        CSVFile::delete($this->path);
+        $this->storage->delete($this->path);
 
         $this->hasChanges = true;
 

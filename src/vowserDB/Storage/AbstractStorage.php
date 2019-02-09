@@ -1,7 +1,7 @@
 <?php
 /**
- * vowserDB CSV File
- * Handle reading and writing to the table CSV files.
+ * vowserDB Storage abstract class
+ * Abstract class for the creation of storage providers.
  *
  * Licensed under MIT License
  * For full copyright and license information, please see the LICENSE file
@@ -16,12 +16,17 @@
  * @version       4.1.0
  */
 
-namespace vowserDB;
+namespace vowserDB\Storage;
 
-use vowserDB\Helper\Armor;
-
-class CSVFile
+abstract class AbstractStorage implements StorageInterface
 {
+    /**
+     * File extension used for table files
+     *
+     * @var String
+     */
+    public $extension;
+
     /**
      * Read a CSV file and remove the first row as it is used for column decleration.
      *
@@ -30,25 +35,7 @@ class CSVFile
      *
      * @return array Data from the file associated with the given column names
      */
-    public static function read(string $file, array $columns): array
-    {
-        $f = fopen($file, 'r');
-        $content = [];
-        while (($data = fgetcsv($f)) !== false) {
-            if (!empty($data) && array_filter($data, 'trim')) {
-                $row = [];
-                foreach ($data as $key => $e) {
-                    $row[$columns[$key]] = Armor::unarmor($e);
-                }
-                $content[] = $row;
-            }
-        }
-        fclose($f);
-
-        array_shift($content);
-
-        return $content;
-    }
+    abstract public function read(string $file, array $columns): array;
 
     /**
      * Get an array with the name of the columns in a given file.
@@ -57,14 +44,7 @@ class CSVFile
      *
      * @return array Array of the columns in the file
      */
-    public static function columns(string $file): array
-    {
-        $f = fopen($file, 'r');
-        $rows = fgetcsv($f);
-        fclose($f);
-
-        return $rows;
-    }
+    abstract public function columns(string $file): array;
 
     /**
      * Write the column decleration row (first row) to a table file.
@@ -75,16 +55,7 @@ class CSVFile
      *
      * @return file Table file if $dontCloseFile is true
      */
-    public static function writeColumns(string $file, array $columns, bool $dontCloseFile = false)
-    {
-        $file = fopen($file, 'w');
-        fputcsv($file, $columns);
-        if ($dontCloseFile) {
-            return $file;
-        } else {
-            fclose($file);
-        }
-    }
+    abstract public function writeColumns(string $file, array $columns, bool $dontCloseFile = false);
 
     /**
      * Save data from data array to the table file.
@@ -93,25 +64,14 @@ class CSVFile
      * @param array  $columns Array of column names of the table
      * @param array  $data    Data that will be saved to the table
      */
-    public static function save(string $file, array $columns, array $data)
-    {
-        $file = self::writeColumns($file, $columns, true);
-        foreach ($data as $row) {
-            $final = [];
-            foreach ($columns as $column) {
-                $final[] = isset($row[$column]) ? Armor::armor($row[$column]) : '';
-            }
-            fputcsv($file, $final);
-        }
-        fclose($file);
-    }
+    abstract public function save(string $file, array $columns, array $data);
 
     /**
      * Delete a table file.
      *
      * @param string $file Path to the table file to delete
      */
-    public static function delete(string $file)
+    public function delete(string $file)
     {
         unlink($file);
     }
