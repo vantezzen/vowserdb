@@ -1,8 +1,8 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
-use vowserDB\Table;
 use vowserDB\Storage\JSON;
+use vowserDB\Table;
 
 class JSONStorageTest extends TestCase
 {
@@ -11,9 +11,9 @@ class JSONStorageTest extends TestCase
 
     public static function setUpBeforeClass()
     {
-        self::$storage = new JSON;
+        self::$storage = new JSON();
         self::$table = new Table('unitJSONStorageTest', ['one', 'two', 'three', 'four'], false, [
-            "storage" => self::$storage
+            'storage' => self::$storage,
         ]);
     }
 
@@ -25,7 +25,6 @@ class JSONStorageTest extends TestCase
         $this->assertFileExists('vowserDB/unitJSONStorageTest.json');
         $this->assertStringEqualsFile('vowserDB/unitJSONStorageTest.json', '{"columns":["one","two","three","four"],"data":[]}');
     }
-
 
     /**
      * Test get columns array.
@@ -43,13 +42,13 @@ class JSONStorageTest extends TestCase
     public function testInsert()
     {
         self::$table->insert(['two' => 'test'])->save()->read();
-    
+
         // Test table class data
         $expected = [[
-            'one' => '', 
-            'two' => 'test', 
-            'three' => '', 
-            'four' => ''
+            'one'   => '',
+            'two'   => 'test',
+            'three' => '',
+            'four'  => '',
         ]];
         $this->assertEquals($expected, self::$table->data());
 

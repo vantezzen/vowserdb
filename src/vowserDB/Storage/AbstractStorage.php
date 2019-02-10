@@ -21,9 +21,9 @@ namespace vowserDB\Storage;
 abstract class AbstractStorage implements StorageInterface
 {
     /**
-     * File extension used for table files
+     * File extension used for table files.
      *
-     * @var String
+     * @var string
      */
     public $extension;
 

@@ -1,8 +1,8 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
-use vowserDB\Table;
 use vowserDB\Storage\CSV;
+use vowserDB\Table;
 
 class CSVStorageTest extends TestCase
 {
@@ -11,9 +11,9 @@ class CSVStorageTest extends TestCase
 
     public static function setUpBeforeClass()
     {
-        self::$storage = new CSV;
+        self::$storage = new CSV();
         self::$table = new Table('unitCSVStorageTest', ['one', 'two', 'three', 'four'], false, [
-            "storage" => self::$storage
+            'storage' => self::$storage,
         ]);
     }
 
@@ -23,10 +23,9 @@ class CSVStorageTest extends TestCase
     public function testCreation()
     {
         $this->assertFileExists('vowserDB/unitCSVStorageTest.csv');
-        $this->assertStringEqualsFile('vowserDB/unitCSVStorageTest.csv', "one,two,three,four
-");
+        $this->assertStringEqualsFile('vowserDB/unitCSVStorageTest.csv', 'one,two,three,four
+');
     }
-
 
     /**
      * Test get columns array.
@@ -44,20 +43,20 @@ class CSVStorageTest extends TestCase
     public function testInsert()
     {
         self::$table->insert(['two' => 'test'])->save()->read();
-    
+
         // Test table class data
         $expected = [[
-            'one' => '', 
-            'two' => 'test', 
-            'three' => '', 
-            'four' => ''
+            'one'   => '',
+            'two'   => 'test',
+            'three' => '',
+            'four'  => '',
         ]];
         $this->assertEquals($expected, self::$table->data());
 
         // Test table file
-        $this->assertStringEqualsFile('vowserDB/unitCSVStorageTest.csv', "one,two,three,four
+        $this->assertStringEqualsFile('vowserDB/unitCSVStorageTest.csv', 'one,two,three,four
 ,test,,
-");
+');
         self::$table->truncate()->save();
     }
 

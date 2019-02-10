@@ -125,12 +125,12 @@ class Table
 
         // Create new storage provider
         if (empty($this->storage)) {
-            $this->storage = new \vowserDB\Storage\CSV;
+            $this->storage = new \vowserDB\Storage\CSV();
         }
 
         // Get path for table
-        $this->path = getcwd().'/'.$this->folder.$this->table.'.'. $this->storage->extension;
-        
+        $this->path = getcwd().'/'.$this->folder.$this->table.'.'.$this->storage->extension;
+
         // Try to initialize table and database
         if (!Initialize::table($this->path, $this->table, $columns, $this->storage, $additionalColumns)) {
             throw new TableInitializeException('Could not open and initialize table '.$table);
