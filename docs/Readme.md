@@ -422,7 +422,10 @@ $posts->attach(new exampleExtension());
 Please take a look at the extensions documentation for more information about how to use it. Some extensions may require additional configuration.
 
 ### Build-in extensions
-For documentation of vowserDBs build-in extensions visit [the vowserDB extension documentation](https://vantezzen.github.io/vowserdb/extensions.html)
+For documentation of vowserDBs build-in extensions visit <a href="#/Extensions?id=vowserdb-build-in-extensions">the vowserDB extension documentation</a>
+
+### Creating extensions
+For documentation on how to create vowserDB extensions visit <a href="#/CreateExtensions?id=creating-extensions-for-vowserdb">the vowserDB extension creation documentation</a>
 
 # vowserDB\Database
 ## General usage
