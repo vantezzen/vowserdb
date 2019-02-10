@@ -54,7 +54,7 @@ $rows = $table->selected();
 ```
 
 # Documentation
-The documentation can be found at [https://vantezzen.github.io/vowserdb](https://vantezzen.github.io/vowserdb). It can also be viewed from `docs/index.html` when cloning the repository or by opening `docs/Readme.md`. 
+The documentation can be found at [https://vantezzen.github.io/vowserdb](https://vantezzen.github.io/vowserdb). It can also be viewed from `docs/index.html` when cloning the repository or by opening `docs/Home.md`. 
 The documentation is powered by [Flatdoc](http://ricostacruz.com/flatdoc).
 
 # Bugs and feature requests
