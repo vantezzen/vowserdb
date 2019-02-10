@@ -4,7 +4,7 @@ use PHPUnit\Framework\TestCase;
 use vowserDB\Extensions\encryptExtension;
 use vowserDB\Table;
 
-class TableTest extends TestCase
+class EncryptExtensionTest extends TestCase
 {
     protected static $table;
 
