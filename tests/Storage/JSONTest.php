@@ -9,7 +9,7 @@ class JSONStorageTest extends TestCase
     protected static $storage;
     protected static $table;
 
-    public static function setUpBeforeClass()
+    public static function setUpBeforeClass(): void
     {
         self::$storage = new JSON();
         self::$table = new Table('unitJSONStorageTest', ['one', 'two', 'three', 'four'], false, [
@@ -57,7 +57,7 @@ class JSONStorageTest extends TestCase
         self::$table->truncate()->save();
     }
 
-    public static function tearDownAfterClass()
+    public static function tearDownAfterClass(): void
     {
         self::$table->drop();
     }

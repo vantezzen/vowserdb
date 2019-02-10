@@ -9,7 +9,7 @@ class CSVStorageTest extends TestCase
     protected static $storage;
     protected static $table;
 
-    public static function setUpBeforeClass()
+    public static function setUpBeforeClass(): void
     {
         self::$storage = new CSV();
         self::$table = new Table('unitCSVStorageTest', ['one', 'two', 'three', 'four'], false, [
@@ -60,7 +60,7 @@ class CSVStorageTest extends TestCase
         self::$table->truncate()->save();
     }
 
-    public static function tearDownAfterClass()
+    public static function tearDownAfterClass(): void
     {
         self::$table->drop();
     }

@@ -7,7 +7,7 @@ class TableTest extends TestCase
 {
     protected static $table;
 
-    public static function setUpBeforeClass()
+    public static function setUpBeforeClass(): void
     {
         self::$table = new Table('unitTest', ['one', 'two', 'three', 'four']);
     }
@@ -257,7 +257,7 @@ class TableTest extends TestCase
         $this->assertCount(0, $table->data());
     }
 
-    public static function tearDownAfterClass()
+    public static function tearDownAfterClass(): void
     {
         self::$table->drop();
     }

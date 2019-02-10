@@ -8,7 +8,7 @@ class encryptExtensionTest extends TestCase
 {
     protected static $table;
 
-    public static function setUpBeforeClass()
+    public static function setUpBeforeClass(): void
     {
         $table = new Table('unitTestEncryptExtension', ['one', 'two', 'three', 'four'], false, ['skip_read' => true]);
         $extension = new encryptExtension('EE3542093D20E7175A8321E48FCC9934');
@@ -40,7 +40,7 @@ class encryptExtensionTest extends TestCase
         ]], self::$table->data());
     }
 
-    public static function tearDownAfterClass()
+    public static function tearDownAfterClass(): void
     {
         self::$table->drop();
     }

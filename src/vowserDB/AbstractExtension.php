@@ -53,5 +53,5 @@ abstract class AbstractExtension implements ExtensionInterface
      * @param string $path     Absolute path to the tables file
      * @param Table  $instance Current vowserDB\Table instance the extension got attached to
      */
-    abstract public function onAttach(string $table, string $path, Table $instance);
+    abstract public function onAttach(string $table, string $path, \vowserDB\Table $instance);
 }

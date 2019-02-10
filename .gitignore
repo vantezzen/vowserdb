@@ -4,3 +4,5 @@ monolog_for_reference/
 test.php
 TODO.txt
 .DS_Store
+.phpunit.result.cache
+composer.lock
