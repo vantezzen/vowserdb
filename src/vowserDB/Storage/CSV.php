@@ -23,9 +23,9 @@ use vowserDB\Helper\Armor;
 class CSV extends AbstractStorage
 {
     /**
-     * File extension used for table files
+     * File extension used for table files.
      *
-     * @var String
+     * @var string
      */
     public $extension = 'csv';
 

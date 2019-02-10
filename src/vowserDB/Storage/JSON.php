@@ -18,14 +18,12 @@
 
 namespace vowserDB\Storage;
 
-use vowserDB\Helper\Armor;
-
 class JSON extends AbstractStorage
 {
     /**
-     * File extension used for table files
+     * File extension used for table files.
      *
-     * @var String
+     * @var string
      */
     public $extension = 'json';
 
@@ -40,12 +38,12 @@ class JSON extends AbstractStorage
     public function read(string $file, array $columns): array
     {
         $f = fopen($file, 'r');
-        $json = fread($f , filesize($file));
+        $json = fread($f, filesize($file));
         fclose($f);
 
         $content = \json_decode($json, true);
-        $data = $content['data']; 
-        
+        $data = $content['data'];
+
         return $data;
     }
 
@@ -59,12 +57,12 @@ class JSON extends AbstractStorage
     public function columns(string $file): array
     {
         $f = fopen($file, 'r');
-        $json = fread($f , filesize($file));
+        $json = fread($f, filesize($file));
         fclose($f);
 
         $content = \json_decode($json, true);
-        $columns = $content['columns']; 
-        
+        $columns = $content['columns'];
+
         return $columns;
     }
 
@@ -78,8 +76,8 @@ class JSON extends AbstractStorage
     public function save(string $file, array $columns, array $data)
     {
         // Make sure all rows contain all columns
-        foreach($data as $key => $row) {
-            foreach($columns as $column) {
+        foreach ($data as $key => $row) {
+            foreach ($columns as $column) {
                 if (!isset($row[$column])) {
                     $data[$key][$column] = '';
                 }
@@ -88,11 +86,11 @@ class JSON extends AbstractStorage
 
         // Write to file
         $content = [
-            "columns" => $columns,
-            "data" => $data
+            'columns' => $columns,
+            'data'    => $data,
         ];
         $f = fopen($file, 'w');
-        $json = fwrite($f , json_encode($content));
+        $json = fwrite($f, json_encode($content));
         fclose($f);
     }
 

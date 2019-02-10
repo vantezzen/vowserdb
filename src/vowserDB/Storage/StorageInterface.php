@@ -20,7 +20,6 @@ namespace vowserDB\Storage;
 
 interface StorageInterface
 {
-    
     public function read(string $file, array $columns): array;
 
     /**
