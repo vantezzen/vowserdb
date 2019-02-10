@@ -113,10 +113,11 @@ Availible table templates are:
 When opening or creating a table via `new Table` you can add a config array as the 4th argument.
 This argument currently supports:
 
-| Name      | Description                                                |
-| --------- | ---------------------------------------------------------- |
-| folder    | Folder to save vowserDB tables into (default: "vowserDB/") |
-| skip_read | Don't read table contents when initializing                |
+| Name      | Description                                                                                                                      |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| folder    | Folder to save vowserDB tables into (default: "vowserDB/")                                                                       |
+| storage   | [Storage provider](#vowserdbtable-using-storage-providers) used for storing the table file (default: `new vowserDB\Storage\CSV`) |
+| skip_read | Don't read table contents when initializing                                                                                      |
 
 Example: Change the folder to "tables/"
 ```php
@@ -127,6 +128,21 @@ $table = new Table('users', ['username', 'password'], false, ['folder' => 'table
 When naming a vowserDB table please follow these rules:
 - You are not allowed to use slash (/), backslash (\\), dot (.), comma (,), spaces ( ) and hash symbols (#) as these can create problems with the filesystem
 - We advice you to only use letters of the english alphabet and numbers
+
+## Using storage providers
+vowserDB supports storage provider. These storage provider handle reading and writing to the table file.
+
+By default, vowserDB uses the `vowserDB\Storage\CSV` provider to store your table to a CSV file but vowserDB also comes with a `vowserDB\Storage\JSON` provider to store your table to a JSON file.
+
+To use this provider first create a new `vowserDB\Storage\JSON` instance, then pass it to your new `vowserDB\Table` instance using the `config['storage']` argument.
+```php
+$storage = new vowserDB\Storage\JSON;
+$table = new vowserDB\Table('name', 'users', false, [
+    'storage' => $storage
+]);
+```
+
+You can also create your own vowserDB storage providers. Please take a look at `src/vowserDB/Storage/JSON.php` for a simple storage provider.
 
 ## Inserting data into a table
 To insert new data into the table use the `insert` function.

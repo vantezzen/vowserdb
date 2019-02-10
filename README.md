@@ -64,7 +64,6 @@ Bugs and feature request are tracked on [GitHub](https://github.com/vantezzen/vo
 vowserDB is licensed under the MIT License - see the `LICENSE` file for details.
 
 # Acknowledgements
-
 This library is heavily inspired by Laravels Eloquent syntax.
 
 # Unit Test

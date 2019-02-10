@@ -76,10 +76,10 @@ $table2->attach($relationshipExtension); // Second table to be attached is secon
 # encryptExtension
 The `encryptExtension` allows you to automatically encrypt your vowserDB tables using the PHP OpenSSL extension.
 
-# Installation
+## Installation
 encryptExtension comes pre-installed with vowserDB - no installation required.
 
-# Attaching
+## Attaching
 When encrypting tables, you need an AES-128-CBC key. When using table encryption, vowserDB cannot read your tables when you initalize your vowserDB\Table instance yet - encryptExtension needs to be attached first. This is why you'll need to set `$config['skip_read']` to `true` when creating your `vowserDB\Table` instance. When attaching your `encryptExtension` instance, it will automatically read your table - you won't have to start a manual read.
 
 The following example adds encryption to the table '`table`':

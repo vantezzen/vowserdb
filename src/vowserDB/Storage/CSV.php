@@ -1,7 +1,7 @@
 <?php
 /**
- * vowserDB CSV File
- * Handle reading and writing to the table CSV files.
+ * vowserDB CSV File storage
+ * Handle reading and writing to the table using CSV files.
  *
  * Licensed under MIT License
  * For full copyright and license information, please see the LICENSE file
@@ -16,12 +16,19 @@
  * @version       4.1.0
  */
 
-namespace vowserDB;
+namespace vowserDB\Storage;
 
 use vowserDB\Helper\Armor;
 
-class CSVFile
+class CSV extends AbstractStorage
 {
+    /**
+     * File extension used for table files
+     *
+     * @var String
+     */
+    public $extension = 'csv';
+
     /**
      * Read a CSV file and remove the first row as it is used for column decleration.
      *
@@ -30,7 +37,7 @@ class CSVFile
      *
      * @return array Data from the file associated with the given column names
      */
-    public static function read(string $file, array $columns): array
+    public function read(string $file, array $columns): array
     {
         $f = fopen($file, 'r');
         $content = [];
@@ -57,7 +64,7 @@ class CSVFile
      *
      * @return array Array of the columns in the file
      */
-    public static function columns(string $file): array
+    public function columns(string $file): array
     {
         $f = fopen($file, 'r');
         $rows = fgetcsv($f);
@@ -75,7 +82,7 @@ class CSVFile
      *
      * @return file Table file if $dontCloseFile is true
      */
-    public static function writeColumns(string $file, array $columns, bool $dontCloseFile = false)
+    public function writeColumns(string $file, array $columns, bool $dontCloseFile = false)
     {
         $file = fopen($file, 'w');
         fputcsv($file, $columns);
@@ -93,7 +100,7 @@ class CSVFile
      * @param array  $columns Array of column names of the table
      * @param array  $data    Data that will be saved to the table
      */
-    public static function save(string $file, array $columns, array $data)
+    public function save(string $file, array $columns, array $data)
     {
         $file = self::writeColumns($file, $columns, true);
         foreach ($data as $row) {
@@ -111,7 +118,7 @@ class CSVFile
      *
      * @param string $file Path to the table file to delete
      */
-    public static function delete(string $file)
+    public function delete(string $file)
     {
         unlink($file);
     }
