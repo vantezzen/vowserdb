@@ -38,7 +38,7 @@ class encryptExtension extends AbstractExtension
         $this->key = $key;
     }
 
-    public function onAttach($table, $path, $instance)
+    public function onAttach(string $table, string $path, vowserDB\Table $instance)
     {
         $this->decryptedPath = $path;
         $this->encryptedPath = $path.'.enc';

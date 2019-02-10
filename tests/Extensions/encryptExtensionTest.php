@@ -10,15 +10,17 @@ class encryptExtensionTest extends TestCase
 
     public static function setUpBeforeClass()
     {
-        self::$table = new Table('unitTestEncryptExtension', ['one', 'two', 'three', 'four'], false, ['skip_read' => true]);
+        $table = new Table('unitTestEncryptExtension', ['one', 'two', 'three', 'four'], false, ['skip_read' => true]);
         $extension = new encryptExtension('EE3542093D20E7175A8321E48FCC9934');
-        self::$table->attach($extension);
+        $table->attach($extension);
 
-        self::$table->insert([
+        $table->insert([
             'one'   => '1',
             'two'   => '2',
             'three' => '3',
         ]);
+
+        self::$table = $table;
     }
 
     public function testTableEncryption()
