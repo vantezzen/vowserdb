@@ -447,12 +447,16 @@ use vowserDB\Database;
 
 The `Database` class, in contrast to `Table`, is intended to use statically, without creating an instance.
 
-By default, `Database` will use `vowserDB/` as the database folder. If you would like to use a different folder you can add it as the '$folder' argument availible in each method of `Database`. This will eather accept a relative or absolute path or an instance of `Table`, in which case the folder set in the `Table` instance will be used.
+By default, `Database` will use `vowserDB/` as the database folder and `vowserDB\Storage\CSV` as the storage provider. 
+
+If you would like to use a different folder you can add it as the `$folder` argument availible in each method of `Database`. This will eather accept a relative or absolute path or an instance of `Table`, in which case the folder set in the `Table` instance will be used. 
+
+If you would like to use a different storage provider you can pass a storage provider instance as the `$storage` argument in each method of `Database`.
 
 ## Getting tables in the database
 The static function `tables` will return an array with all tables in the database folder.
 ```php
-array Database::tables($folder = false);
+array Database::tables($storage = false, $folder = false);
 ```
 
 Example 1: Get tables in the default database folder.
@@ -462,18 +466,24 @@ $tables = Database::tables();
 
 Example 2: Get tables in folder 'tables/'
 ```php
-$tables = Database::tables('tables/');
+$tables = Database::tables(false, 'tables/');
 ```
 
 Example 3: Get all tables in the folder `$table` is in
 ```php
 $table = new Table(...);
-$tables = Database::tables($table);
+$tables = Database::tables(false, $table);
+```
+
+Example 4: Get all tables using the `vowserDB\Storage\JSON` provider
+```php
+$storage = new vowserDB\Storage\JSON;
+$tables = Database::tables($storage);
 ```
 
 ## Truncating database
 Truncating the database - meaning deleting all tables in the database - can be achieved using the `trunacate` method.
 ```php
-Database::truncate($folder = false);
+Database::truncate($storage = false, $folder = false);
 ```
 This function can be used in the same way `tables` gets used.

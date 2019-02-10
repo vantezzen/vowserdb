@@ -19,6 +19,8 @@
 
 namespace vowserDB;
 
+use vowserDB\Storage\CSV;
+
 class Database
 {
     public static function getPath($folder)
@@ -35,28 +37,36 @@ class Database
         return $folder;
     }
 
-    public static function tables($folder = false)
+    public static function tables($storage = false, $folder = false)
     {
         $path = self::getPath($folder);
 
-        $files = glob($path.'/*.csv');
+        if ($storage == false) {
+            $storage = new CSV;
+        }
+
+        $files = glob($path.'/*.' . $storage->extension);
 
         // Get table name from absolute path
         foreach ($files as $key => $file) {
-            $files[$key] = basename($file, '.csv');
+            $files[$key] = basename($file, '.'. $storage->extension);
         }
 
         return $files;
     }
 
-    public static function truncate($folder = false)
+    public static function truncate($storage = false, $folder = false)
     {
-        $tables = self::tables($folder);
+        if ($storage == false) {
+            $storage = new CSV;
+        }
+
+        $tables = self::tables($storage, $folder);
         $folder = self::getPath($folder);
 
         foreach ($tables as $table) {
-            $columns = CSVFile::columns($folder.$table.'.csv');
-            CSVFile::writeColumns($folder.$table.'.csv', $columns);
+            $columns = $storage->columns($folder.$table.'.'. $storage->extension);
+            $storage->save($folder.$table.'.'. $storage->extension, $columns, []);
         }
     }
 }
