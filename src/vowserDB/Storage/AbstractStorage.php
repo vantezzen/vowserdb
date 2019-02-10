@@ -47,17 +47,6 @@ abstract class AbstractStorage implements StorageInterface
     abstract public function columns(string $file): array;
 
     /**
-     * Write the column decleration row (first row) to a table file.
-     *
-     * @param string $file          Path to the table file
-     * @param array  $columns       Array of column names that should be written to the table
-     * @param bool   $dontCloseFile Don't close the file but rather return it
-     *
-     * @return file Table file if $dontCloseFile is true
-     */
-    abstract public function writeColumns(string $file, array $columns, bool $dontCloseFile = false);
-
-    /**
      * Save data from data array to the table file.
      *
      * @param string $file    Path to the table file

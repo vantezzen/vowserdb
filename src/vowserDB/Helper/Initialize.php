@@ -126,8 +126,8 @@ class Initialize
                 }
             }
 
-            // Write columns - this will automatically create the file
-            $storageProvider->writeColumns($path, $columns);
+            // Create file with columns
+            $storageProvider->save($path, $columns, []);
         }
 
         return true;
