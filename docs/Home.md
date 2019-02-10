@@ -92,7 +92,8 @@ Availible table templates are:
 | ----- | --------------------------------------- |
 | users | username, uuid, password, mail, data    |
 | posts | uuid, post_id, type, data, created_date |
-```php
+
+```PHP
 "users" => array(
     "username",
     "uuid",
@@ -204,12 +205,17 @@ $table->insert(
 ## Selecting data from a table
 Selecting can be done via the `select` function.
 The first argument will be a selection - an argument of what to select. This can eather be an empty string or array or an asterix ('*') to select everything or an associative array of key value pairs.
+
 The second argument, `$fromSelected`, defines if the new selection should be made from the previous selection. If set to false (default) the selection will be made from all data in the table.
-The selection is case-sensitive
+
+The thrid argument, `$particalArrayMatch`, defines if partial array matches are valid matches. For example, if the field `one` has the value `['a', 'b', 'c']` and you run `select` with `'one' => ['a', 'b']` this won't normally be a match as the two arrays do not fully match. If you however set `$particalArrayMatch` to `true` this will be a match as every array value from your selection requirement (`['a', 'b']`) is also availible in the field value (`['a', 'b', 'c']`).
+
+The selection is case-sensitive.
 ```php
 $table->select(
     $selection
-    [, $fromSelected = false]
+    [, $fromSelected = false
+    [, $particalArrayMatch = false]]
 );
 ```
 Example: Select all rows where username is `testuser`
@@ -225,12 +231,17 @@ $table->select(
     ]
 );
 ```
-Example 3: First select all post from `user` `testuser`, do something with it, then, from these posts, select all with `text` `Hello`
+Example 3: First select all post from `user` `testuser`, then, from these posts, select all with `text` `Hello`
 ```php
 $table->select(['username' => 'testuser']);
-// Do something
 $table->select(['text' => 'Hello'], true);
 ```
+
+Example 4: Get all users that have `vantezzen` and `testuser` in their `subscribers` array. This will be a partial array match: We also want to select them if they are also subscribed to other users too.
+```php
+$table->select(['subscibers' => ['vantezzen', 'testuser']], false, true);
+```
+
 
 ### Selection arguments
 When selecting data from a table, vowserDB selection arguments can be used.
@@ -251,7 +262,7 @@ $table->select(['likes' => 'BIGGER EQUAL 3']);
 ```
 Example 2: Select all rows where text is not "Hello, World!"
 ```php
-$table->select(['likes' => 'IS NOT Hello, World!']);
+$table->select(['text' => 'IS NOT Hello, World!']);
 ```
 
 ### Limiting selected data

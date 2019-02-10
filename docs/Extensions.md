@@ -46,7 +46,7 @@ array(1) {
     } 
 }
 ```
-Relationships are *always* many-to-many connections, but - as seen in the example above - can also be used for one-to-one or many-to-many connections.
+Relationships are *always* many-to-many connections, but - as seen in the example above - can also be used for one-to-one or one-to-many connections.
 
 ## Installation
 relationshipExtension comes pre-installed with vowserDB - no installation required.
