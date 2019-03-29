@@ -14,7 +14,7 @@
  *
  * @license       https://opensource.org/licenses/mit-license.php MIT License
  *
- * @version       4.1.0
+ * @version       4.1.1
  */
 
 namespace vowserDB;
