@@ -51,7 +51,7 @@ Relationships are *always* many-to-many connections, but - as seen in the exampl
 ## Installation
 relationshipExtension comes pre-installed with vowserDB - no installation required.
 
-## Attaching
+## Usage
 When creating a relationship you will always have two tables - in this case `table1` and `table2`. 
 
 The following example connects `row1` from `table1` to `row2` from `table2`.
@@ -79,7 +79,7 @@ The `encryptExtension` allows you to automatically encrypt your vowserDB tables 
 ## Installation
 encryptExtension comes pre-installed with vowserDB - no installation required.
 
-## Attaching
+## Usage
 When encrypting tables, you need an AES-128-CBC key. When using table encryption, vowserDB cannot read your tables when you initalize your vowserDB\Table instance yet - encryptExtension needs to be attached first. This is why you'll need to set `$config['skip_read']` to `true` when creating your `vowserDB\Table` instance. When attaching your `encryptExtension` instance, it will automatically read your table - you won't have to start a manual read.
 
 The following example adds encryption to the table '`table`':
@@ -97,4 +97,31 @@ $encryptExtension = new encryptExtension('YOUR_AES_128_CBC_KEY_HERE');
 $table->attach($encryptExtension);
 
 // You can now use your table
+```
+
+# sessionExtension
+The `sessionExtension` is a PHP `SessionHandler` that allows you to use a vowserDB table for storing session data.
+
+## Installation
+sessionExtension comes pre-installed with vowserDB - no installation required.
+
+## Usage
+When you use the `sessionExtension` you can use the default table and values by simply creating a new `vowserDB\Extensions\sessionExtension` instance.
+
+Alternatively, you can pass `false` as the first argument when creating the `vowserDB\Extensions\sessionExtension` instance and attach the extension to a custom table. In this case use `vowserDB\Extensions\sessionExtension::$columns` as the columns for your session table.
+```php
+use vowserDB\Table;
+use vowserDB\Extensions\sessionExtension;
+
+// Use defaults - no table creation needed
+$extension = new sessionExtension();
+session_set_save_handler($extension);
+session_start();
+
+// Use custom table
+$extension = new sessionExtension(false);
+$table = new Table('myCustomSessionTable', sessionExtension::$columns);
+$table->attach($extension);
+session_set_save_handler($extension);
+session_start();
 ```
